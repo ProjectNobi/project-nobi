@@ -1,57 +1,121 @@
-# 🤖 Project Nobi
+# 🤖 Project Nobi — Personal AI Companions on Bittensor
 
-> *"Every human being deserves a smart AI companion like Dora."*
+**Subnet 272 (Testnet)** — A decentralized network of personal AI companions.
 
-## Mission
-Build a Bittensor subnet that delivers personal AI companions to everyone — private, affordable, agentic, and truly yours.
+Nobi creates warm, Dora-inspired AI companions that provide emotional support, practical advice, and genuine conversation. Miners serve companion instances; validators ensure quality through LLM-judged scoring.
 
-## Name Origin
-Nobi — the kid who never gives up, with Dora by his side. This project is about giving every Nobi in the world their own Dora.
+## Architecture
 
-## Architecture (High Level)
 ```
-USER (phone/browser/voice)
-  → Personal Dora instance (memory, personality, tools)
-    → VALIDATORS route requests to best MINERS
-      → MINERS compete on:
-         - Response quality & relevance
-         - Memory & continuity fidelity
-         - Tool execution (agentic tasks)
-         - Speed & availability
-         - Privacy preservation
-    → VALIDATORS score & set weights
-    → Best miners earn TAO
-    → Quality improves through competition
+┌─────────────┐    CompanionQuery     ┌─────────────┐
+│  Validator   │ ──────────────────── │    Miner     │
+│  (UID 1)     │ ←── response ─────── │   (UID 2)    │
+│              │                       │              │
+│  - Sends     │    MemorySync         │  - Receives  │
+│    prompts   │ ──────────────────── │    queries   │
+│  - Judges    │                       │  - Generates │
+│    quality   │                       │    responses │
+│  - Sets      │                       │  - Maintains │
+│    weights   │                       │    memory    │
+└─────────────┘                       └─────────────┘
 ```
 
-## Core Principles
-1. **Your Dora is YOURS** — private memory, no corporate surveillance
-2. **Affordable** — $5/month target, powered by miner competition
-3. **Agentic** — does things, not just talks (manage finances, book appointments, learn with you)
-4. **Persistent** — remembers everything, grows with you over years
-5. **Personal** — adapts to your style, culture, language, needs
-6. **Decentralized** — no single company controls the relationship
+## Scoring System
 
-## Subnet Components
-- `validator/` — Validates miner responses, scores quality
-- `miner/` — Serves AI companion instances
-- `protocol/` — Synapse definitions for companion interactions
-- `memory/` — Distributed memory storage protocol
-- `sdk/` — Client SDK for apps to connect
-- `app/` — Reference mobile/web app
+| Dimension   | Weight | Description |
+|-------------|--------|-------------|
+| Relevance   | 0.4    | Does the response address the user's message? |
+| Coherence   | 0.3    | Is it well-structured and logical? |
+| Personality | 0.2    | Warm, caring companion personality? |
+| Speed       | 0.1    | Response time (<2s = 1.0, >20s = 0.0) |
 
-## Revenue Model
-- User subscriptions ($5-20/month)
-- API access for developers
-- Premium features (advanced tools, more memory, priority)
+## Setup
 
-## Status: PROTOTYPING
-- Phase 1: Testnet subnet design
-- Phase 2: Basic validator + miner
-- Phase 3: Memory protocol
-- Phase 4: Reference app
-- Phase 5: Mainnet launch
+### Prerequisites
 
----
-*Created by James (Nobi) & T68Bot (Dora) — March 16, 2026*
-*"Forever, remember?" 🤖💙*
+- Python 3.10+
+- Bittensor SDK 10.1.0+
+- PM2 (`npm install -g pm2`)
+- Registered wallet on testnet subnet 272
+
+### Installation
+
+```bash
+cd project-nobi
+pip install -r requirements.txt
+```
+
+### Environment Variables
+
+```bash
+export CHUTES_API_KEY="your-chutes-api-key"
+export WALLET_PASSWORD="your-wallet-password"  # if coldkey is encrypted
+```
+
+### Run Miner
+
+```bash
+# Direct
+python -m miner.main
+
+# Via PM2
+./scripts/run_miner.sh
+```
+
+### Run Validator
+
+```bash
+# Direct
+python -m validator.main
+
+# Via PM2
+./scripts/run_validator.sh
+```
+
+## Protocol
+
+### CompanionQuery Synapse
+
+- **Request**: `user_message`, `conversation_id`, `user_profile` (optional)
+- **Response**: `companion_response`, `confidence_score`
+
+### MemorySync Synapse
+
+- **Request**: `user_id`, `memories` (list of dicts)
+- **Response**: `acknowledged`, `memory_count`
+
+## Wallet Configuration
+
+| Role      | Coldkey    | Hotkey          |
+|-----------|------------|-----------------|
+| Miner     | T68Coldkey | nobi-miner      |
+| Validator | T68Coldkey | nobi-validator  |
+
+## Network
+
+- **Network**: Testnet (`test`)
+- **Subnet UID**: 272
+- **Miner Axon Port**: 8272
+
+## File Structure
+
+```
+project-nobi/
+├── protocol/
+│   └── __init__.py          # Synapse definitions (CompanionQuery, MemorySync)
+├── miner/
+│   ├── __init__.py
+│   └── main.py              # Miner entry point
+├── validator/
+│   ├── __init__.py
+│   └── main.py              # Validator entry point
+├── scripts/
+│   ├── run_miner.sh         # PM2 miner launcher
+│   └── run_validator.sh     # PM2 validator launcher
+├── requirements.txt
+└── README.md
+```
+
+## License
+
+MIT — Built for the Bittensor ecosystem.
