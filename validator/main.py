@@ -39,11 +39,14 @@ NETWORK = "test"
 WALLET_NAME = "T68Coldkey"
 HOTKEY_NAME = "nobi-validator"
 
-# LLM config for judging
+# LLM config for judging (primary + fallback)
 CHUTES_API_URL = "https://llm.chutes.ai/v1/chat/completions"
 CHUTES_API_KEY = os.environ.get("CHUTES_API_KEY", "")
+OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 JUDGE_MODEL = "deepseek-ai/DeepSeek-V3-0324"
-JUDGE_TIMEOUT = 30
+OPENROUTER_JUDGE_MODEL = "deepseek/deepseek-chat"
+JUDGE_TIMEOUT = 10
 
 # Scoring weights
 W_RELEVANCE = 0.4
@@ -155,34 +158,40 @@ def judge_response(user_message: str, companion_response: str) -> dict:
         "temperature": 0.1,  # Low temp for consistent scoring
     }
 
-    try:
-        resp = requests.post(
-            CHUTES_API_URL,
-            headers=headers,
-            json=payload,
-            timeout=JUDGE_TIMEOUT,
-        )
-        resp.raise_for_status()
-        content = resp.json()["choices"][0]["message"]["content"].strip()
-
-        # Parse JSON from response (handle potential markdown wrapping)
+    def _try_judge(url, api_key, model, timeout):
+        """Try to call an LLM judge endpoint."""
+        h = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        p = {"model": model, "messages": messages, "max_tokens": 100, "temperature": 0.1}
+        r = requests.post(url, headers=h, json=p, timeout=timeout)
+        r.raise_for_status()
+        content = r.json()["choices"][0]["message"]["content"].strip()
         if "```" in content:
             content = content.split("```")[1]
             if content.startswith("json"):
                 content = content[4:]
             content = content.strip()
-
         scores = json.loads(content)
-
-        # Clamp scores to [0, 1]
         return {
             "relevance": max(0.0, min(1.0, float(scores.get("relevance", 0.5)))),
             "coherence": max(0.0, min(1.0, float(scores.get("coherence", 0.5)))),
             "personality": max(0.0, min(1.0, float(scores.get("personality", 0.5)))),
         }
-    except Exception as e:
-        bt.logging.warning(f"LLM judge failed: {e} — falling back to heuristics")
-        return heuristic_score(user_message, companion_response)
+
+    # Try Chutes first (fast fail)
+    if CHUTES_API_KEY:
+        try:
+            return _try_judge(CHUTES_API_URL, CHUTES_API_KEY, JUDGE_MODEL, 5)
+        except Exception as e:
+            print(f"[JUDGE] Chutes failed: {e} — trying OpenRouter", flush=True)
+
+    # Fallback to OpenRouter
+    if OPENROUTER_API_KEY:
+        try:
+            return _try_judge(OPENROUTER_API_URL, OPENROUTER_API_KEY, OPENROUTER_JUDGE_MODEL, 15)
+        except Exception as e:
+            print(f"[JUDGE] OpenRouter failed: {e} — falling back to heuristics", flush=True)
+
+    return heuristic_score(user_message, companion_response)
 
 
 def heuristic_score(user_message: str, companion_response: str) -> dict:
@@ -273,10 +282,35 @@ def run_epoch(
     # On testnet we just query everyone except ourselves
     axon_infos = []
     miner_uids = []
+
+    # Testnet direct-IP overrides (axon.serve() has issues on testnet metadata)
+    # Map hotkey → (ip, port) for miners we know about
+    TESTNET_MINER_OVERRIDES = {
+        # nobi-miner hotkey → Server3 IP
+        "5DviHANYx2pzBy2b29r932YTUugVga7Vrjm5E9fa6PSZ5QSA": ("127.0.0.1", 8272),
+    }
+
     for uid in range(metagraph.n.item()):
         if uid == my_uid:
             continue
+        hotkey = metagraph.hotkeys[uid]
         axon_info = metagraph.axons[uid]
+
+        # Check if we have a direct-IP override for this miner
+        if hotkey in TESTNET_MINER_OVERRIDES:
+            ip, port = TESTNET_MINER_OVERRIDES[hotkey]
+            axon_info = bt.AxonInfo(
+                version=1,
+                ip=ip,
+                port=port,
+                ip_type=4,
+                hotkey=hotkey,
+                coldkey=metagraph.coldkeys[uid],
+            )
+            axon_infos.append(axon_info)
+            miner_uids.append(uid)
+            continue
+
         # Skip neurons with no serving info
         if axon_info.ip == "0.0.0.0" or axon_info.port == 0:
             continue
@@ -313,7 +347,13 @@ def run_epoch(
     # ── Score each response ─────────────────────────────────────
     scores = {}
     for i, (uid, response) in enumerate(zip(miner_uids, responses)):
-        companion_text = response.companion_response if response else None
+        # Handle both synapse objects and dict responses
+        companion_text = None
+        if response is not None:
+            if isinstance(response, dict):
+                companion_text = response.get("companion_response")
+            elif hasattr(response, "companion_response"):
+                companion_text = response.companion_response
 
         if not companion_text:
             bt.logging.warning(f"  UID {uid}: No response (timeout or error)")
@@ -321,11 +361,14 @@ def run_epoch(
             continue
 
         # Get process time from dendrite timing info
-        process_time = (
-            response.dendrite.process_time
-            if response.dendrite and response.dendrite.process_time
-            else MINER_QUERY_TIMEOUT
-        )
+        process_time = MINER_QUERY_TIMEOUT
+        if response is not None:
+            if isinstance(response, dict):
+                dendrite_info = response.get("dendrite", {})
+                if isinstance(dendrite_info, dict):
+                    process_time = dendrite_info.get("process_time", MINER_QUERY_TIMEOUT)
+            elif hasattr(response, "dendrite") and response.dendrite:
+                process_time = getattr(response.dendrite, "process_time", MINER_QUERY_TIMEOUT) or MINER_QUERY_TIMEOUT
 
         # Judge the response quality
         quality_scores = judge_response(user_message, companion_text)
@@ -334,18 +377,18 @@ def run_epoch(
 
         scores[uid] = round(final_score, 4)
 
-        bt.logging.info(
+        print(
             f"  UID {uid}: score={final_score:.3f} "
             f"(rel={quality_scores['relevance']:.2f}, "
             f"coh={quality_scores['coherence']:.2f}, "
             f"per={quality_scores['personality']:.2f}, "
-            f"spd={speed:.2f}, time={process_time:.2f}s)"
+            f"spd={speed:.2f}, time={process_time:.2f}s)", flush=True
         )
-        bt.logging.debug(f"  UID {uid} response: '{companion_text[:100]}...'")
+        print(f"  UID {uid} response: '{companion_text[:120]}...'", flush=True)
 
     # ── Set weights on-chain ────────────────────────────────────
     if not scores:
-        bt.logging.warning("⚠️ No scores to set. Skipping weight update.")
+        print("⚠️ No scores to set. Skipping weight update.", flush=True)
         return
 
     # Build weight arrays for ALL UIDs in the metagraph
@@ -449,23 +492,22 @@ def main():
         while running:
             epoch += 1
             bt.logging.info(f"\n{'='*60}")
-            bt.logging.info(f"🔄 Epoch {epoch} starting...")
+            print(f"\n{'='*60}", flush=True)
+            print(f"🔄 Epoch {epoch} starting...", flush=True)
 
             # Resync metagraph before each epoch
             try:
                 metagraph.sync(subtensor=subtensor)
-                bt.logging.info(
-                    f"📊 Metagraph: {metagraph.n} neurons, block {metagraph.block}"
-                )
+                print(f"📊 Metagraph: {metagraph.n} neurons, block {metagraph.block}", flush=True)
             except Exception as e:
-                bt.logging.warning(f"⚠️ Metagraph sync failed: {e}")
+                print(f"⚠️ Metagraph sync failed: {e}", flush=True)
 
             # Run validation epoch
             try:
                 run_epoch(dendrite, metagraph, subtensor, wallet, my_uid)
             except Exception as e:
-                bt.logging.error(f"❌ Epoch {epoch} failed: {e}")
-                bt.logging.debug(traceback.format_exc())
+                print(f"❌ Epoch {epoch} failed: {e}", flush=True)
+                traceback.print_exc()
 
             bt.logging.info(f"⏰ Sleeping {EPOCH_INTERVAL}s until next epoch...")
 

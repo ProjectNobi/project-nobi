@@ -41,10 +41,13 @@ WALLET_NAME = "T68Coldkey"
 HOTKEY_NAME = "nobi-miner"
 AXON_PORT = 8272
 
-# LLM config
+# LLM config — primary + fallback
 CHUTES_API_URL = "https://llm.chutes.ai/v1/chat/completions"
 CHUTES_API_KEY = os.environ.get("CHUTES_API_KEY", "")
+OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 LLM_MODEL = "deepseek-ai/DeepSeek-V3-0324"
+OPENROUTER_MODEL = "deepseek/deepseek-chat"
 LLM_TIMEOUT = 30  # seconds
 
 # Companion system prompt — warm, helpful, Dora-inspired
@@ -114,43 +117,54 @@ memory = ConversationMemory()
 # ═══════════════════════════════════════════════════════════════════
 
 
-def call_llm(messages: list[dict], max_tokens: int = 512) -> str:
-    """
-    Call Chutes.ai LLM API with the given messages.
-    Returns the assistant's response text, or a fallback on error.
-    """
-    if not CHUTES_API_KEY:
-        bt.logging.warning("CHUTES_API_KEY not set — returning fallback response")
-        return "I'm here for you! (Note: LLM API key not configured, running in fallback mode)"
-
+def _call_api(url: str, api_key: str, model: str, messages: list, max_tokens: int, timeout: int = 15) -> str:
+    """Call an OpenAI-compatible API endpoint."""
     headers = {
-        "Authorization": f"Bearer {CHUTES_API_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     payload = {
-        "model": LLM_MODEL,
+        "model": model,
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": 0.7,
         "top_p": 0.9,
     }
+    resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
+    resp.raise_for_status()
+    data = resp.json()
+    return data["choices"][0]["message"]["content"].strip()
 
-    try:
-        resp = requests.post(
-            CHUTES_API_URL,
-            headers=headers,
-            json=payload,
-            timeout=LLM_TIMEOUT,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        return data["choices"][0]["message"]["content"].strip()
-    except requests.exceptions.Timeout:
-        bt.logging.error("LLM API timeout")
-        return "I need a moment to think... could you try again? 🤔"
-    except Exception as e:
-        bt.logging.error(f"LLM API error: {e}")
-        return "I'm having a bit of trouble right now, but I'm still here for you! 💙"
+
+def call_llm(messages: list, max_tokens: int = 512) -> str:
+    """
+    Call LLM API with fallback: Chutes (5s timeout) → OpenRouter (20s timeout).
+    Fast fail on Chutes so we have time for OpenRouter within the validator's query window.
+    """
+    # Try Chutes first with SHORT timeout (5s) — fail fast if rate limited
+    if CHUTES_API_KEY:
+        try:
+            return _call_api(CHUTES_API_URL, CHUTES_API_KEY, LLM_MODEL, messages, max_tokens, timeout=5)
+        except requests.exceptions.Timeout:
+            bt.logging.warning("Chutes API timeout (5s) — trying OpenRouter")
+        except Exception as e:
+            bt.logging.warning(f"Chutes API error: {e} — trying OpenRouter")
+
+    # Fallback to OpenRouter with longer timeout
+    if OPENROUTER_API_KEY:
+        try:
+            return _call_api(OPENROUTER_API_URL, OPENROUTER_API_KEY, OPENROUTER_MODEL, messages, max_tokens, timeout=20)
+        except requests.exceptions.Timeout:
+            bt.logging.error("OpenRouter API timeout (20s)")
+        except Exception as e:
+            bt.logging.error(f"OpenRouter API error: {e}")
+
+    # Both failed
+    if not CHUTES_API_KEY and not OPENROUTER_API_KEY:
+        bt.logging.warning("No LLM API keys set — returning fallback response")
+        return "I'm here for you! (Note: LLM API not configured, running in fallback mode)"
+
+    return "I'm having a bit of trouble right now, but I'm still here for you! 💙"
 
 
 # ═══════════════════════════════════════════════════════════════════
