@@ -1,0 +1,31 @@
+# Project Nobi — Minimum compute requirements
+
+miner:
+  cpu:
+    min_cores: 2
+    recommended_cores: 4
+  ram:
+    min_gb: 4
+    recommended_gb: 8
+  gpu:
+    required: false
+  storage:
+    min_gb: 10
+  network:
+    download_mbps: 10
+    upload_mbps: 5
+
+validator:
+  cpu:
+    min_cores: 2
+    recommended_cores: 4
+  ram:
+    min_gb: 4
+    recommended_gb: 8
+  gpu:
+    required: false
+  storage:
+    min_gb: 10
+  network:
+    download_mbps: 10
+    upload_mbps: 5

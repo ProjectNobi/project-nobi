@@ -1,8 +1,34 @@
+# Python
 __pycache__/
-*.pyc
-.env
+*.py[cod]
+*$py.class
+*.so
 *.egg-info/
 dist/
 build/
+*.egg
+
+# Virtual environments
+venv/
 .venv/
-node_modules/
+env/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Bittensor
+wallets/
+~/.bittensor/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# State files
+state.npz
