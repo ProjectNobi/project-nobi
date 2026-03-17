@@ -55,7 +55,7 @@ W_PERSONALITY = 0.2
 W_SPEED = 0.1
 
 # Query timeout for miners
-MINER_QUERY_TIMEOUT = 30  # seconds
+MINER_QUERY_TIMEOUT = 40  # seconds (miner needs ~25s: 5s Chutes fail + 20s OpenRouter)
 
 # Epoch interval (seconds between validation rounds)
 EPOCH_INTERVAL = 300  # 5 minutes
@@ -234,14 +234,16 @@ def heuristic_score(user_message: str, companion_response: str) -> dict:
 def calculate_speed_score(response_time: float) -> float:
     """
     Convert response time to a 0-1 score.
-    <2s = 1.0, >20s = 0.0, linear interpolation between.
+    <3s = 1.0, >35s = 0.0, linear interpolation between.
+    Calibrated for current testnet: ~25s response time = ~0.35 score.
+    When Chutes recovers and responds in <5s, miners will get ~0.86+ speed score.
     """
-    if response_time <= 2.0:
+    if response_time <= 3.0:
         return 1.0
-    elif response_time >= 20.0:
+    elif response_time >= 35.0:
         return 0.0
     else:
-        return round(1.0 - (response_time - 2.0) / 18.0, 3)
+        return round(1.0 - (response_time - 3.0) / 32.0, 3)
 
 
 def compute_weighted_score(scores: dict, speed_score: float) -> float:

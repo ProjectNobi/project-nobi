@@ -30,6 +30,7 @@ import bittensor as bt
 # Add project root to path so protocol imports work
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from protocol import CompanionQuery, MemorySync
+from memory import MemoryManager
 
 # ═══════════════════════════════════════════════════════════════════
 # Configuration
@@ -108,8 +109,9 @@ class ConversationMemory:
             return len(self._user_memories[user_id])
 
 
-# Global memory instance
-memory = ConversationMemory()
+# Global memory instances
+memory = ConversationMemory()  # Legacy in-memory store (for backward compat)
+persistent_memory = MemoryManager()  # New persistent file-based memory
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -175,34 +177,59 @@ def call_llm(messages: list, max_tokens: int = 512) -> str:
 def handle_companion_query(synapse: CompanionQuery) -> CompanionQuery:
     """
     Process a CompanionQuery synapse:
-    1. Retrieve conversation history
-    2. Build LLM prompt with companion personality
+    1. Retrieve conversation history and user facts from persistent memory
+    2. Build LLM prompt with companion personality + user context
     3. Generate response via Chutes.ai
-    4. Store the turn in memory
-    5. Return response with confidence score
+    4. Store the turn in persistent memory
+    5. Extract and store any new facts from the conversation
+    6. Return response with confidence score
     """
     start_time = time.time()
     conv_id = synapse.conversation_id or "default"
+    user_id = synapse.user_id or conv_id  # fallback to conv_id if no user_id
     user_msg = synapse.user_message
 
-    bt.logging.info(f"📨 CompanionQuery: conv={conv_id}, msg='{user_msg[:80]}...'")
+    bt.logging.info(f"📨 CompanionQuery: user={user_id}, conv={conv_id}, msg='{user_msg[:80]}...'")
 
     # Build messages for LLM
     messages = [{"role": "system", "content": COMPANION_SYSTEM_PROMPT}]
 
-    # Add user profile context if provided
+    # ── Add user facts context if available ─────────────────────────
+    try:
+        user_facts = persistent_memory.get_user_facts(user_id)
+        if user_facts:
+            user_summary = persistent_memory.summarize_user(user_id)
+            messages.append({
+                "role": "system",
+                "content": f"What you know about this user: {user_summary}"
+            })
+            bt.logging.info(f"🧠 Loaded user facts: {user_summary}")
+            
+            # Greet returning users by name
+            if "name" in user_facts and len(persistent_memory.get_history(conv_id, max_turns=1, user_id=user_id)) == 0:
+                # First message in this conversation + we know their name
+                greeting_prompt = f"This is the start of a new conversation. Greet {user_facts['name']} warmly and naturally."
+                messages.append({"role": "system", "content": greeting_prompt})
+    except Exception as e:
+        bt.logging.warning(f"⚠️ Failed to load user facts: {e}")
+
+    # Add user profile context if provided (legacy field)
     if synapse.user_profile:
         profile_str = json.dumps(synapse.user_profile)
-        messages.append(
-            {
-                "role": "system",
-                "content": f"User profile context: {profile_str}",
-            }
-        )
+        messages.append({
+            "role": "system",
+            "content": f"Additional context: {profile_str}",
+        })
 
-    # Add conversation history
-    history = memory.get_history(conv_id)
-    messages.extend(history)
+    # ── Add conversation history from persistent memory ─────────────
+    try:
+        history = persistent_memory.get_history(conv_id, max_turns=10, user_id=user_id)
+        messages.extend(history)
+    except Exception as e:
+        bt.logging.warning(f"⚠️ Failed to load conversation history: {e}")
+        # Fallback to in-memory store
+        history = memory.get_history(conv_id)
+        messages.extend(history)
 
     # Add the current user message
     messages.append({"role": "user", "content": user_msg})
@@ -211,9 +238,22 @@ def handle_companion_query(synapse: CompanionQuery) -> CompanionQuery:
     response_text = call_llm(messages)
     elapsed = time.time() - start_time
 
-    # Store the turn in memory
-    memory.add_turn(conv_id, "user", user_msg)
-    memory.add_turn(conv_id, "assistant", response_text)
+    # ── Store the turn in persistent memory ─────────────────────────
+    try:
+        persistent_memory.add_message(conv_id, "user", user_msg, user_id=user_id)
+        persistent_memory.add_message(conv_id, "assistant", response_text, user_id=user_id)
+    except Exception as e:
+        bt.logging.warning(f"⚠️ Failed to save to persistent memory: {e}")
+        # Fallback to in-memory store
+        memory.add_turn(conv_id, "user", user_msg)
+        memory.add_turn(conv_id, "assistant", response_text)
+
+    # ── Extract and store facts from conversation ───────────────────
+    try:
+        persistent_memory.extract_facts_from_message(user_id, user_msg, response_text)
+        bt.logging.info(f"🔍 Facts extracted and stored for user {user_id}")
+    except Exception as e:
+        bt.logging.warning(f"⚠️ Fact extraction failed: {e}")
 
     # Calculate confidence based on response quality heuristics
     confidence = 0.8  # base confidence

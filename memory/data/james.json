@@ -1,0 +1,41 @@
+{
+  "user_id": "james",
+  "created_at": 1773778588.527977,
+  "updated_at": 1773778588.534,
+  "facts": {
+    "name": {
+      "value": "James",
+      "updated_at": 1773778588.5311995
+    },
+    "likes": {
+      "value": "pizza and coding",
+      "updated_at": 1773778588.5314083
+    },
+    "location": {
+      "value": "London",
+      "updated_at": 1773778588.53194
+    },
+    "life_event": {
+      "value": "got a promotion",
+      "updated_at": 1773778588.5338025
+    },
+    "occupation": {
+      "value": "software engineer",
+      "updated_at": 1773778588.5339992
+    }
+  },
+  "conversations": {
+    "james": [
+      {
+        "role": "user",
+        "content": "Hi! I am James from London. I love pizza and coding.",
+        "timestamp": 1773778588.52798
+      },
+      {
+        "role": "user",
+        "content": "I work as a software engineer. I just got a promotion!",
+        "timestamp": 1773778588.5322862
+      }
+    ]
+  }
+}

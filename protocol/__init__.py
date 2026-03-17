@@ -25,6 +25,10 @@ class CompanionQuery(bt.Synapse):
         default="default",
         description="Unique conversation thread identifier.",
     )
+    user_id: typing.Optional[str] = pydantic.Field(
+        default=None,
+        description="Optional user identifier for persistent memory lookup.",
+    )
     user_profile: typing.Optional[dict] = pydantic.Field(
         default=None,
         description="Optional user profile dict (name, preferences, etc.).",

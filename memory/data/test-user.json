@@ -1,0 +1,20 @@
+{
+  "user_id": "test-user",
+  "created_at": 1773778583.3642766,
+  "updated_at": 1773778583.3644903,
+  "facts": {},
+  "conversations": {
+    "test-user": [
+      {
+        "role": "user",
+        "content": "Hi! I am James from London. I love pizza.",
+        "timestamp": 1773778583.3642802
+      },
+      {
+        "role": "assistant",
+        "content": "Hello James! Nice to meet you.",
+        "timestamp": 1773778583.3644893
+      }
+    ]
+  }
+}
