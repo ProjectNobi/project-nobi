@@ -22,7 +22,7 @@ import signal
 import traceback
 import threading
 from collections import defaultdict
-from typing import Optional
+from typing import Optional, Tuple
 
 import requests
 import bittensor as bt
@@ -239,12 +239,12 @@ def handle_memory_sync(synapse: MemorySync) -> MemorySync:
     return synapse
 
 
-def blacklist_companion_query(synapse: CompanionQuery) -> tuple[bool, str]:
+def blacklist_companion_query(synapse: CompanionQuery) -> Tuple[bool, str]:
     """Basic blacklist — allow all for now on testnet."""
     return False, "Allowed"
 
 
-def blacklist_memory_sync(synapse: MemorySync) -> tuple[bool, str]:
+def blacklist_memory_sync(synapse: MemorySync) -> Tuple[bool, str]:
     """Basic blacklist — allow all for now on testnet."""
     return False, "Allowed"
 
@@ -320,9 +320,12 @@ def main():
 
     bt.logging.info("📡 Axon handlers attached: CompanionQuery, MemorySync")
 
-    # Serve the axon on the network
-    axon.serve(netuid=NETUID, subtensor=subtensor)
-    bt.logging.info(f"📡 Axon serving on port {AXON_PORT}")
+    # Serve the axon on the network (set on-chain axon info)
+    # NOTE: Skipped for testnet — axon.serve() hits scalecodec decode issues
+    # on testnet metadata. Validator queries miner directly by IP instead.
+    # TODO: Re-enable for mainnet
+    # axon.serve(netuid=NETUID, subtensor=subtensor)
+    bt.logging.info(f"📡 Axon listening on port {AXON_PORT} (direct IP mode for testnet)")
 
     # Start the axon server
     axon.start()
