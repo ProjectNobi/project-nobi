@@ -362,15 +362,17 @@ def run_epoch(
             scores[uid] = 0.0
             continue
 
-        # Get process time from dendrite timing info
-        process_time = MINER_QUERY_TIMEOUT
+        # Get process time — try dendrite timing, fall back to wall clock
+        process_time = total_time  # wall clock as default (more accurate than timeout)
         if response is not None:
             if isinstance(response, dict):
                 dendrite_info = response.get("dendrite", {})
-                if isinstance(dendrite_info, dict):
-                    process_time = dendrite_info.get("process_time", MINER_QUERY_TIMEOUT)
+                if isinstance(dendrite_info, dict) and dendrite_info.get("process_time"):
+                    process_time = dendrite_info["process_time"]
             elif hasattr(response, "dendrite") and response.dendrite:
-                process_time = getattr(response.dendrite, "process_time", MINER_QUERY_TIMEOUT) or MINER_QUERY_TIMEOUT
+                pt = getattr(response.dendrite, "process_time", None)
+                if pt and pt > 0:
+                    process_time = pt
 
         # Judge the response quality
         quality_scores = judge_response(user_message, companion_text)

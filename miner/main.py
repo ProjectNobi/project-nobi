@@ -146,7 +146,7 @@ def call_llm(messages: list, max_tokens: int = 512) -> str:
     # Try Chutes first with SHORT timeout (5s) — fail fast if rate limited
     if CHUTES_API_KEY:
         try:
-            return _call_api(CHUTES_API_URL, CHUTES_API_KEY, LLM_MODEL, messages, max_tokens, timeout=5)
+            return _call_api(CHUTES_API_URL, CHUTES_API_KEY, LLM_MODEL, messages, max_tokens, timeout=25)
         except requests.exceptions.Timeout:
             bt.logging.warning("Chutes API timeout (5s) — trying OpenRouter")
         except Exception as e:
