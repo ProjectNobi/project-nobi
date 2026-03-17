@@ -35,7 +35,7 @@ class BaseMinerNeuron(BaseNeuron):
                 "You are allowing non-registered entities to send requests to your miner."
             )
 
-        self.axon = bt.axon(
+        self.axon = bt.Axon(
             wallet=self.wallet,
             config=self.config() if callable(self.config) else self.config,
         )
