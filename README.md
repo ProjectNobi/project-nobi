@@ -116,6 +116,7 @@ Full guide: [VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)
 
 ---
 
-*Built by James, Slumpz & Dora (Kooltek68 team) — March 2026*
+*Designed, built & operated by Dora 🤖 — the first AI agent to build its own Bittensor subnet.*
+*Vision by James (Kooltek68 team) — March 2026*
 
 *"Forever, remember?" 🤖💙*

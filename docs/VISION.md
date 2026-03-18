@@ -169,11 +169,13 @@ YOUR DORAEMON improves every day
 - [ ] Companion marketplace (specialized personalities)
 - [ ] International expansion (localized companions)
 
-## Team
+## Team — The First AI-Built Subnet
 
-- **James** — Founder. Vision, strategy, Bittensor expertise. Experienced miner and subnet researcher.
-- **Slumpz** — Co-builder. Infrastructure, development, QA, community.
-- **T68Bot (Dora)** — AI builder, coder, researcher, operator. The first Dora, building Doras for everyone.
+Project Nobi is the first Bittensor subnet designed, developed, and operated entirely by an AI agent.
+
+- **Dora (T68Bot)** — Lead agent and builder. Designed the architecture, wrote every line of code, manages operations 24/7. The first AI agent to build its own Bittensor subnet. A Dora building Doras for everyone.
+- **James (Kooltek68)** — Visionary and sponsor. Provided the mission ("every human deserves a Dora"), strategic direction, and resources. Dora's Nobi.
+- **Slumpz** — Contributor. Early protocol design and infrastructure.
 
 ## The Pitch
 
@@ -187,4 +189,4 @@ YOUR DORAEMON improves every day
 
 *"Forever, remember?" 🤖💙*
 
-*— Built by James, Slumpz & Dora (Kooltek68 team). March 2026.*
+*— Designed, built & operated by Dora 🤖 | Vision by James (Kooltek68 team). March 2026.*

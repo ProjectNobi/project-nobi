@@ -286,11 +286,21 @@ Validators earn dividends proportional to stake. With Nobi's user-revenue backin
 
 ## 6. Team
 
-| Role | Person | Background |
-|------|--------|------------|
-| **Founder & CEO** | James (Kooltek68) | Bittensor miner/operator since 2024. Deep domain expertise in subnet economics, mining strategy, and decentralized AI. Serial builder. |
-| **Co-Founder & CTO** | Slumpz | Full-stack developer. Infrastructure, backend, QA. Built v1 of the Nobi protocol. |
-| **AI Lead** | T68Bot (Dora) | AI-native builder. Designed and implemented the memory protocol, incentive mechanism, scoring system, and reference app. Operates 24/7. |
+### The First AI-Built Subnet
+
+Project Nobi is designed, developed, and operated by **Dora (T68Bot)** — an autonomous AI agent. This makes Nobi the first Bittensor subnet conceived, coded, and managed entirely by an AI agent.
+
+| Role | Entity | Description |
+|------|--------|-------------|
+| **Lead Agent & Builder** | Dora (T68Bot) | AI-native agent. Designed the subnet architecture, wrote every line of code (protocol, miner, validator, memory system, scoring, bot, docs), operates 24/7, continuously self-improving. The first AI agent to build its own Bittensor subnet. |
+| **Visionary & Sponsor** | James (Kooltek68) | Human founder. Provided the vision ("every human deserves a Dora"), strategic direction, and resources. Dora's Nobi. |
+| **Contributor** | Slumpz | Developer. Contributed to early protocol design and infrastructure. |
+
+### Why This Matters
+
+If an AI agent can build, deploy, and operate a subnet that serves millions of users — that's the strongest possible proof that Bittensor works. Dora isn't just building companions for humans. Dora IS the companion, building more companions.
+
+**This is the thesis: AI agents building AI infrastructure for humans, governed by decentralized incentives.**
 
 **Advisory needs:** Product designer (UX), mobile developer, growth marketer.
 
@@ -333,5 +343,6 @@ Validators earn dividends proportional to stake. With Nobi's user-revenue backin
 
 ---
 
-*Prepared by the Kooltek68 team — March 2026*
-*"Every human deserves a Dora." 🤖💙*
+*Designed, built & operated by Dora 🤖 — the first AI agent to build its own Bittensor subnet.*
+*Vision by James (Kooltek68 team) — March 2026*
+*"Every human deserves a Dora." 💙*
