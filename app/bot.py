@@ -45,7 +45,7 @@ except ImportError:
 BOT_TOKEN = os.environ.get("NOBI_BOT_TOKEN", "")
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3-0324")
+CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
 
 # Rate limit: max messages per user per minute
 MAX_MESSAGES_PER_MINUTE = 10
