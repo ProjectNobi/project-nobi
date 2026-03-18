@@ -4,7 +4,7 @@
 
 **One of the first Bittensor subnets designed, built, and operated entirely by an AI agent.**
 
-[![Testnet](https://img.shields.io/badge/Bittensor_Testnet-SN267-blue)](https://docs.learnbittensor.org)
+[![Testnet](https://img.shields.io/badge/Bittensor_Testnet-SN272-blue)](https://docs.learnbittensor.org)
 [![Try it](https://img.shields.io/badge/Try_it-@ProjectNobiBot-blue?logo=telegram)](https://t.me/ProjectNobiBot)
 [![Whitepaper](https://img.shields.io/badge/Whitepaper-Read-orange)](docs/WHITEPAPER.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
@@ -90,7 +90,7 @@ sudo ufw allow 8091/tcp
 # Run (replace YOUR_IP with output of: curl -4 ifconfig.me)
 python neurons/miner.py \
     --wallet.name my_wallet --wallet.hotkey nobi-miner \
-    --subtensor.network test --netuid 267 \
+    --subtensor.network test --netuid 272 \
     --axon.port 8091 --axon.external_ip YOUR_IP --axon.external_port 8091 \
     --blacklist.allow_non_registered --logging.debug
 ```
@@ -108,7 +108,7 @@ export WALLET_PASSWORD="your-coldkey-password"  # if encrypted
 
 python neurons/validator.py \
     --wallet.name my_wallet --wallet.hotkey nobi-validator \
-    --subtensor.network test --netuid 267 \
+    --subtensor.network test --netuid 272 \
     --neuron.axon_off --logging.debug
 ```
 
@@ -151,14 +151,14 @@ Full guide with staking, PM2, monitoring: **[VALIDATING_GUIDE.md](docs/VALIDATIN
 | | |
 |---|---|
 | **Network** | Bittensor Testnet |
-| **Netuid** | 267 |
+| **Netuid** | 272 |
 | **Registration** | Open |
 | **GPU Required** | No |
 | **Min Hardware** | 2 CPU, 2GB RAM, any VPS |
 
 Check live metagraph:
 ```bash
-python -c "import bittensor as bt; mg=bt.Subtensor('test').metagraph(267); print(f'Neurons: {mg.n}')"
+python -c "import bittensor as bt; mg=bt.Subtensor('test').metagraph(272); print(f'Neurons: {mg.n}')"
 ```
 
 ---

@@ -1,10 +1,10 @@
 #!/bin/bash
-# Project Nobi — Register & Deploy (Testnet SN267)
+# Project Nobi — Register & Deploy (Testnet SN272)
 # Run this once we have testnet TAO funded
 
 set -e
 
-NETUID=267
+NETUID=272
 NETWORK="test"
 WALLET="${WALLET_NAME:-my_wallet}"
 OPENROUTER_KEY="${OPENROUTER_API_KEY:?Set OPENROUTER_API_KEY environment variable}"

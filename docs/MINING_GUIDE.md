@@ -72,7 +72,7 @@ btcli wallet new-hotkey --wallet.name my_wallet --wallet.hotkey nobi-miner
 
 # Register on testnet (costs minimal tTAO)
 btcli subnets register \
-    --netuid 267 \
+    --netuid 272 \
     --wallet.name my_wallet \
     --wallet.hotkey nobi-miner \
     --subtensor.network test
@@ -115,7 +115,7 @@ python neurons/miner.py \
     --wallet.name my_wallet \
     --wallet.hotkey nobi-miner \
     --subtensor.network test \
-    --netuid 267 \
+    --netuid 272 \
     --axon.port 8091 \
     --axon.external_ip YOUR_PUBLIC_IP \
     --axon.external_port 8091 \
@@ -137,7 +137,7 @@ pm2 start python3 --name nobi-miner -- \
     --wallet.name my_wallet \
     --wallet.hotkey nobi-miner \
     --subtensor.network test \
-    --netuid 267 \
+    --netuid 272 \
     --axon.port 8091 \
     --axon.external_ip YOUR_PUBLIC_IP \
     --axon.external_port 8091 \
@@ -157,7 +157,7 @@ pm2 logs nobi-miner --lines 20
 python -c "
 import bittensor as bt
 sub = bt.Subtensor(network='test')
-mg = sub.metagraph(267)
+mg = sub.metagraph(272)
 w = bt.Wallet(name='my_wallet', hotkey='nobi-miner')
 hk = w.hotkey.ss58_address
 if hk in mg.hotkeys:
@@ -237,7 +237,7 @@ Tips: use a server geographically close to validators, use connection pooling, p
 | Problem | Solution |
 |---------|----------|
 | `ModuleNotFoundError: nobi` | Run `pip install -e .` from project root |
-| `Not registered` | Run `btcli subnets register --netuid 267 ...` |
+| `Not registered` | Run `btcli subnets register --netuid 272 ...` |
 | `Connection refused` on axon | Check firewall (`ufw allow 8091/tcp`), verify external IP is correct |
 | `LLM API error` | Check API key, try `curl` to test: `curl https://llm.chutes.ai/v1/models -H "Authorization: Bearer $CHUTES_API_KEY"` |
 | `Wrong password` / `DecryptionError` | Set `WALLET_PASSWORD` env var, or recreate wallet without password |

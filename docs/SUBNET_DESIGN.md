@@ -5,7 +5,7 @@
 
 ## Overview
 
-A Bittensor subnet (testnet SN267) where miners compete to provide the best personal AI companion experience. Validators score miners on response quality, memory recall, and reliability.
+A Bittensor subnet (testnet SN272) where miners compete to provide the best personal AI companion experience. Validators score miners on response quality, memory recall, and reliability.
 
 ## Synapse Protocol
 
@@ -198,7 +198,7 @@ Validator
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| `netuid` | 267 (testnet) | Subnet identifier |
+| `netuid` | 272 (testnet) | Subnet identifier |
 | `tempo` | 99 blocks (~20 min) | Weight update interval |
 | `max_validators` | 64 | Maximum validator slots |
 | `immunity_period` | 5000 blocks | New miner grace period |

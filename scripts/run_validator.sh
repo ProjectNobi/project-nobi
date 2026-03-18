@@ -12,7 +12,7 @@ fi
 
 WALLET_NAME="${WALLET_NAME:-my_wallet}"
 WALLET_HOTKEY="${WALLET_HOTKEY:-nobi-validator}"
-NETUID="${NETUID:-267}"
+NETUID="${NETUID:-272}"
 NETWORK="${NETWORK:-test}"
 
 pm2 delete nobi-validator 2>/dev/null || true

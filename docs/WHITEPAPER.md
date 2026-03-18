@@ -10,7 +10,7 @@
 
 ## Abstract
 
-We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants that forget users between sessions and operate under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces three key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, and (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification and latency measurement. We demonstrate the system's viability through testnet deployment on Bittensor SN267 and stress testing at 500-node scale with 99.75% reliability. We further outline a **planned federated privacy architecture** — grounded in McMahan et al. (2016) — that will enable user memories to remain on-device, with only model weights (never raw data) shared across the network. This roadmap directly addresses the current plaintext memory limitation and positions Nobi as a privacy-first platform as it matures toward mainnet.
+We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants that forget users between sessions and operate under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces three key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, and (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification and latency measurement. We demonstrate the system's viability through testnet deployment on Bittensor SN272 and stress testing at 500-node scale with 99.75% reliability. We further outline a **planned federated privacy architecture** — grounded in McMahan et al. (2016) — that will enable user memories to remain on-device, with only model weights (never raw data) shared across the network. This roadmap directly addresses the current plaintext memory limitation and positions Nobi as a privacy-first platform as it matures toward mainnet.
 
 ---
 
@@ -285,12 +285,12 @@ Memory extraction accuracy on test corpus:
 
 ### 4.3 Testnet Deployment
 
-Project Nobi is deployed on Bittensor testnet as SN267:
+Project Nobi is deployed on Bittensor testnet as SN272:
 
 | Parameter | Value |
 |-----------|-------|
 | Network | Bittensor Testnet |
-| Netuid | 267 |
+| Netuid | 272 |
 | Registered neurons | 5 |
 | Active miners | 1 (miner UID 3) |
 | Active validators | 1 (validator UID 4) |

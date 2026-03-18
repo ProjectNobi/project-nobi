@@ -2,7 +2,7 @@
 # Project Nobi — Live Monitor
 # Shows on-chain state + PM2 status
 
-NETUID=267
+NETUID=272
 NETWORK="test"
 
 while true; do

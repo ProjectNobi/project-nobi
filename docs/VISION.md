@@ -152,7 +152,7 @@ USER talks to Dora (Telegram / Web / Mobile app)
 - [x] Persistent memory protocol (SQLite, auto-extraction)
 - [x] Anti-gaming measures (heuristic cap, fake user IDs, dynamic queries)
 - [x] 500-node stress test (2000 queries, 99.75% success rate)
-- [x] Testnet deployment (SN267, validator + miner live)
+- [x] Testnet deployment (SN272, validator + miner live)
 - [x] Reference Telegram bot (@ProjectNobiBot)
 - [x] Full documentation and business plan
 

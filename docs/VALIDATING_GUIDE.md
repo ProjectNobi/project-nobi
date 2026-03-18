@@ -47,7 +47,7 @@ btcli wallet new-hotkey --wallet.name my_validator_wallet --wallet.hotkey nobi-v
 
 # Register on testnet
 btcli subnets register \
-    --netuid 267 \
+    --netuid 272 \
     --wallet.name my_validator_wallet \
     --wallet.hotkey nobi-validator \
     --subtensor.network test
@@ -62,14 +62,14 @@ You need enough stake to be in the **top 64 validators** by stake on the subnet.
 btcli stake add \
     --wallet.name my_validator_wallet \
     --wallet.hotkey nobi-validator \
-    --netuid 267 \
+    --netuid 272 \
     --subtensor.network test
 
 # Check if you have a validator permit
 python -c "
 import bittensor as bt
 sub = bt.Subtensor(network='test')
-mg = sub.metagraph(267)
+mg = sub.metagraph(272)
 w = bt.Wallet(name='my_validator_wallet', hotkey='nobi-validator')
 hk = w.hotkey.ss58_address
 if hk in mg.hotkeys:
@@ -106,7 +106,7 @@ python neurons/validator.py \
     --wallet.name my_validator_wallet \
     --wallet.hotkey nobi-validator \
     --subtensor.network test \
-    --netuid 267 \
+    --netuid 272 \
     --neuron.epoch_length 100 \
     --neuron.sample_size 10 \
     --neuron.axon_off \
@@ -124,7 +124,7 @@ pm2 start python3 --name nobi-validator -- \
     --wallet.name my_validator_wallet \
     --wallet.hotkey nobi-validator \
     --subtensor.network test \
-    --netuid 267 \
+    --netuid 272 \
     --neuron.epoch_length 100 \
     --neuron.sample_size 10 \
     --neuron.axon_off \
@@ -206,7 +206,7 @@ Every ~20 seconds, the validator:
 python -c "
 import bittensor as bt
 sub = bt.Subtensor(network='test')
-mg = sub.metagraph(267)
+mg = sub.metagraph(272)
 print(f'Neurons: {mg.n}')
 for uid in range(mg.n):
     s = float(mg.S[uid])

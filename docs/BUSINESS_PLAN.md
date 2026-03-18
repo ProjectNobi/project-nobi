@@ -13,7 +13,7 @@ Project Nobi is building the decentralized infrastructure layer for personal AI 
 
 Nobi's answer: **you do.** Built on Bittensor's decentralized incentive network, Nobi creates a competitive marketplace where hundreds of miners compete to build the best companion — driving quality up and costs down, while users retain ownership of their data and memories.
 
-**Current status:** Working product on Bittensor testnet (SN267), live Telegram bot (@ProjectNobiBot), stress-tested at 500-node scale, community launch imminent.
+**Current status:** Working product on Bittensor testnet (SN272), live Telegram bot (@ProjectNobiBot), stress-tested at 500-node scale, community launch imminent.
 
 ---
 
@@ -246,7 +246,7 @@ Validators earn dividends proportional to stake. With Nobi's user-revenue backin
 - [x] LLM-as-judge scoring with dynamic queries
 - [x] Anti-gaming measures (heuristic cap, fake user IDs, dynamic generation)
 - [x] 500-node stress test (2000 queries, 99.75% success)
-- [x] Testnet deployment (SN267, live)
+- [x] Testnet deployment (SN272, live)
 - [x] Reference Telegram bot (@ProjectNobiBot)
 - [x] Full documentation suite
 
