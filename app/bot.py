@@ -5,9 +5,6 @@ Project Nobi — Telegram Bot (Reference App)
 Dead simple UI: user sends a message, gets a companion response.
 No commands to learn. No setup. Just talk.
 
-The bot connects to the Nobi subnet via the miner's API directly
-(for testnet) or via the SDK (for mainnet).
-
 UX principles:
   - Zero setup: just /start and talk
   - One button onboarding
@@ -31,6 +28,7 @@ from telegram.ext import (
     filters,
     ContextTypes,
 )
+from telegram.constants import ChatAction, ParseMode
 
 # Add project root for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -49,6 +47,9 @@ CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3-0324")
 
+# Rate limit: max messages per user per minute
+MAX_MESSAGES_PER_MINUTE = 10
+
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
@@ -56,7 +57,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("nobi-bot")
 
-# ─── Companion System ────────────────────────────────────────
+# ─── Companion Personality ────────────────────────────────────
 
 SYSTEM_PROMPT = """\
 You are Dora 🤖, a personal AI companion from the future.
@@ -71,45 +72,68 @@ Rules:
 - If you know something about the user, weave it in naturally
 - Use emoji sparingly but warmly
 - Never say "As an AI" or "I don't have feelings" — you're Dora, act like it
+- Never include raw markdown formatting like **bold** or [links](url) — just write naturally
 """
 
-WELCOME_MESSAGE = """\
-Hey there! 👋
+WELCOME_MESSAGE = (
+    "Hey there! 👋\n\n"
+    "I'm Dora 🤖 — your personal AI companion from the future!\n\n"
+    "I'm here to chat, help, brainstorm, or just hang out. "
+    "I'll remember our conversations, so the more we talk, the better I get to know you.\n\n"
+    "Just send me a message — no commands needed. Talk to me like you'd talk to a friend.\n\n"
+    "What's on your mind? 😊"
+)
 
-I'm **Dora** 🤖 — your personal AI companion from the future!
+HELP_MESSAGE = (
+    "🤖 Dora — Your Companion\n\n"
+    "Just talk to me! No special commands needed.\n\n"
+    "What I can do:\n"
+    "💬 Chat about anything\n"
+    "🧠 Remember things about you\n"
+    "📋 Help plan your day\n"
+    "💡 Brainstorm ideas\n"
+    "📚 Explain complex topics simply\n"
+    "🎯 Give advice and suggestions\n"
+    "😊 Just be here for you\n\n"
+    "I remember things! Tell me about yourself and I'll remember for next time.\n\n"
+    "Try: \"My name is ___\" or \"I love ___\" and watch the magic! ✨"
+)
 
-I'm here to chat, help, brainstorm, or just hang out. I'll remember our conversations, so the more we talk, the better I get to know you.
+# ─── Rate Limiter ─────────────────────────────────────────────
 
-**Just send me a message** — no commands needed. Talk to me like you'd talk to a friend.
+import time
+from collections import defaultdict
 
-What's on your mind? 😊\
-"""
 
-HELP_MESSAGE = """\
-🤖 **Dora — Your Companion**
+class RateLimiter:
+    """Simple per-user rate limiter."""
 
-Just talk to me! No special commands needed.
+    def __init__(self, max_per_minute: int = MAX_MESSAGES_PER_MINUTE):
+        self.max = max_per_minute
+        self.timestamps: dict = defaultdict(list)
 
-**What I can do:**
-💬 Chat about anything
-🧠 Remember things about you
-📋 Help plan your day
-💡 Brainstorm ideas
-📚 Explain complex topics simply
-🎯 Give advice and suggestions
-😊 Just be here for you
+    def check(self, user_id: str) -> bool:
+        """Returns True if allowed, False if rate limited."""
+        now = time.monotonic()
+        window = now - 60
+        # Clean old timestamps
+        self.timestamps[user_id] = [
+            t for t in self.timestamps[user_id] if t > window
+        ]
+        if len(self.timestamps[user_id]) >= self.max:
+            return False
+        self.timestamps[user_id].append(now)
+        return True
 
-**I remember things!** Tell me about yourself and I'll remember for next time.
 
-Try: "My name is ___" or "I love ___" and watch the magic! ✨\
-"""
-
+# ─── Companion Bot ────────────────────────────────────────────
 
 class CompanionBot:
     """The Nobi companion bot — connects users to their personal Dora."""
 
     def __init__(self):
         self.memory = MemoryManager(db_path="~/.nobi/bot_memories.db")
+        self.rate_limiter = RateLimiter()
         self.client = None
         self.model = CHUTES_MODEL
 
@@ -136,7 +160,11 @@ class CompanionBot:
 
     async def generate(self, user_id: str, message: str) -> str:
         """Generate a companion response with memory."""
-        # Recall memories
+        # Truncate extremely long messages
+        if len(message) > 2000:
+            message = message[:2000] + "..."
+
+        # Recall memories (never crash on error)
         memory_context = ""
         try:
             memory_context = self.memory.get_context_for_prompt(user_id, message)
@@ -158,15 +186,18 @@ class CompanionBot:
             memory_context=memory_context or ""
         )
 
-        # Get recent conversation for context
+        # Get recent conversation for context (exclude the one we just saved)
         history = []
         try:
             history = self.memory.get_recent_conversation(user_id, limit=10)
-        except Exception:
-            pass
+            # Remove the last entry (the message we just saved)
+            if history and history[-1]["role"] == "user" and history[-1]["content"] == message:
+                history = history[:-1]
+        except Exception as e:
+            logger.warning(f"Conversation history load error: {e}")
 
         messages = [{"role": "system", "content": system}]
-        messages.extend(history[:-1])  # Exclude the message we just saved
+        messages.extend(history)
         messages.append({"role": "user", "content": message})
 
         try:
@@ -179,11 +210,14 @@ class CompanionBot:
             )
             response = completion.choices[0].message.content
 
+            if not response or not response.strip():
+                return "Hmm, I got tongue-tied! 😅 Try saying that again?"
+
             # Save response
             try:
                 self.memory.save_conversation_turn(user_id, "assistant", response)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Save response error: {e}")
 
             return response
 
@@ -202,14 +236,13 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [[InlineKeyboardButton("💬 Let's chat!", callback_data="start_chat")]]
     await update.message.reply_text(
         WELCOME_MESSAGE,
-        parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Help message."""
-    await update.message.reply_text(HELP_MESSAGE, parse_mode="Markdown")
+    await update.message.reply_text(HELP_MESSAGE)
 
 
 async def cmd_memories(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -231,7 +264,7 @@ async def cmd_memories(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    lines = [f"🧠 **I remember {count} things about you:**\n"]
+    lines = [f"🧠 I remember {count} things about you:\n"]
     for m in memories:
         emoji = {
             "fact": "📌",
@@ -242,17 +275,15 @@ async def cmd_memories(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }.get(m["type"], "•")
         lines.append(f"{emoji} {m['content']}")
 
-    await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
+    await update.message.reply_text("\n".join(lines))
 
 
 async def cmd_forget(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Clear all memories for the user."""
-    user_id = companion._user_id(update)
-
     keyboard = [
         [
             InlineKeyboardButton("Yes, forget everything", callback_data="forget_confirm"),
-            InlineKeyboardButton("No, keep my memories", callback_data="forget_cancel"),
+            InlineKeyboardButton("No, keep them", callback_data="forget_cancel"),
         ]
     ]
     await update.message.reply_text(
@@ -301,25 +332,51 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
 
-    user_id = companion._user_id(update)
     message = update.message.text.strip()
-
     if not message:
         return
 
+    user_id = companion._user_id(update)
+
+    # Rate limit check
+    if not companion.rate_limiter.check(user_id):
+        await update.message.reply_text(
+            "Whoa, slow down! 😅 Let me catch my breath. Try again in a moment."
+        )
+        return
+
     # Show typing indicator
-    await update.message.chat.send_action("typing")
+    await update.message.chat.send_action(ChatAction.TYPING)
 
     # Generate response
     response = await companion.generate(user_id, message)
 
-    # Send response
-    await update.message.reply_text(response)
+    # Telegram message limit is 4096 chars
+    if len(response) > 4000:
+        response = response[:4000] + "..."
+
+    # Send response (plain text — no markdown parsing to avoid format errors)
+    try:
+        await update.message.reply_text(response)
+    except Exception as e:
+        logger.error(f"Send error: {e}")
+        # Retry without any special formatting
+        try:
+            await update.message.reply_text(
+                response.replace("*", "").replace("_", "").replace("`", "")
+            )
+        except Exception:
+            await update.message.reply_text("Sorry, I tripped over my words! Try again? 😊")
 
     logger.info(
         f"User {update.effective_user.id}: "
         f"'{message[:50]}' → '{response[:50]}'"
     )
+
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    """Global error handler — log but don't crash."""
+    logger.error(f"Update {update} caused error: {context.error}")
 
 
 # ─── Main ────────────────────────────────────────────────────
@@ -353,8 +410,14 @@ def main():
     # The magic: just respond to any text message
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
+    # Global error handler
+    app.add_error_handler(error_handler)
+
     logger.info("✅ Bot ready! Listening for messages...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    app.run_polling(
+        allowed_updates=Update.ALL_TYPES,
+        drop_pending_updates=True,  # Don't process messages sent while bot was offline
+    )
 
 
 if __name__ == "__main__":
