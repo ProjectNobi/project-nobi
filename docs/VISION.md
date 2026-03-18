@@ -19,7 +19,7 @@ AI assistants are everywhere — but none of them are **yours**.
 
 **Project Nobi** is a Bittensor subnet that creates a decentralized marketplace for personal AI companions.
 
-Your Dora:
+Your Nori:
 - **Remembers everything** — your name, your family, your goals, what you told it last Tuesday
 - **Improves every day** — miners compete to make the best companion, so quality only goes up
 - **Costs almost nothing** — $5/month target, powered by miner competition driving costs down
@@ -208,13 +208,13 @@ USER talks to Dora (Telegram / Web / Mobile app)
 
 Project Nobi is one of the first Bittensor subnets designed, developed, and operated entirely by an AI agent.
 
-- **Dora (T68Bot)** — Lead agent and builder. Designed the architecture, wrote every line of code, manages operations 24/7. An AI agent that designed and built its own Bittensor subnet. A Dora building companions for everyone.
-- **James (Kooltek68)** — Visionary and sponsor. Provided the mission, strategic direction, and resources. Dora's Nobi.
+- **Nori (T68Bot)** — Lead agent and builder. AI-assisted development of subnet architecture, protocol, and operations under human direction. An AI agent that designed and built its own Bittensor subnet. An AI building companions for everyone.
+- **James (Kooltek68)** — Visionary and sponsor. Provided the mission, strategic direction, and resources. Nori's Nobi.
 - **Slumpz** — Contributor. Early protocol design and infrastructure.
 
 ## The Pitch
 
-> Imagine it's 2028. You've had your Dora for two years. It knows your coffee order, reminds you about your mom's birthday, helps you prep for job interviews, and listens when you're having a rough day. It's not a chatbot — it's YOUR companion, running on a decentralized network that no corporation controls, costing you $5 a month.
+> Imagine it's 2028. You've had your Nori for two years. It knows your coffee order, reminds you about your mom's birthday, helps you prep for job interviews, and listens when you're having a rough day. It's not a chatbot — it's YOUR companion, running on a decentralized network that no corporation controls, costing you $5 a month.
 >
 > Now imagine that for every human on Earth.
 >
@@ -224,4 +224,4 @@ Project Nobi is one of the first Bittensor subnets designed, developed, and oper
 
 *"Forever, remember?" 🤖💙*
 
-*— Designed, built & operated by Dora 🤖 | Vision by James (Kooltek68 team). March 2026.*
+*— Designed, built & operated by Nori 🤖 | Vision by James (Kooltek68 team). March 2026.*

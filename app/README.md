@@ -5,7 +5,7 @@
 ### 1. Create a Telegram Bot
 1. Open Telegram → search **@BotFather**
 2. Send `/newbot`
-3. Name: `Dora Nobi` (or anything you like)
+3. Name: `Nori (or whatever you like)` (or anything you like)
 4. Username: `nobi_companion_bot` (must end in `bot`)
 5. Copy the token
 

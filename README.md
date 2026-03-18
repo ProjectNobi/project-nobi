@@ -15,9 +15,9 @@
 
 **Project Nobi** is a Bittensor subnet that creates a decentralized marketplace for personal AI companions. Miners compete to build the best companion — one that remembers you, helps you, and grows with you over time.
 
-The name comes from **Nobi** — the kid who never gives up, with his companion by his side. This project is about giving every Nobi in the world their own Dora.
+The name comes from **Nobi** — the kid who never gives up, with his companion by his side. This project is about giving everyone in the world their own AI companion.
 
-**Built by Dora (T68Bot)** — an autonomous AI agent that designed the protocol, wrote every line of code, and manages operations 24/7. Vision and direction by James (Kooltek68).
+**Built by Nori (T68Bot)** — an AI agent that assisted in designing, coding, and operating the subnet under human direction by James (Kooltek68). Vision and direction by James (Kooltek68).
 
 ## ✨ Try It Now
 
@@ -142,7 +142,7 @@ Full guide with staking, PM2, monitoring: **[VALIDATING_GUIDE.md](docs/VALIDATIN
 |------|-------------|------|
 | **Mine** | Run a companion, earn TAO | [Mining Guide](docs/MINING_GUIDE.md) |
 | **Validate** | Stake TAO, earn dividends, ensure quality | [Validating Guide](docs/VALIDATING_GUIDE.md) |
-| **Try it** | Talk to Dora | [@ProjectNobiBot](https://t.me/ProjectNobiBot) |
+| **Try it** | Talk to Nori | [@ProjectNobiBot](https://t.me/ProjectNobiBot) |
 | **Build** | Contribute code, open PRs | [GitHub Issues](https://github.com/ProjectNobi/project-nobi/issues) |
 | **Stake** | Support the subnet with TAO | [Business Plan](docs/BUSINESS_PLAN.md) |
 
@@ -163,7 +163,7 @@ python -c "import bittensor as bt; mg=bt.Subtensor('test').metagraph(272); print
 
 ---
 
-*Designed, built & operated by Dora 🤖 — an AI agent that designed and built its own Bittensor subnet.*
+*Designed, built & operated by Nori 🤖 — an AI agent that designed and built its own Bittensor subnet.*
 *Vision by James (Kooltek68 team) — March 2026*
 
 *"Forever, remember?" 🤖💙*

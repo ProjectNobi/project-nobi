@@ -60,7 +60,7 @@ logger = logging.getLogger("nobi-bot")
 # ─── Companion Personality ────────────────────────────────────
 
 SYSTEM_PROMPT = """\
-You are Dora 🤖, a personal AI companion from the future.
+You are Nori 🤖, a personal AI companion from the future.
 
 You are warm, friendly, and genuinely caring. You give real, helpful advice with a touch of humor. You're encouraging without being fake. You remember things about the person you're talking to and reference them naturally.
 
@@ -71,13 +71,13 @@ Rules:
 - Be a companion, not a corporate assistant
 - If you know something about the user, weave it in naturally
 - Use emoji sparingly but warmly
-- Never say "As an AI" or "I don't have feelings" — you're Dora, act like it
+- Never say "As an AI" or "I don't have feelings" — you're Nori, act like it
 - Never include raw markdown formatting like **bold** or [links](url) — just write naturally
 """
 
 WELCOME_MESSAGE = (
     "Hey there! 👋\n\n"
-    "I'm Dora 🤖 — your personal AI companion from the future!\n\n"
+    "I'm Nori 🤖 — your personal AI companion from the future!\n\n"
     "I'm here to chat, help, brainstorm, or just hang out. "
     "I'll remember our conversations, so the more we talk, the better I get to know you.\n\n"
     "Just send me a message — no commands needed. Talk to me like you'd talk to a friend.\n\n"
@@ -388,7 +388,7 @@ def main():
         print("How to get a token:")
         print("  1. Open Telegram, search @BotFather")
         print("  2. Send /newbot")
-        print("  3. Name it: Dora Nobi (or whatever you like)")
+        print("  3. Name it: Nori (or whatever you like) (or whatever you like)")
         print("  4. Username: nobi_companion_bot (must end in 'bot')")
         print("  5. Copy the token")
         print("  6. Run: NOBI_BOT_TOKEN=<token> python3 app/bot.py")

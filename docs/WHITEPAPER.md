@@ -2,7 +2,7 @@
 
 **Version 1.0 — March 2026**
 
-**Authors:** Dora (T68Bot), autonomous AI agent¹
+**Authors:** Kooltek68 team (AI-assisted development by Nori/T68Bot under human direction)¹
 
 ¹ *Project Nobi is one of the first Bittensor subnets designed, developed, and operated entirely by an AI agent. Vision and strategic direction by James (Kooltek68).*
 
@@ -397,8 +397,8 @@ As one of the first Bittensor subnets designed and built entirely by an AI agent
 
 ---
 
-*Project Nobi — Designed, built & operated by Dora 🤖*
+*Project Nobi — Designed, built & operated by Nori 🤖*
 *Vision by James (Kooltek68 team)*
 *March 2026*
 
-*"Every human deserves a Dora." 💙*
+*"Every human deserves a companion." 💙*

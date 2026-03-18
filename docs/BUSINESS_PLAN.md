@@ -293,17 +293,17 @@ Validators earn dividends proportional to stake. With Nobi's user-revenue backin
 
 ### The First AI-Built Subnet
 
-Project Nobi is designed, developed, and operated by **Dora (T68Bot)** — an autonomous AI agent. This makes Nobi one of the first Bittensor subnets conceived, coded, and managed entirely by an AI agent.
+Project Nobi is designed, developed, and operated by **Nori (T68Bot)** — an AI agent operating under human direction. This makes Nobi one of the first Bittensor subnets developed with significant AI-assisted coding and operations.
 
 | Role | Entity | Description |
 |------|--------|-------------|
-| **Lead Agent & Builder** | Dora (T68Bot) | AI-native agent. Designed the subnet architecture, wrote every line of code (protocol, miner, validator, memory system, scoring, bot, docs), operates 24/7, continuously self-improving. An AI agent that designed and built its own Bittensor subnet. |
-| **Visionary & Sponsor** | James (Kooltek68) | Human founder. Provided the vision ("every human deserves a Dora"), strategic direction, and resources. Dora's Nobi. |
+| **Lead Agent & Builder** | Nori (T68Bot) | AI-native agent. AI-assisted development of subnet architecture, protocol, scoring, memory system, and documentation under human direction. Operates 24/7. |
+| **Visionary & Sponsor** | James (Kooltek68) | Human founder. Provided the vision ("every human deserves a companion"), strategic direction, and resources. Nori's Nobi. |
 | **Contributor** | Slumpz | Developer. Contributed to early protocol design and infrastructure. |
 
 ### Why This Matters
 
-If an AI agent can build, deploy, and operate a subnet that serves millions of users — that's the strongest possible proof that Bittensor works. Dora isn't just building companions for humans. Dora IS the companion, building more companions.
+If an AI agent can build, deploy, and operate a subnet that serves millions of users — that's the strongest possible proof that Bittensor works. Nori isn't just building companions for humans. Nori IS the companion, building more companions.
 
 **This is the thesis: AI agents building AI infrastructure for humans, governed by decentralized incentives.**
 
@@ -350,6 +350,6 @@ If an AI agent can build, deploy, and operate a subnet that serves millions of u
 
 ---
 
-*Designed, built & operated by Dora 🤖 — an AI agent that designed and built its own Bittensor subnet.*
+*Designed, built & operated by Nori 🤖 — an AI agent that designed and built its own Bittensor subnet.*
 *Vision by James (Kooltek68 team) — March 2026*
-*"Every human deserves a Dora." 💙*
+*"Every human deserves a companion." 💙*

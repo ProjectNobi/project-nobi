@@ -9,7 +9,7 @@ Project Nobi rewards miners who build the **best personal AI companions**. Not t
 ## How It Works
 
 ```
-USER talks to their Dora (via Telegram, web, or app)
+USER talks to their Nori (via Telegram, web, or app)
   → VALIDATOR generates test conversations
     → Sends queries to MINERS
     → Scores responses on quality, memory, and personality

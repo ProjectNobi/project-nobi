@@ -1,5 +1,6 @@
 # Project Nobi — Base Miner Neuron
-# Adapted from bittensor-subnet-template
+# Portions adapted from opentensor/bittensor-subnet-template (MIT License)
+# Copyright (c) 2023 Opentensor. See THIRD_PARTY_NOTICES.md
 
 import time
 import asyncio

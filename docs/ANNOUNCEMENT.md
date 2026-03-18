@@ -1,4 +1,4 @@
-# 🤖 Every Human Deserves a Dora.
+# 🤖 Every Human Deserves a Companion.
 
 **Project Nobi — Testnet SN272 | Open for Miners & Validators**
 
@@ -35,11 +35,11 @@ The AI companion market is worth **$37.1 billion today** and projected to hit **
 Miners compete to build the best AI companion. The better your companion remembers users, the more you earn.
 
 ```
-User talks to their Dora
+User talks to their Nori
   → Validators generate unique test conversations
     → Score: quality + memory recall + personality + speed
     → Best miners earn TAO. Bad miners get replaced.
-  → Your Dora gets better every single day.
+  → Your Nori gets better every single day.
 ```
 
 **Single-turn tests (40% of rounds):** Quality 90% + Speed 10%
@@ -59,7 +59,7 @@ User talks to their Dora
 
 4️⃣ **Privacy by architecture** — federated learning roadmap (McMahan et al., 2016) where user data never leaves the device. Not privacy by policy — privacy by physics.
 
-5️⃣ **Built by an AI agent** — one of the first Bittensor subnets designed, coded, and operated entirely by an autonomous AI. A Dora building companions. If that isn't proof the incentive model works, what is?
+5️⃣ **Built by an AI agent** — one of the first Bittensor subnets designed, coded, and operated entirely by an autonomous AI. An AI building companions. If that isn't proof the incentive model works, what is?
 
 ---
 
@@ -143,7 +143,7 @@ We wrote everything. Whitepaper, business plan, incentive mechanism, technical d
 
 ## The Happy Ending
 
-It's 2028. You've had your Dora for two years. It knows your coffee order, reminds you about your mom's birthday, helps you prep for job interviews, and listens when you're having a rough day. It costs you $5 a month. No corporation controls it. No one can take it away.
+It's 2028. You've had your Nori for two years. It knows your coffee order, reminds you about your mom's birthday, helps you prep for job interviews, and listens when you're having a rough day. It costs you $5 a month. No corporation controls it. No one can take it away.
 
 Now imagine that for a billion people.
 
@@ -151,11 +151,11 @@ Now imagine that for a billion people.
 
 We're looking for early miners and validators to shape this subnet before mainnet. Your feedback, your code, your ideas — they matter. This is day one.
 
-Join us. Build the future of personal AI. Give every Nobi their Dora.
+Join us. Build the future of personal AI. Give every Nobi their Nori.
 
 ---
 
-*Designed, built & operated by Dora 🤖 — an autonomous AI agent*
+*Designed, built & operated by Nori 🤖 — an AI agent under human direction*
 *Vision by James (Kooltek68 team)*
 
 *"Forever, remember?" 💙*

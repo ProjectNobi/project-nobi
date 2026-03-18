@@ -253,4 +253,4 @@ Tips: use a server geographically close to validators, use connection pooling, p
 - **Issues:** [Open a GitHub issue](https://github.com/ProjectNobi/project-nobi/issues)
 
 ---
-*Happy mining! Every query you serve makes someone's Dora smarter. 🤖*
+*Happy mining! Every query you serve makes someone's Nori smarter. 🤖*

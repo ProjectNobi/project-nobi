@@ -225,4 +225,4 @@ for uid in range(mg.n):
 - **Issues:** [Open a GitHub issue](https://github.com/ProjectNobi/project-nobi/issues)
 
 ---
-*By validating, you're ensuring every human gets a quality Dora. Thank you. 🤖*
+*By validating, you're ensuring every human gets a quality Nori. Thank you. 🤖*
