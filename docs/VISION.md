@@ -57,7 +57,7 @@ USER talks to Dora (Telegram / Web / Mobile app)
     → VALIDATORS score quality, memory recall, personality, speed
     → WEIGHTS set on-chain → best miners earn most TAO
   → Response returns to user
-  → YOUR DORAEMON improves every day
+  → YOUR COMPANION improves every day
 ```
 
 ## Market Opportunity
@@ -167,7 +167,7 @@ USER talks to Dora (Telegram / Web / Mobile app)
 ### Phase 3: Mainnet Launch (Q3 2026)
 - [ ] Mainnet subnet registration
 - [ ] Subnet routing: bot → validators → miners (replacing direct LLM)
-- [ ] Web app (dora.nobi.ai)
+- [ ] Web app (app.nobi.ai)
 - [ ] Mobile app (iOS + Android)
 - [ ] 10,000+ users, first subscription revenue
 - [ ] **[Federated Milestone]** Mobile app ships with on-device memory storage (memories stay on your phone, not on miner machines)

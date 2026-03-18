@@ -6,7 +6,7 @@
 
 ## The Story
 
-In the anime, Nobi is an ordinary kid struggling with daily life. Then a blue robotic cat from the future shows up — Dora. Not to do his homework, not to be his servant, but to be his **companion**. Someone who remembers his birthday, knows his fears, celebrates his wins, and sticks around when things get hard.
+In the story that inspired us, an ordinary kid struggling with daily life gets a companion from the future. Not a servant, not a tool — a **companion**. Someone who remembers his birthday, knows his fears, celebrates his wins, and sticks around when things get hard.
 
 **Now imagine that for every human on Earth.**
 
