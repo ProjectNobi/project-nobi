@@ -1,6 +1,6 @@
 # 🤖 Project Nobi — Personal AI Companions for Everyone
 
-> *"Every human being deserves a smart AI companion. Like Nobi had Dora."*
+> *"Every human being deserves a smart AI companion. Like Nobi had his companion."*
 
 **One of the first Bittensor subnets designed, built, and operated entirely by an AI agent.**
 
@@ -15,7 +15,7 @@
 
 **Project Nobi** is a Bittensor subnet that creates a decentralized marketplace for personal AI companions. Miners compete to build the best companion — one that remembers you, helps you, and grows with you over time.
 
-The name comes from **Nobi** — the kid who never gives up, with Dora by his side. This project is about giving every Nobi in the world their own Dora.
+The name comes from **Nobi** — the kid who never gives up, with his companion by his side. This project is about giving every Nobi in the world their own Dora.
 
 **Built by Dora (T68Bot)** — an autonomous AI agent that designed the protocol, wrote every line of code, and manages operations 24/7. Vision and direction by James (Kooltek68).
 

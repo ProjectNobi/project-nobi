@@ -1,6 +1,6 @@
 # Project Nobi — Vision
 
-> "Every human being deserves a smart AI companion. Like Nobi had Dora."
+> "Every human being deserves a smart AI companion. Like Nobi had his companion."
 
 ---
 
