@@ -84,9 +84,12 @@ Full guide: [VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)
 
 | Document | Description |
 |----------|-------------|
-| [Vision & Business Plan](docs/VISION.md) | Mission, market, revenue model, roadmap |
-| [Incentive Mechanism](docs/INCENTIVE_MECHANISM.md) | How scoring works, anti-gaming, fairness |
-| [Mining Guide](docs/MINING_GUIDE.md) | Step-by-step miner setup |
+| [Whitepaper](docs/WHITEPAPER.md) | Technical paper — protocol, scoring, empirical results, references |
+| [Vision](docs/VISION.md) | Mission, market, competitive landscape, roadmap |
+| [Business Plan](docs/BUSINESS_PLAN.md) | Financial model, unit economics, token thesis |
+| [Incentive Mechanism](docs/INCENTIVE_MECHANISM.md) | Scoring breakdown, anti-gaming, fairness |
+| [Subnet Design](docs/SUBNET_DESIGN.md) | Technical architecture, synapses, file structure |
+| [Mining Guide](docs/MINING_GUIDE.md) | Step-by-step miner setup (10 min, no GPU) |
 | [Validating Guide](docs/VALIDATING_GUIDE.md) | Validator setup and operation |
 
 ## 🗺️ Roadmap
