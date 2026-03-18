@@ -32,7 +32,7 @@ Just press Start and talk. No setup, no commands. It remembers you.
 | Remembers you | ❌ Resets each session | Barely | ✅ Persistent memory |
 | Data ownership | Company owns it | Company owns it | User controls it¹ |
 | Gets better over time | Quarterly updates | Rarely | ✅ Miners compete daily |
-| Affordable | $20/mo+ | Free (limited) | $5/mo target |
+| Affordable | $20/mo+ | Free (limited) | $4.99/mo target |
 | Single point of failure | Yes | Yes | ✅ No single entity controls it |
 
 ¹ *Memory is stored on individual miner machines with user-controlled deletion. Client-side encryption is on the roadmap. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) for details.*
