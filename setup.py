@@ -40,7 +40,7 @@ setup(
     description="Project Nobi — Bittensor subnet for personal AI companions",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/travellingsoldier85/project-nobi",
+    url="https://github.com/ProjectNobi/project-nobi",
     author="Kooltek68 team",
     packages=find_packages(),
     include_package_data=True,

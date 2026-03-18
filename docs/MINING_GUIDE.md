@@ -43,7 +43,7 @@ Run your own model with vLLM or Ollama, then point the miner at `http://localhos
 
 ```bash
 # Clone the repo
-git clone https://github.com/travellingsoldier85/project-nobi.git
+git clone https://github.com/ProjectNobi/project-nobi.git
 cd project-nobi
 
 # (Recommended) Create a virtual environment
@@ -247,10 +247,10 @@ Tips: use a server geographically close to validators, use connection pooling, p
 
 ## Questions?
 
-- **GitHub:** [project-nobi](https://github.com/travellingsoldier85/project-nobi)
+- **GitHub:** [project-nobi](https://github.com/ProjectNobi/project-nobi)
 - **Discord:** Bittensor testnet channel
 - **Telegram:** [@ProjectNobiBot](https://t.me/ProjectNobiBot) (try the companion yourself!)
-- **Issues:** [Open a GitHub issue](https://github.com/travellingsoldier85/project-nobi/issues)
+- **Issues:** [Open a GitHub issue](https://github.com/ProjectNobi/project-nobi/issues)
 
 ---
 *Happy mining! Every query you serve makes someone's Dora smarter. 🤖*

@@ -24,7 +24,7 @@ As a validator, you:
 
 ```bash
 # Clone
-git clone https://github.com/travellingsoldier85/project-nobi.git
+git clone https://github.com/ProjectNobi/project-nobi.git
 cd project-nobi
 
 # (Recommended) Virtual environment
@@ -219,10 +219,10 @@ for uid in range(mg.n):
 
 ## Questions?
 
-- **GitHub:** [project-nobi](https://github.com/travellingsoldier85/project-nobi)
+- **GitHub:** [project-nobi](https://github.com/ProjectNobi/project-nobi)
 - **Discord:** Bittensor testnet channel
 - **Full scoring details:** [INCENTIVE_MECHANISM.md](INCENTIVE_MECHANISM.md)
-- **Issues:** [Open a GitHub issue](https://github.com/travellingsoldier85/project-nobi/issues)
+- **Issues:** [Open a GitHub issue](https://github.com/ProjectNobi/project-nobi/issues)
 
 ---
 *By validating, you're ensuring every human gets a quality Dora. Thank you. 🤖*

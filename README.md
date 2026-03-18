@@ -73,7 +73,7 @@ Fair, transparent, open source. See [INCENTIVE_MECHANISM.md](docs/INCENTIVE_MECH
 No GPU required. ~15 minute setup.
 
 ```bash
-git clone https://github.com/travellingsoldier85/project-nobi.git
+git clone https://github.com/ProjectNobi/project-nobi.git
 cd project-nobi
 
 # Set up environment
@@ -143,7 +143,7 @@ Full guide with staking, PM2, monitoring: **[VALIDATING_GUIDE.md](docs/VALIDATIN
 | **Mine** | Run a companion, earn TAO | [Mining Guide](docs/MINING_GUIDE.md) |
 | **Validate** | Stake TAO, earn dividends, ensure quality | [Validating Guide](docs/VALIDATING_GUIDE.md) |
 | **Try it** | Talk to Dora | [@ProjectNobiBot](https://t.me/ProjectNobiBot) |
-| **Build** | Contribute code, open PRs | [GitHub Issues](https://github.com/travellingsoldier85/project-nobi/issues) |
+| **Build** | Contribute code, open PRs | [GitHub Issues](https://github.com/ProjectNobi/project-nobi/issues) |
 | **Stake** | Support the subnet with TAO | [Business Plan](docs/BUSINESS_PLAN.md) |
 
 ## 📈 Subnet Info
