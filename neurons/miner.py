@@ -46,7 +46,7 @@ class Miner(BaseMinerNeuron):
         self.memory = MemoryManager(db_path="~/.nobi/memories.db")
         bt.logging.info(f"Memory manager initialized: {self.memory.stats()}")
 
-        # Set up LLM client (Chutes free tier first, OpenRouter as fallback)
+        # Set up LLM client (Chutes low-cost first, OpenRouter as fallback)
         chutes_key = os.environ.get("CHUTES_API_KEY", "")
         openrouter_key = (
             getattr(self.config.neuron, "openrouter_api_key", "")
@@ -60,7 +60,7 @@ class Miner(BaseMinerNeuron):
                 api_key=chutes_key,
             )
             self.model = os.environ.get("CHUTES_MODEL", self.model)
-            bt.logging.info(f"Chutes client initialized (FREE) with model: {self.model}")
+            bt.logging.info(f"Chutes client initialized with model: {self.model}")
         elif openrouter_key and OpenAI is not None:
             self.client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",

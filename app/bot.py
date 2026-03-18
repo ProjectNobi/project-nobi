@@ -137,7 +137,7 @@ class CompanionBot:
         self.client = None
         self.model = CHUTES_MODEL
 
-        # Set up LLM client (Chutes free → OpenRouter fallback)
+        # Set up LLM client (Chutes → OpenRouter fallback)
         if CHUTES_KEY and OpenAI:
             self.client = OpenAI(
                 base_url="https://llm.chutes.ai/v1",

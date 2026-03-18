@@ -111,7 +111,7 @@ YOUR DORAEMON improves every day
 
 ### For Miners
 - Earn TAO by running quality companions
-- Low barrier to entry (no GPU, free LLM tier available)
+- Low barrier to entry (no GPU, cheap LLM API access)
 - Better companion = more earnings
 - Innovation rewarded: memory improvements, personality tuning
 

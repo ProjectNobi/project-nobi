@@ -122,15 +122,15 @@ weights = scores / sum(scores)
 
 ### What You Need
 - **Hardware:** Any machine with internet (no GPU required!)
-- **LLM Access:** Free tier (Chutes.ai) or paid (OpenRouter, local models)
+- **LLM Access:** Chutes.ai (~$0.0001/query), OpenRouter (~$0.001/query), or self-hosted (free)
 - **Storage:** SQLite for memories (< 100MB for thousands of users)
 - **Registration:** Standard subnet registration fee
 
 ### Cost Structure
-| Component | Free Tier | Paid Tier |
+| Component | Low Cost | Higher Cost |
 |-----------|-----------|-----------|
-| LLM Inference | Chutes.ai (free) | OpenRouter (~$0.001/query) |
-| Memory Storage | SQLite (free) | SQLite (free) |
+| LLM Inference | Chutes.ai (~$0.0001/q) | OpenRouter (~$0.001/q) |
+| Memory Storage | SQLite (included) | SQLite (included) |
 | Server | Any VPS ($5-20/mo) | Dedicated ($20-50/mo) |
 
 ### How to Win

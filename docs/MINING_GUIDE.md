@@ -20,17 +20,17 @@ You're running a **personal AI companion** (Dora) that talks to users, remembers
 
 **No GPU needed!** The miner uses cloud LLM APIs for inference.
 
-## Step 1: Get an LLM API Key (Free)
+## Step 1: Get an LLM API Key
 
 You need an API key for your companion's brain. Choose one:
 
-### Option A: Chutes.ai (Free)
+### Option A: Chutes.ai (Low cost, ~$0.0001/query)
 1. Go to [chutes.ai](https://chutes.ai)
 2. Create account
 3. Get API key from dashboard
 4. Model: `deepseek-ai/DeepSeek-V3-0324`
 
-### Option B: OpenRouter (Pay per use, ~$0.001/query)
+### Option B: OpenRouter (~$0.001/query)
 1. Go to [openrouter.ai](https://openrouter.ai)
 2. Create account, add credits
 3. Get API key
@@ -49,6 +49,7 @@ cd project-nobi
 # Install dependencies
 pip install -e .
 pip install openai  # For LLM API access
+pip install bittensor-cli  # For wallet and registration commands
 
 # Verify
 python -c "import nobi; print('✅ Installed')"
@@ -58,8 +59,8 @@ python -c "import nobi; print('✅ Installed')"
 
 ```bash
 # Create wallet (if you don't have one)
-btcli wallet new_coldkey --wallet.name my_wallet
-btcli wallet new_hotkey --wallet.name my_wallet --wallet.hotkey nobi-miner
+btcli wallet new-coldkey --wallet.name my_wallet
+btcli wallet new-hotkey --wallet.name my_wallet --wallet.hotkey nobi-miner
 
 # Register on testnet (costs minimal tTAO)
 btcli subnets register --netuid 267 --wallet.name my_wallet --wallet.hotkey nobi-miner --subtensor.network test
@@ -133,9 +134,9 @@ The quality of your LLM directly affects your earnings.
 |-------|---------|------|
 | GPT-4o | ⭐⭐⭐⭐⭐ | $$$$ |
 | Claude 3.5 Haiku | ⭐⭐⭐⭐ | $$ |
-| DeepSeek V3 | ⭐⭐⭐⭐ | Free (Chutes) |
+| DeepSeek V3 | ⭐⭐⭐⭐ | $ (Chutes) |
 | Llama 3.3 70B | ⭐⭐⭐ | $ |
-| Small local model | ⭐⭐ | Free |
+| Small local model | ⭐⭐ | Free (self-hosted) |
 
 ### 2. Improve Memory (30% of score)
 The default memory system uses SQLite with keyword matching. To compete at the top:

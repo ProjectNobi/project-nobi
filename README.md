@@ -51,7 +51,7 @@ No GPU required. 10-minute setup.
 git clone https://github.com/travellingsoldier85/project-nobi.git
 cd project-nobi && pip install -e .
 
-# Get a free LLM key from chutes.ai, then:
+# Get an LLM key from chutes.ai or openrouter.ai, then:
 export CHUTES_API_KEY="your-key"
 
 python neurons/miner.py \

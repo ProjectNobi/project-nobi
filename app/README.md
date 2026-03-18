@@ -13,7 +13,7 @@
 ```bash
 # Set your token + API key
 export NOBI_BOT_TOKEN="your-token-from-botfather"
-export CHUTES_API_KEY="your-chutes-key"  # Free at chutes.ai
+export CHUTES_API_KEY="your-chutes-key"  # From chutes.ai
 
 # Start
 python3 app/bot.py

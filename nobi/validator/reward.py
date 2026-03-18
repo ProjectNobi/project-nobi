@@ -74,7 +74,7 @@ def reward(
 
 
 def _llm_judge(query: str, response: str, api_key: str = "") -> float:
-    """Score using LLM-as-judge with Chutes (free) + OpenRouter fallback."""
+    """Score using LLM-as-judge with Chutes + OpenRouter fallback."""
     chutes_key = os.environ.get("CHUTES_API_KEY", "")
     chutes_model = os.environ.get("CHUTES_JUDGE_MODEL", "deepseek-ai/DeepSeek-V3-0324")
 

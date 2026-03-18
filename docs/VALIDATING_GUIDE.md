@@ -16,18 +16,18 @@ As a validator, you:
 | Stake | Enough to get a validator permit (top 64 by stake) |
 | CPU | 2 cores |
 | RAM | 4 GB |
-| LLM API Key | For scoring responses (Chutes free / OpenRouter) |
+| LLM API Key | For scoring responses (Chutes or OpenRouter) |
 
 ## Quick Start
 
 ```bash
 # Clone
 git clone https://github.com/travellingsoldier85/project-nobi.git
-cd project-nobi && pip install -e .
+cd project-nobi && pip install -e . && pip install bittensor-cli
 
 # Create wallet
-btcli wallet new_coldkey --wallet.name my_validator_wallet
-btcli wallet new_hotkey --wallet.name my_validator_wallet --wallet.hotkey nobi-validator
+btcli wallet new-coldkey --wallet.name my_validator_wallet
+btcli wallet new-hotkey --wallet.name my_validator_wallet --wallet.hotkey nobi-validator
 
 # Register
 btcli subnets register --netuid 267 --wallet.name my_validator_wallet --wallet.hotkey nobi-validator --subtensor.network test
