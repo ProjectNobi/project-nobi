@@ -157,3 +157,24 @@ The LLM judge score includes helpfulness (40%), coherence (30%), and personality
 3. **LLM judge is model-agnostic** — any LLM backend can compete
 4. **No GPU requirement** — CPU-only miners can earn if their companion quality is high
 5. **Memory is the moat** — miners who invest in better memory systems earn more
+
+---
+
+## Future: Differential Privacy on Scoring *(Planned — Not Yet Implemented)*
+
+> **Honest status:** The current scoring system aggregates user interaction signals without any differential privacy (DP) protections. This is a known limitation. The following describes the intended future state.
+
+As Nobi scales, individual user interaction data contributes to the aggregate scoring signals that determine miner weights. At scale, it becomes theoretically possible to infer individual user behavior from miner weight changes. The planned mitigation is **differential privacy (DP) scoring**, based on the foundational work of Dwork & Roth (2014) and compatible with the federated learning architecture described in the whitepaper (McMahan et al., 2016 — arXiv:1602.05629).
+
+### Planned DP Scoring Mechanism *(Not Implemented)*
+
+- **Calibrated Gaussian noise** will be added to per-user score contributions before they are aggregated into the miner's round score
+- The noise magnitude will be calibrated to achieve a target ε (privacy budget), with smaller ε = stronger privacy guarantee
+- The DP mechanism will be applied client-side (before data leaves the device) once on-device memory architecture ships
+- Validators will receive noisy aggregate scores; no individual user signal will be recoverable
+
+### Privacy–Utility Tradeoff
+
+Adding DP noise reduces scoring precision. We will characterize this tradeoff empirically once the prototype is built, and will publish the ε values chosen and the reasoning. The goal is to find the minimum noise level that provides meaningful DP guarantees without materially degrading miner differentiation (currently σ = 0.14 across miners — a meaningful amount of headroom).
+
+**Until DP scoring ships, scoring aggregates user interaction signals without formal privacy guarantees. Users should be aware of this limitation.**

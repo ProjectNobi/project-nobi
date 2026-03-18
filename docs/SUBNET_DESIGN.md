@@ -109,6 +109,54 @@ Memory is stored in plaintext SQLite on the miner's machine. Users trust their a
 - Memory consolidation (merging similar memories)
 - Distributed storage across miners for redundancy
 
+## Federated Privacy Roadmap *(Planned — Not Yet Implemented)*
+
+> **Honest status:** Nothing in this section exists in the current codebase. This is the intended privacy evolution of the protocol. All items are explicitly marked as planned.
+
+The current architecture stores user memories in plaintext SQLite on miner machines. While this is acceptable for testnet, it represents a real privacy risk at scale. The planned solution is a federated learning architecture grounded in McMahan et al. (2016) — *Communication-Efficient Learning of Deep Networks from Decentralized Data* (arXiv:1602.05629).
+
+**Core principle:** Raw user data never leaves the user's device. Only model weight updates (gradients) are shared with miners.
+
+### Planned Federated Synapse: `FederatedUpdate` *(Not Implemented)*
+
+```python
+# Concept only — not implemented in current codebase
+class FederatedUpdate(bt.Synapse):
+    """
+    Planned synapse for carrying federated learning weight updates
+    from user devices to miners. Replaces raw memory transmission
+    with privacy-preserving model deltas.
+
+    Based on: McMahan et al. (2016) FedAvg algorithm, arXiv:1602.05629
+    """
+    user_id: str                       # Anonymous device identifier
+    adapter_delta: bytes               # Serialized LoRA weight delta (encrypted)
+    round_number: int                  # FL aggregation round
+    num_samples: int                   # Local training samples (for FedAvg weighting)
+    noise_scale: float                 # DP noise magnitude applied client-side
+
+    # Miner response
+    aggregated: Optional[bool] = None  # Whether server accepted the update
+    new_round: Optional[int] = None    # Next aggregation round number
+```
+
+### Federated Integration Points *(All Planned)*
+
+| Feature | Status | Privacy Guarantee |
+|---------|--------|-------------------|
+| On-device memory storage (mobile) | Planned — Q3 2026 | Memories never reach miner disk |
+| Federated memory extractor training | Planned — Q4 2026 | Training data never leaves device |
+| Per-user federated adapter weights | Planned — Q4 2026 | Personality data stays on device |
+| Differential privacy on scoring | Planned — 2027 | Individual behavior unidentifiable in aggregate |
+| `FederatedUpdate` synapse | Planned — Q4 2026 | Weight deltas only, no raw data |
+| Independent privacy audit | Planned — 2027 | Third-party verification of guarantees |
+
+### Why This Architecture Is the Right Path
+
+McMahan et al. (2016) demonstrated that FedAvg — aggregating weight updates across many clients — achieves accuracy within a few percent of centralized training, even with highly heterogeneous non-IID data. Given that user memories are by definition non-IID (every user is different), FedAvg is a natural fit. The privacy–utility tradeoff is well-characterized in the literature, and we intend to publish benchmarks comparing federated and centralized memory quality when the prototype is complete.
+
+**Until these features ship, users should treat their data as visible to their assigned miner machine and use the `/forget` command to delete data if they have concerns.**
+
 ## Network Architecture
 
 ```

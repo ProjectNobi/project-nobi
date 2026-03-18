@@ -10,7 +10,7 @@
 
 ## Abstract
 
-We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants that forget users between sessions and operate under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces three key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, and (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification and latency measurement. We demonstrate the system's viability through testnet deployment on Bittensor SN267 and stress testing at 500-node scale with 99.75% reliability.
+We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants that forget users between sessions and operate under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces three key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, and (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification and latency measurement. We demonstrate the system's viability through testnet deployment on Bittensor SN267 and stress testing at 500-node scale with 99.75% reliability. We further outline a **planned federated privacy architecture** — grounded in McMahan et al. (2016) — that will enable user memories to remain on-device, with only model weights (never raw data) shared across the network. This roadmap directly addresses the current plaintext memory limitation and positions Nobi as a privacy-first platform as it matures toward mainnet.
 
 ---
 
@@ -107,7 +107,72 @@ Memory extraction employs 11 regex patterns covering:
 
 Memory retrieval uses parameterized keyword search with importance weighting. Short keywords (≤2 characters) employ word-boundary matching to prevent false positives (e.g., "5" matches "turned 5" but not "15").
 
-**Current limitation:** Memory is stored in plaintext. User-controlled client-side encryption is on the development roadmap. Current privacy protection relies on user-controlled deletion (`/forget` command) and the decentralized nature of miner-specific storage.
+**Current limitation:** Memory is stored in plaintext on miner machines. User-controlled client-side encryption is on the development roadmap, and a federated privacy architecture (Section 2.4) is planned to eliminate the need for miners to hold raw user data at all. Current privacy protection relies on user-controlled deletion (`/forget` command) and the decentralized nature of miner-specific storage.
+
+---
+
+### 2.4 Federated Privacy Architecture *(Planned — not yet implemented)*
+
+> **Honest status note:** Nothing described in this section is built yet. This is a roadmap section describing the intended privacy evolution of the protocol, grounded in established federated learning research. All features are marked **[Planned]**.
+
+The current architecture's primary privacy weakness is that user memories are stored in plaintext on miner machines. While decentralization distributes risk, it does not eliminate it. The long-term solution is a federated learning architecture inspired by McMahan et al. (2016), in which **raw user data never leaves the user's device** — only model weights (gradients) are shared.
+
+**Theoretical basis:** McMahan, H. B., Moore, E., Ramage, D., Hampson, S., & Agüera y Arcas, B. (2016). *Communication-Efficient Learning of Deep Networks from Decentralized Data.* arXiv:1602.05629. McMahan et al. introduced the FedAvg algorithm, demonstrating that high-quality model training is achievable by aggregating gradient updates from many clients — without ever centralizing the underlying training data. This principle maps directly to Nobi's memory problem.
+
+#### 2.4.1 Federated Memory Learning **[Planned]**
+
+Rather than extracting memories centrally on a miner machine, miners will ship lightweight memory-extractor model weights to user devices. Each device trains its local extractor on the user's own conversation data — the training data never leaves the phone or laptop. Devices periodically send only model weight deltas back to their assigned miner. The miner aggregates weight updates (via FedAvg or a variant) to improve the shared extractor without seeing individual training samples.
+
+*Privacy guarantee:* A compromised miner learns nothing about any individual user's conversation history — only aggregated model weight updates.
+
+#### 2.4.2 On-Device Memory Storage **[Planned]**
+
+The mobile app (planned for Q3 2026) will store user memories locally on the user's device rather than on the miner. The miner serves inference; the client holds the memory index. Queries are answered by retrieving relevant memories client-side and including only the minimum necessary context in the request to the miner.
+
+*Privacy guarantee:* Miner machines hold zero persistent user data. A full miner compromise leaks no user history.
+
+#### 2.4.3 Privacy-Preserving Quality Improvement **[Planned]**
+
+Personality adaptation (tuning a companion's communication style to a specific user) will be implemented via federated adapter weights. The base companion model remains shared; per-user adapters (LoRA-style weight deltas) are trained locally and never transmitted. The miner's role shifts to serving the base model and accepting per-request adapter overlays from the client.
+
+*Privacy guarantee:* Personality data (what makes your companion *yours*) remains exclusively on your device.
+
+#### 2.4.4 Differential Privacy Scoring **[Planned]**
+
+Validator scoring aggregates signals across many users. Future implementations will apply calibrated Gaussian noise (the standard differential privacy (DP) mechanism; Dwork & Roth, 2014) to aggregate scoring signals before they leave user devices, providing ε-DP guarantees on the contribution of any individual user's interaction data to miner weight updates.
+
+*Privacy guarantee:* No individual user's behavior is identifiable from the aggregate score signals used for on-chain weight setting.
+
+#### 2.4.5 FederatedUpdate Synapse *(Concept — Not Implemented)*
+
+A future `FederatedUpdate` synapse type is envisioned to carry model weight deltas from clients to miners:
+
+```python
+# Concept only — not implemented
+class FederatedUpdate(bt.Synapse):
+    user_id: str                       # Anonymous device identifier
+    adapter_delta: bytes               # Serialized LoRA weight delta (encrypted)
+    round_number: int                  # FL aggregation round
+    num_samples: int                   # Local training samples used (for FedAvg weighting)
+    noise_scale: float                 # DP noise magnitude applied client-side
+
+    # Response
+    aggregated: Optional[bool] = None  # Whether server accepted the update
+    new_round: Optional[int] = None    # Next aggregation round number
+```
+
+This synapse is **planned and not yet implemented**. Its introduction will require updates to the protocol, miner, and validator, and is targeted for the Phase 4–5 roadmap window (see Section 7).
+
+#### 2.4.6 Honest Assessment of the Transition
+
+Moving to full federated architecture is a significant engineering undertaking. The current SQLite-on-miner approach is simpler to implement and sufficient for testnet. The federated architecture is the **intended end state**, not the current state. Key milestones before federated features ship:
+
+1. Mobile app exists (Q3 2026 target) — required for on-device storage
+2. Semantic memory search (Q2 2026) — improves recall quality before moving storage
+3. Federated adapter training prototype (Q4 2026 target)
+4. Full on-device memory migration (2027 target)
+
+**No federated privacy features are operational today. Users should be aware that their memories are currently stored in plaintext on miner machines and act accordingly (use the `/forget` command to delete data if desired).**
 
 ---
 
@@ -325,6 +390,10 @@ As the first Bittensor subnet designed and built entirely by an AI agent, Projec
 5. Rao, Y. & Opentensor Foundation. (2023). "Bittensor: A Peer-to-Peer Intelligence Market." Whitepaper.
 
 6. World Health Organization. (2023). "Social Isolation and Loneliness." WHO Commission report declaring loneliness a global health threat.
+
+7. McMahan, H. B., Moore, E., Ramage, D., Hampson, S., & Agüera y Arcas, B. (2016). "Communication-Efficient Learning of Deep Networks from Decentralized Data." *AISTATS 2017*. arXiv:1602.05629. *(The foundational FedAvg paper. Basis for Nobi's planned federated privacy architecture in Section 2.4.)*
+
+8. Dwork, C. & Roth, A. (2014). "The Algorithmic Foundations of Differential Privacy." *Foundations and Trends in Theoretical Computer Science*, 9(3–4), 211–407. *(Theoretical basis for the planned differential privacy scoring mechanism in Section 2.4.4.)*
 
 ---
 

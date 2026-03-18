@@ -136,9 +136,10 @@ USER talks to Dora (Telegram / Web / Mobile app)
 4. **Cost advantage** — miners bear inference costs, giving us 85% gross margins vs. OpenAI's ~55%
 5. **Open source** — community can audit, verify, and contribute
 6. **Cultural adaptation** — miners worldwide serve companions that understand local context and language
+7. **Federated privacy roadmap** — planned architecture where data never leaves your device; only model weights shared (McMahan et al., 2016). *Not yet implemented — planned for Phase 4–5.* When live, this will be a unique, auditable privacy guarantee that no centralized competitor can match.
 
 ### Honest Limitations (Current)
-- Memory is **not yet encrypted** — stored in plaintext on miner machines. User-controlled encryption is on the roadmap.
+- Memory is **stored in plaintext on miner machines** — not yet encrypted, not yet on-device. User-controlled encryption is on the near-term roadmap. The long-term solution is a **federated learning architecture** (McMahan et al., 2016 — arXiv:1602.05629) where memories never leave your device at all; only model weight updates are shared. This is planned, not yet built — see the Roadmap below.
 - The Telegram bot currently calls LLM directly, **not through the subnet**. Subnet routing is the mainnet target.
 - No tool execution yet (calendar, booking, etc.) — companion is conversation-only for now.
 
@@ -169,13 +170,16 @@ USER talks to Dora (Telegram / Web / Mobile app)
 - [ ] Web app (dora.nobi.ai)
 - [ ] Mobile app (iOS + Android)
 - [ ] 10,000+ users, first subscription revenue
+- [ ] **[Federated Milestone]** Mobile app ships with on-device memory storage (memories stay on your phone, not on miner machines)
 
 ### Phase 4: Growth (Q4 2026)
 - [ ] Developer SDK and API
 - [ ] Tool integrations (calendar, reminders, web search)
-- [ ] User-controlled memory encryption
+- [ ] User-controlled memory encryption (interim step before full federated architecture)
 - [ ] Enterprise tier
 - [ ] 50,000+ users, break-even
+- [ ] **[Federated Milestone]** Federated adapter training prototype: per-user personality adapters trained locally, never transmitted (based on McMahan et al., 2016 FedAvg)
+- [ ] **[Federated Milestone]** `FederatedUpdate` synapse implementation (miners receive weight deltas, not raw data)
 
 ### Phase 5: Scale (2027+)
 - [ ] 1M+ users
@@ -184,6 +188,9 @@ USER talks to Dora (Telegram / Web / Mobile app)
 - [ ] Agentic capabilities (booking, purchasing, task management)
 - [ ] Companion marketplace
 - [ ] International expansion
+- [ ] **[Federated Milestone]** Full on-device memory architecture: raw memories never leave user device under any circumstances
+- [ ] **[Federated Milestone]** Differential privacy scoring: calibrated noise on score aggregation (ε-DP guarantees on individual user contribution to miner weights)
+- [ ] **[Federated Milestone]** Independent privacy audit of federated implementation
 
 ## Risks & Mitigations
 

@@ -78,6 +78,11 @@ Realistic capture given our distribution channels, competitive positioning, and 
 | Censorship | Company decides | Decentralized, uncensorable |
 | Switching cost | Lose everything | Own your data, portable |
 | Improvement pace | Quarterly updates | Continuous (miners evolve daily) |
+| Privacy architecture | Trust the company | **Federated roadmap: data never leaves your device** *(Planned — Q4 2026+)* |
+
+**Federated privacy as enterprise differentiator:** The planned federated learning architecture (McMahan et al., 2016 — arXiv:1602.05629) is particularly compelling for enterprise customers in regulated industries (healthcare, finance, legal) where sending conversation data to third-party servers creates compliance risk. Once implemented, Nobi's on-device memory model means enterprise deployments can achieve meaningful data-residency guarantees that no centralized competitor can offer at all — because their architecture fundamentally requires data to reach their servers. This is expected to be a key differentiator for enterprise tier pricing and partnership conversations beginning in 2027.
+
+*Note: Federated features are not yet implemented. Enterprise conversations should not reference these capabilities as current. They are planned roadmap items.*
 
 ---
 
@@ -311,11 +316,13 @@ If an AI agent can build, deploy, and operate a subnet that serves millions of u
 | Risk | Probability | Impact | Mitigation |
 |------|------------|--------|------------|
 | Bittensor network issues | Medium | High | Multi-chain readiness, fallback infrastructure |
-| Regulatory (AI companions) | Medium | Medium | Privacy-by-design, data deletion tools, age verification |
+| Regulatory (AI companions) | Medium | Medium | Privacy-by-design, data deletion tools, age verification; federated architecture (planned) eliminates data-at-rest risk entirely |
 | Competition (OpenAI, Google) | High | Medium | Decentralization moat, memory lock-in, cost advantage |
 | User acquisition cost | Medium | Medium | Organic-first strategy, viral referral program |
 | Miner quality inconsistency | Medium | Low | Robust scoring, minimum quality thresholds |
 | Token price volatility | High | Medium | Revenue-backed fundamentals, not speculation-dependent |
+| **Privacy breach (miner compromise)** | **Medium** | **High** | **Current:** plaintext SQLite + `/forget` command + decentralized miner distribution. **Planned mitigation (Q4 2026+):** Federated architecture (McMahan et al., 2016) moves memories off miner machines entirely — a compromised miner holds no user data. Until federated features ship, users should be clearly informed of the plaintext storage limitation. |
+| Federated architecture delivery risk | Medium | Low | Federated features are roadmap items, not commitments. The business is viable without them (testnet proves this). Privacy improvements are additive, not existential. |
 
 ---
 

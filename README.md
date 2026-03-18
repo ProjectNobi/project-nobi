@@ -35,7 +35,7 @@ Just press Start and talk. No setup, no commands. It remembers you.
 | Affordable | $20/mo+ | Free (limited) | $4.99/mo target |
 | Single point of failure | Yes | Yes | ✅ No single entity controls it |
 
-¹ *Memory is stored on individual miner machines with user-controlled deletion. Client-side encryption is on the roadmap. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) for details.*
+¹ *Memory is currently stored in plaintext on individual miner machines, with user-controlled deletion (`/forget`). Client-side encryption is a near-term roadmap item. Long-term, a **federated learning architecture** (McMahan et al., 2016 — arXiv:1602.05629) is planned where memories never leave your device at all — only model weight updates are shared. This is roadmap, not yet implemented. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) and [WHITEPAPER.md](docs/WHITEPAPER.md) Section 2.4 for details.*
 
 ## 🏗️ Architecture
 
