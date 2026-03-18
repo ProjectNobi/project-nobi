@@ -37,7 +37,7 @@ class BaseMinerNeuron(BaseNeuron):
 
         self.axon = bt.Axon(
             wallet=self.wallet,
-            config=self.config() if callable(self.config) else self.config,
+            config=self.config,
         )
 
         bt.logging.info(f"Attaching forward function to miner axon.")

@@ -7,7 +7,7 @@ from typing import List
 
 
 def check_uid_availability(
-    metagraph: "bt.metagraph.Metagraph", uid: int, vpermit_tao_limit: int
+    metagraph: "bt.Metagraph.Metagraph", uid: int, vpermit_tao_limit: int
 ) -> bool:
     """Check if uid is available (serving and not a high-stake validator)."""
     if not metagraph.axons[uid].is_serving:

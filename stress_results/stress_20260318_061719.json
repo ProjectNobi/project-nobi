@@ -1,0 +1,129 @@
+{
+  "phase2": {
+    "total_queries": 1000,
+    "total_scored": 1000,
+    "judge_errors": 0,
+    "avg_score": 0.35305,
+    "score_std": 0.08898846835405136,
+    "min_score": 0.15000000000000002,
+    "max_score": 0.595,
+    "total_time_s": 2570.5088438579114,
+    "queries_per_second": 0.3890280332586463
+  },
+  "phase3": {
+    "num_validators": 20,
+    "num_miners_with_weight": 226,
+    "consensus_gini": 0.4405810901569004,
+    "avg_validator_agreement": 0.07992762683775191,
+    "top_20_miners": [
+      {
+        "uid": 115,
+        "weight": 0.025780610740184784,
+        "model": "API"
+      },
+      {
+        "uid": 90,
+        "weight": 0.021261565387248993,
+        "model": "API"
+      },
+      {
+        "uid": 65,
+        "weight": 0.02125632017850876,
+        "model": "API"
+      },
+      {
+        "uid": 215,
+        "weight": 0.020460227504372597,
+        "model": "API"
+      },
+      {
+        "uid": 140,
+        "weight": 0.02040441893041134,
+        "model": "API"
+      },
+      {
+        "uid": 175,
+        "weight": 0.01989302784204483,
+        "model": "API"
+      },
+      {
+        "uid": 150,
+        "weight": 0.015156942419707775,
+        "model": "API"
+      },
+      {
+        "uid": 80,
+        "weight": 0.01514662615954876,
+        "model": "API"
+      },
+      {
+        "uid": 205,
+        "weight": 0.015060423873364925,
+        "model": "API"
+      },
+      {
+        "uid": 180,
+        "weight": 0.014157723635435104,
+        "model": "API"
+      },
+      {
+        "uid": 5,
+        "weight": 0.014063320122659206,
+        "model": "API"
+      },
+      {
+        "uid": 225,
+        "weight": 0.013229286298155785,
+        "model": "API"
+      },
+      {
+        "uid": 15,
+        "weight": 0.013175006955862045,
+        "model": "API"
+      },
+      {
+        "uid": 130,
+        "weight": 0.012945705093443394,
+        "model": "API"
+      },
+      {
+        "uid": 75,
+        "weight": 0.01269488874822855,
+        "model": "API"
+      },
+      {
+        "uid": 25,
+        "weight": 0.012127872556447983,
+        "model": "API"
+      },
+      {
+        "uid": 170,
+        "weight": 0.011730876751244068,
+        "model": "API"
+      },
+      {
+        "uid": 110,
+        "weight": 0.011278204619884491,
+        "model": "API"
+      },
+      {
+        "uid": 120,
+        "weight": 0.010246257297694683,
+        "model": "API"
+      },
+      {
+        "uid": 165,
+        "weight": 0.010224721394479275,
+        "model": "API"
+      }
+    ],
+    "total_time_s": 0.02276200905907899
+  },
+  "summary": {
+    "total_time_s": 2570.535696739098,
+    "num_miners": 230,
+    "num_validators": 20,
+    "num_rounds": 5,
+    "timestamp": "2026-03-18T06:17:19.742884"
+  }
+}

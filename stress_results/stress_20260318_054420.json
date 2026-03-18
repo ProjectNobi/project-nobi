@@ -1,0 +1,25 @@
+{
+  "timestamp": "20260318_054420",
+  "config": {
+    "miners": 230,
+    "validators": 20,
+    "rounds": 5,
+    "sample_size": 10
+  },
+  "phase2": {
+    "avg_score": 0.9276,
+    "std_score": 0.055337509882538057,
+    "min_score": 0.8,
+    "max_score": 1.0,
+    "judge_ok": 0,
+    "judge_err": 0,
+    "total_time_s": 5.897223920910619
+  },
+  "phase3": {
+    "active_miners": 228,
+    "gini": 0.2550496191177824,
+    "validator_agreement": -0.0030708551918669073,
+    "total_time_s": 0.017036438104696572
+  },
+  "total_time_s": 5.9158425509231165
+}

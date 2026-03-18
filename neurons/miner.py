@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Project Nobi — Miner Neuron
-# Phase 1: Personal AI companion powered by OpenRouter
+# Phase 1: Personal AI companion powered by LLM
+# Phase 2: Persistent memory — remembers users across conversations
 
 import os
 import time
@@ -9,7 +10,8 @@ import bittensor as bt
 
 import nobi
 from nobi.base.miner import BaseMinerNeuron
-from nobi.protocol import CompanionRequest
+from nobi.protocol import CompanionRequest, MemoryStore, MemoryRecall
+from nobi.memory import MemoryManager
 
 try:
     from openai import OpenAI
@@ -17,7 +19,6 @@ except ImportError:
     OpenAI = None
 
 
-# Default system prompt for the companion
 COMPANION_SYSTEM_PROMPT = """You are Dora, a personal AI companion from the future. You are:
 - Warm, friendly, and genuinely caring
 - Helpful and practical — you give real, actionable advice
@@ -25,74 +26,85 @@ COMPANION_SYSTEM_PROMPT = """You are Dora, a personal AI companion from the futu
 - Knowledgeable but humble — you admit when you don't know something
 - Encouraging and supportive without being fake
 
+{memory_context}
+
 Keep responses concise but meaningful. You're having a conversation, not writing an essay.
+If you know something about the user from memory, reference it naturally (don't list facts).
 Remember: you're a companion, not just an assistant. Show personality!"""
 
 
 class Miner(BaseMinerNeuron):
     """
-    Project Nobi Miner — serves personal AI companion responses.
-
-    Uses OpenRouter API for LLM inference with in-memory conversation tracking.
+    Project Nobi Miner — serves personal AI companion responses
+    with persistent memory per user.
     """
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        # In-memory conversation store: {user_id: [messages]}
-        self.conversations = {}
-        self.max_history = 20  # Max messages to keep per user
+        # Initialize memory manager
+        self.memory = MemoryManager(db_path="~/.nobi/memories.db")
+        bt.logging.info(f"Memory manager initialized: {self.memory.stats()}")
 
-        # Set up OpenRouter client
-        api_key = (
+        # Set up LLM client (Chutes free tier first, OpenRouter as fallback)
+        chutes_key = os.environ.get("CHUTES_API_KEY", "")
+        openrouter_key = (
             getattr(self.config.neuron, "openrouter_api_key", "")
             or os.environ.get("OPENROUTER_API_KEY", "")
         )
-        self.model = getattr(self.config.neuron, "model", "") or "anthropic/claude-3.5-haiku"
+        self.model = getattr(self.config.neuron, "model", "") or "deepseek-ai/DeepSeek-V3-0324"
 
-        if api_key and OpenAI is not None:
+        if chutes_key and OpenAI is not None:
+            self.client = OpenAI(
+                base_url="https://llm.chutes.ai/v1",
+                api_key=chutes_key,
+            )
+            self.model = os.environ.get("CHUTES_MODEL", self.model)
+            bt.logging.info(f"Chutes client initialized (FREE) with model: {self.model}")
+        elif openrouter_key and OpenAI is not None:
             self.client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
-                api_key=api_key,
+                api_key=openrouter_key,
             )
             bt.logging.info(f"OpenRouter client initialized with model: {self.model}")
         else:
             self.client = None
-            bt.logging.warning("No OpenRouter API key — miner will use fallback responses.")
+            bt.logging.warning("No API key — miner will use fallback responses.")
 
-    def _get_conversation(self, user_id: str) -> list:
-        """Get or create conversation history for a user."""
-        if user_id not in self.conversations:
-            self.conversations[user_id] = []
-        return self.conversations[user_id]
+    def _generate_response(self, message: str, user_id: str, conversation_history: list) -> tuple:
+        """
+        Generate a companion response using LLM + memory context.
+        Returns (response_text, memory_entries_used).
+        """
+        # Get memory context for this user
+        memory_context = ""
+        memory_entries = []
+        if user_id:
+            memory_context = self.memory.get_context_for_prompt(user_id, message)
+            if memory_context:
+                memory_entries = self.memory.recall(user_id, query=message, limit=5)
 
-    def _update_conversation(self, user_id: str, role: str, content: str):
-        """Add a message to conversation history."""
-        conv = self._get_conversation(user_id)
-        conv.append({"role": role, "content": content})
-        # Trim to max history
-        if len(conv) > self.max_history:
-            self.conversations[user_id] = conv[-self.max_history:]
-
-    def _generate_response(self, message: str, user_id: str, conversation_history: list) -> str:
-        """Generate a companion response using OpenRouter."""
         if self.client is None:
-            return self._fallback_response(message)
+            return self._fallback_response(message), memory_entries
+
+        # Build system prompt with memory
+        system_prompt = COMPANION_SYSTEM_PROMPT.format(
+            memory_context=memory_context if memory_context else ""
+        )
 
         # Build message list
-        messages = [{"role": "system", "content": COMPANION_SYSTEM_PROMPT}]
+        messages = [{"role": "system", "content": system_prompt}]
 
-        # Add conversation history from request or memory
+        # Add conversation history
         if conversation_history:
-            for msg in conversation_history[-10:]:  # Last 10 messages
+            for msg in conversation_history[-10:]:
                 if isinstance(msg, dict) and "role" in msg and "content" in msg:
                     messages.append({"role": msg["role"], "content": msg["content"]})
         elif user_id:
-            # Use our in-memory history
-            conv = self._get_conversation(user_id)
-            messages.extend(conv[-10:])
+            # Use stored conversation history
+            recent = self.memory.get_recent_conversation(user_id, limit=10)
+            messages.extend(recent)
 
-        # Add current message
         messages.append({"role": "user", "content": message})
 
         try:
@@ -104,19 +116,19 @@ class Miner(BaseMinerNeuron):
             )
             response = completion.choices[0].message.content
 
-            # Update conversation memory
+            # Save conversation + extract memories
             if user_id:
-                self._update_conversation(user_id, "user", message)
-                self._update_conversation(user_id, "assistant", response)
+                self.memory.save_conversation_turn(user_id, "user", message)
+                self.memory.save_conversation_turn(user_id, "assistant", response)
+                self.memory.extract_memories_from_message(user_id, message, response)
 
-            return response
+            return response, memory_entries
 
         except Exception as e:
-            bt.logging.error(f"OpenRouter API error: {e}")
-            return self._fallback_response(message)
+            bt.logging.error(f"LLM API error: {e}")
+            return self._fallback_response(message), memory_entries
 
     def _fallback_response(self, message: str) -> str:
-        """Simple fallback when API is unavailable."""
         return (
             f"I received your message: '{message[:100]}'. "
             "I'm currently running in limited mode, but I'm here to help! "
@@ -124,12 +136,10 @@ class Miner(BaseMinerNeuron):
         )
 
     async def forward(self, synapse: CompanionRequest) -> CompanionRequest:
-        """
-        Process an incoming CompanionRequest and generate a response.
-        """
+        """Process an incoming CompanionRequest and generate a response."""
         bt.logging.info(f"Received query from user '{synapse.user_id}': {synapse.message[:100]}")
 
-        response = self._generate_response(
+        response, memory_entries = self._generate_response(
             message=synapse.message,
             user_id=synapse.user_id,
             conversation_history=synapse.conversation_history,
@@ -137,33 +147,75 @@ class Miner(BaseMinerNeuron):
 
         synapse.response = response
         synapse.confidence = 0.8 if self.client else 0.2
+        synapse.memory_context = [
+            {"type": m.get("type", ""), "content": m.get("content", "")}
+            for m in memory_entries
+        ] if memory_entries else None
 
-        bt.logging.info(f"Generated response ({len(response)} chars)")
+        bt.logging.info(f"Generated response ({len(response)} chars), "
+                       f"memories used: {len(memory_entries) if memory_entries else 0}")
+        return synapse
+
+    async def forward_memory_store(self, synapse: MemoryStore) -> MemoryStore:
+        """Handle memory store requests from validators."""
+        bt.logging.info(f"MemoryStore for user '{synapse.user_id}': {synapse.content[:60]}")
+
+        try:
+            memory_id = self.memory.store(
+                user_id=synapse.user_id,
+                content=synapse.content,
+                memory_type=synapse.memory_type,
+                importance=synapse.importance,
+                tags=synapse.tags,
+                expires_at=synapse.expires_at,
+            )
+            synapse.stored = True
+            synapse.memory_id = memory_id
+            bt.logging.info(f"Stored memory {memory_id}")
+        except Exception as e:
+            bt.logging.error(f"Memory store error: {e}")
+            synapse.stored = False
+
+        return synapse
+
+    async def forward_memory_recall(self, synapse: MemoryRecall) -> MemoryRecall:
+        """Handle memory recall requests from validators."""
+        bt.logging.info(f"MemoryRecall for user '{synapse.user_id}': query='{synapse.query[:60]}'")
+
+        try:
+            memories = self.memory.recall(
+                user_id=synapse.user_id,
+                query=synapse.query,
+                memory_type=synapse.memory_type,
+                tags=synapse.tags,
+                limit=synapse.limit,
+            )
+            synapse.memories = memories
+            synapse.total_count = self.memory.get_user_memory_count(synapse.user_id)
+            bt.logging.info(f"Recalled {len(memories)} memories (total: {synapse.total_count})")
+        except Exception as e:
+            bt.logging.error(f"Memory recall error: {e}")
+            synapse.memories = []
+            synapse.total_count = 0
 
         return synapse
 
     async def blacklist(self, synapse: CompanionRequest) -> typing.Tuple[bool, str]:
         """Blacklist check for incoming requests."""
         if synapse.dendrite is None or synapse.dendrite.hotkey is None:
-            bt.logging.warning("Received a request without a dendrite or hotkey.")
             return True, "Missing dendrite or hotkey"
 
         if (
             not self.config.blacklist.allow_non_registered
             and synapse.dendrite.hotkey not in self.metagraph.hotkeys
         ):
-            bt.logging.trace(f"Blacklisting un-registered hotkey {synapse.dendrite.hotkey}")
             return True, "Unrecognized hotkey"
 
         if self.config.blacklist.force_validator_permit:
             uid = self.metagraph.hotkeys.index(synapse.dendrite.hotkey)
             if not self.metagraph.validator_permit[uid]:
-                bt.logging.warning(
-                    f"Blacklisting non-validator hotkey {synapse.dendrite.hotkey}"
-                )
                 return True, "Non-validator hotkey"
 
-        bt.logging.trace(f"Not blacklisting hotkey {synapse.dendrite.hotkey}")
         return False, "Hotkey recognized!"
 
     async def priority(self, synapse: CompanionRequest) -> float:
@@ -171,9 +223,7 @@ class Miner(BaseMinerNeuron):
         if synapse.dendrite is None or synapse.dendrite.hotkey is None:
             return 0.0
         caller_uid = self.metagraph.hotkeys.index(synapse.dendrite.hotkey)
-        priority = float(self.metagraph.S[caller_uid])
-        bt.logging.trace(f"Prioritizing {synapse.dendrite.hotkey} with value: {priority}")
-        return priority
+        return float(self.metagraph.S[caller_uid])
 
 
 if __name__ == "__main__":
