@@ -167,7 +167,7 @@ USER talks to Dora (Telegram / Web / Mobile app)
 ### Phase 3: Mainnet Launch (Q3 2026)
 - [ ] Mainnet subnet registration
 - [ ] Subnet routing: bot → validators → miners (replacing direct LLM)
-- [ ] Web app (app.projectnobi.com)
+- [ ] Web app (app.projectnobi.ai)
 - [ ] Mobile app (iOS + Android)
 - [ ] 10,000+ users, first subscription revenue
 - [ ] **[Federated Milestone]** Mobile app ships with on-device memory storage (memories stay on your phone, not on miner machines)
