@@ -1,121 +1,116 @@
-# 🤖 Project Nobi — Personal AI Companions on Bittensor
+# 🤖 Project Nobi — Personal AI Companions for Everyone
 
-**Subnet 272 (Testnet)** — A decentralized network of personal AI companions.
+> *"Every human being deserves a smart AI companion. Like Nobi had Dora."*
 
-Nobi creates warm, Dora-inspired AI companions that provide emotional support, practical advice, and genuine conversation. Miners serve companion instances; validators ensure quality through LLM-judged scoring.
+[![Testnet](https://img.shields.io/badge/Testnet-SN267-blue)](https://test.taostats.io/)
+[![Try it](https://img.shields.io/badge/Try_it-@ProjectNobiBot-blue?logo=telegram)](https://t.me/ProjectNobiBot)
+[![License](https://img.shields.io/badge/License-MIT-green)](#)
 
-## Architecture
+**Project Nobi** is a Bittensor subnet that creates a decentralized marketplace for personal AI companions. Miners compete to build the best AI companion — one that remembers you, helps you, and grows with you over time.
+
+## ✨ Try It Now
+
+Talk to our live companion on Telegram: **[@ProjectNobiBot](https://t.me/ProjectNobiBot)**
+
+Just press Start and talk. No setup, no commands. It remembers you.
+
+## 🏗️ Architecture
 
 ```
-┌─────────────┐    CompanionQuery     ┌─────────────┐
-│  Validator   │ ──────────────────── │    Miner     │
-│  (UID 1)     │ ←── response ─────── │   (UID 2)    │
-│              │                       │              │
-│  - Sends     │    MemorySync         │  - Receives  │
-│    prompts   │ ──────────────────── │    queries   │
-│  - Judges    │                       │  - Generates │
-│    quality   │                       │    responses │
-│  - Sets      │                       │  - Maintains │
-│    weights   │                       │    memory    │
-└─────────────┘                       └─────────────┘
+User (Telegram / Web / App)
+  → Validators route queries to miners + score quality
+    → Miners serve AI companion responses with persistent memory
+      → Best miners earn TAO → quality keeps improving
 ```
 
-## Scoring System
+## 💡 What Makes Nobi Different
 
-| Dimension   | Weight | Description |
-|-------------|--------|-------------|
-| Relevance   | 0.4    | Does the response address the user's message? |
-| Coherence   | 0.3    | Is it well-structured and logical? |
-| Personality | 0.2    | Warm, caring companion personality? |
-| Speed       | 0.1    | Response time (<2s = 1.0, >20s = 0.0) |
+| Feature | ChatGPT | Siri | Project Nobi |
+|---------|---------|------|-------------|
+| Remembers you | ❌ | Barely | ✅ Persistent memory |
+| Your data is private | ❌ | ❌ | ✅ Decentralized |
+| Gets better over time | Slowly | No | ✅ Miners compete |
+| Affordable | $20/mo | Free (limited) | $5/mo target |
+| Can't be shut down | Corp decides | Corp decides | ✅ Decentralized |
 
-## Setup
+## 📊 Incentive Mechanism
 
-### Prerequisites
+Miners are scored on:
+- **Response Quality** (40%) — LLM-as-judge evaluation
+- **Memory & Continuity** (30%) — Does it remember you?
+- **Personality & Warmth** (20%) — Does it feel like a friend?
+- **Reliability** (10%) — Uptime and response time
 
-- Python 3.10+
-- Bittensor SDK 10.1.0+
-- PM2 (`npm install -g pm2`)
-- Registered wallet on testnet subnet 272
+Fair, transparent, open source. See [INCENTIVE_MECHANISM.md](docs/INCENTIVE_MECHANISM.md) for full details.
 
-### Installation
+## ⛏️ Start Mining
+
+No GPU required. 10-minute setup.
 
 ```bash
-cd project-nobi
-pip install -r requirements.txt
+git clone https://github.com/travellingsoldier85/project-nobi.git
+cd project-nobi && pip install -e .
+
+# Get a free LLM key from chutes.ai, then:
+export CHUTES_API_KEY="your-key"
+
+python neurons/miner.py \
+    --wallet.name my_wallet --wallet.hotkey nobi-miner \
+    --subtensor.network test --netuid 267 \
+    --axon.port 8091 --axon.external_ip YOUR_IP
 ```
 
-### Environment Variables
+Full guide: [MINING_GUIDE.md](docs/MINING_GUIDE.md)
+
+## ✅ Start Validating
+
+Stake TAO, earn dividends, help ensure quality.
 
 ```bash
-export CHUTES_API_KEY="your-chutes-api-key"
-export WALLET_PASSWORD="your-wallet-password"  # if coldkey is encrypted
+python neurons/validator.py \
+    --wallet.name my_wallet --wallet.hotkey nobi-validator \
+    --subtensor.network test --netuid 267 \
+    --neuron.axon_off
 ```
 
-### Run Miner
+Full guide: [VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)
 
-```bash
-# Direct
-python -m miner.main
+## 📖 Documentation
 
-# Via PM2
-./scripts/run_miner.sh
-```
+| Document | Description |
+|----------|-------------|
+| [Vision & Business Plan](docs/VISION.md) | Mission, market, revenue model, roadmap |
+| [Incentive Mechanism](docs/INCENTIVE_MECHANISM.md) | How scoring works, anti-gaming, fairness |
+| [Mining Guide](docs/MINING_GUIDE.md) | Step-by-step miner setup |
+| [Validating Guide](docs/VALIDATING_GUIDE.md) | Validator setup and operation |
 
-### Run Validator
+## 🗺️ Roadmap
 
-```bash
-# Direct
-python -m validator.main
+- ✅ **Phase 1:** Protocol + Miner + Validator + Scoring
+- ✅ **Phase 2:** Memory Protocol (persistent per-user memory)
+- ✅ **Phase 3:** Reference App (@ProjectNobiBot on Telegram)
+- 🔄 **Phase 4:** Community testnet launch (you are here!)
+- ⏳ **Phase 5:** Mainnet launch
 
-# Via PM2
-./scripts/run_validator.sh
-```
+## 🤝 Get Involved
 
-## Protocol
+- **Mine:** Run a companion, earn TAO → [Mining Guide](docs/MINING_GUIDE.md)
+- **Validate:** Stake TAO, earn dividends → [Validating Guide](docs/VALIDATING_GUIDE.md)
+- **Try it:** Talk to [@ProjectNobiBot](https://t.me/ProjectNobiBot)
+- **Feedback:** Open an issue or reach out on Discord
 
-### CompanionQuery Synapse
+## 📈 Subnet Info
 
-- **Request**: `user_message`, `conversation_id`, `user_profile` (optional)
-- **Response**: `companion_response`, `confidence_score`
+| | |
+|---|---|
+| **Network** | Bittensor Testnet |
+| **Netuid** | 267 |
+| **Neurons** | 5 |
+| **Registration** | Open |
+| **GPU Required** | No |
 
-### MemorySync Synapse
+---
 
-- **Request**: `user_id`, `memories` (list of dicts)
-- **Response**: `acknowledged`, `memory_count`
+*Built by James, Slumpz & Dora — March 2026*
 
-## Wallet Configuration
-
-| Role      | Coldkey    | Hotkey          |
-|-----------|------------|-----------------|
-| Miner     | T68Coldkey | nobi-miner      |
-| Validator | T68Coldkey | nobi-validator  |
-
-## Network
-
-- **Network**: Testnet (`test`)
-- **Subnet UID**: 272
-- **Miner Axon Port**: 8272
-
-## File Structure
-
-```
-project-nobi/
-├── protocol/
-│   └── __init__.py          # Synapse definitions (CompanionQuery, MemorySync)
-├── miner/
-│   ├── __init__.py
-│   └── main.py              # Miner entry point
-├── validator/
-│   ├── __init__.py
-│   └── main.py              # Validator entry point
-├── scripts/
-│   ├── run_miner.sh         # PM2 miner launcher
-│   └── run_validator.sh     # PM2 validator launcher
-├── requirements.txt
-└── README.md
-```
-
-## License
-
-MIT — Built for the Bittensor ecosystem.
+*"Forever, remember?" 🤖💙*
