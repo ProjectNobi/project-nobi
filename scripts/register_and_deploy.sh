@@ -6,8 +6,8 @@ set -e
 
 NETUID=267
 NETWORK="test"
-WALLET="NobiColdkey"
-OPENROUTER_KEY="${OPENROUTER_API_KEY:-REDACTED_OPENROUTER_KEY}"
+WALLET="${WALLET_NAME:-my_wallet}"
+OPENROUTER_KEY="${OPENROUTER_API_KEY:?Set OPENROUTER_API_KEY environment variable}"
 LOG_DIR="/var/log/nobi"
 REPO="/root/project-nobi"
 

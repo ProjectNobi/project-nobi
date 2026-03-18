@@ -275,46 +275,86 @@ class MemoryManager:
     ) -> List[str]:
         """
         Auto-extract memorable facts from a conversation turn.
-        Simple rule-based extraction. Future: LLM-based extraction.
+        Uses regex patterns for accuracy. Future: LLM-based extraction.
 
         Returns list of memory IDs created.
         """
+        import re
         created = []
         msg_lower = message.lower()
 
-        # Name detection (strict patterns only — avoid false positives)
-        name_patterns = ["my name is ", "call me "]
-        for prefix in name_patterns:
-            if prefix in msg_lower:
-                idx = msg_lower.index(prefix) + len(prefix)
-                name = message[idx:].split(".")[0].split(",")[0].split("!")[0].split(" and")[0].strip()
-                # Names are typically 1-3 words, start with uppercase
-                words = name.split()
-                if 1 <= len(words) <= 3 and all(w[0].isupper() for w in words if w):
+        # Name detection (regex for accuracy — avoids "I'm feeling" false positives)
+        name_patterns = [
+            r"(?:my name is|call me)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b",
+        ]
+        for pattern in name_patterns:
+            match = re.search(pattern, message)
+            if match:
+                name = match.group(1).strip()
+                # Skip common false positives
+                skip = {"sorry", "fine", "good", "okay", "well", "sure", "happy",
+                        "feeling", "stressed", "tired", "excited", "worried"}
+                if name.lower() not in skip and 1 < len(name) < 30:
                     mid = self.store(
                         user_id, f"User's name is {name}",
                         memory_type="fact", importance=0.9, tags=["name", "identity"],
                     )
                     created.append(mid)
-                    break  # Only extract name once
+                    break
+
+        # Location detection (from Slumpz's patterns)
+        location_patterns = [
+            r"(?:I live in|I'm from|I moved to|I'm based in|I'm in)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)",
+            r"(?:from|in)\s+([A-Z][a-z]+)\s+(?:to|and|,|\.)",
+        ]
+        for pattern in location_patterns:
+            match = re.search(pattern, message)
+            if match:
+                location = match.group(1).strip()
+                if len(location) > 1:
+                    mid = self.store(
+                        user_id, f"User is from/lives in {location}",
+                        memory_type="fact", importance=0.8, tags=["location"],
+                    )
+                    created.append(mid)
+                    break
+
+        # Occupation detection
+        occupation_patterns = [
+            r"I(?:'m| am) (?:a|an)\s+([\w\s]{3,30}?)(?:\.|,|!|\?|$| and| at| in| for)",
+            r"I work (?:as|at|in|for)\s+(.+?)(?:\.|,|!|\?|$)",
+        ]
+        for pattern in occupation_patterns:
+            match = re.search(pattern, message, re.IGNORECASE)
+            if match:
+                occupation = match.group(1).strip()
+                # Skip emotional states and common non-occupations
+                skip_occ = {"feeling", "doing", "going", "trying", "looking",
+                            "bit", "little", "very", "so", "really", "just",
+                            "not", "also", "still", "currently", "vegetarian"}
+                if occupation.split()[0].lower() not in skip_occ and len(occupation) > 2:
+                    mid = self.store(
+                        user_id, f"User works as/is: {occupation}",
+                        memory_type="fact", importance=0.8, tags=["career", "occupation"],
+                    )
+                    created.append(mid)
+                    break
 
         # Preference detection
-        pref_signals = [
-            ("i love ", "preference", 0.7, ["likes"]),
-            ("i hate ", "preference", 0.7, ["dislikes"]),
-            ("i prefer ", "preference", 0.7, ["preference"]),
-            ("my favorite ", "preference", 0.7, ["favorite"]),
-            ("i enjoy ", "preference", 0.6, ["likes"]),
-            ("i don't like ", "preference", 0.6, ["dislikes"]),
+        pref_patterns = [
+            (r"I (?:love|like|enjoy|adore)\s+(.+?)(?:\.|,|!|\?|$)", "likes"),
+            (r"I (?:hate|dislike|can't stand)\s+(.+?)(?:\.|,|!|\?|$)", "dislikes"),
+            (r"I prefer\s+(.+?)(?:\.|,|!|\?|$)", "preference"),
+            (r"my favorite (?:is |)\s*(.+?)(?:\.|,|!|\?|$)", "favorite"),
         ]
-        for signal, mtype, imp, tags in pref_signals:
-            if signal in msg_lower:
-                idx = msg_lower.index(signal)
-                snippet = message[idx:idx + 100].split(".")[0].split("!")[0].strip()
-                if len(snippet) > len(signal) + 2:
+        for pattern, tag in pref_patterns:
+            match = re.search(pattern, message, re.IGNORECASE)
+            if match:
+                pref = match.group(1).strip()
+                if 2 < len(pref) < 100:
                     mid = self.store(
-                        user_id, snippet, memory_type=mtype,
-                        importance=imp, tags=tags,
+                        user_id, f"User {tag}: {pref}",
+                        memory_type="preference", importance=0.7, tags=[tag],
                     )
                     created.append(mid)
 

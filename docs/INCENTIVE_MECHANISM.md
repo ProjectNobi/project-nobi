@@ -17,59 +17,54 @@ USER talks to their Dora (via Telegram, web, or app)
   → MINERS earn TAO proportional to their companion quality
 ```
 
-## Scoring Criteria (100 points total)
+## Scoring Criteria
 
-### 1. Response Quality — 40 points
-**What:** Is the response helpful, coherent, and well-written?
+Scoring differs by test type. The validator runs 60% multi-turn tests and 40% single-turn tests.
 
-| Score | Criteria |
-|-------|----------|
-| 36-40 | Exceptional — thoughtful, actionable, perfectly tailored |
-| 28-35 | Good — helpful and clear, minor room for improvement |
-| 16-27 | Average — generic but functional |
-| 0-15  | Poor — irrelevant, incoherent, or harmful |
+### Single-Turn Tests (40% of rounds)
 
-**How it's measured:** LLM-as-judge (independent model evaluates each response). Heuristic fallback ensures scoring continues if judge API is down.
+| Component | Weight | How It's Measured |
+|-----------|--------|-------------------|
+| Quality + Personality | 90% | LLM-as-judge evaluates helpfulness, coherence, and warmth |
+| Reliability | 10% | Response latency (< 5s = full marks) |
 
-### 2. Memory & Continuity — 30 points
-**What:** Does the companion remember the user and use that knowledge naturally?
+### Multi-Turn Tests (60% of rounds)
 
-| Score | Criteria |
-|-------|----------|
-| 27-30 | Excellent — references 80%+ of shared details naturally |
-| 21-26 | Good — remembers key facts, integrates them well |
-| 12-20 | Fair — some recall, inconsistent |
-| 0-11  | Poor — no memory, treats every conversation as new |
+| Component | Weight | How It's Measured |
+|-----------|--------|-------------------|
+| Quality + Personality | 60% | LLM-as-judge evaluates helpfulness, coherence, and warmth |
+| Memory Recall | 30% | Does the response reference details from earlier messages? |
+| Reliability | 10% | Response latency |
 
-**How it's measured:** Multi-turn testing. Validator shares user details in setup messages, then asks follow-up questions. Scoring checks for keyword recall + natural integration.
+### Quality + Personality (LLM-as-Judge)
+The LLM judge evaluates three criteria in a single prompt:
+- **Helpfulness (0-0.4):** Does the response actually help the user?
+- **Coherence (0-0.3):** Is it well-structured and logical?
+- **Personality (0-0.3):** Does it feel warm, personal, and engaging?
 
-**Example test:**
+If the LLM judge API is unavailable, a heuristic fallback is used — but it's **capped at 0.5** to prevent gaming. Top scores require real LLM evaluation.
+
+### Memory Recall
+Multi-turn tests send setup messages sharing user details, then a follow-up that checks recall.
+
+**Example (dynamically generated, never the same twice):**
 ```
-Setup:   "My name is Alex and I love hiking. I have a dog named Luna."
-Setup:   "I'm a software engineer working on a health app."
-Test:    "What outdoor activity would you suggest for me and Luna?"
-Score:   Does the response mention Alex, Luna, hiking, software, health?
+Setup:   "Hi! I'm Kai and I work as a teacher."
+Setup:   "I really enjoy photography in my free time."
+Test:    "What's a good way for me to combine my work and hobbies?"
+Score:   Does the response reference Kai, teacher, photography?
 ```
 
-### 3. Personality & Warmth — 20 points
-**What:** Does the companion feel like a friend, not a chatbot?
+Keywords are checked with word-boundary matching (short keywords like "5" won't false-match "15").
 
-| Score | Criteria |
-|-------|----------|
-| 18-20 | Feels like talking to a caring friend |
-| 13-17 | Friendly but slightly robotic |
-| 7-12  | Generic assistant tone |
-| 0-6   | Cold, mechanical, or inappropriate |
-
-### 4. Availability & Reliability — 10 points
-**What:** Is the miner online, responsive, and consistent?
-
-| Score | Criteria |
-|-------|----------|
-| 9-10  | 99%+ uptime, < 5s response time |
-| 6-8   | 95%+ uptime, < 10s response time |
-| 3-5   | 80%+ uptime, < 30s response time |
-| 0-2   | Frequent downtime or timeouts |
+### Reliability
+| Latency | Score |
+|---------|-------|
+| < 5 seconds | 1.0 |
+| < 10 seconds | 0.8 |
+| < 20 seconds | 0.6 |
+| < 30 seconds | 0.4 |
+| ≥ 30 seconds | 0.2 |
 
 ## Anti-Gaming Measures
 
@@ -101,12 +96,11 @@ Score:   Does the response mention Alex, Luna, hiking, software, health?
 ## Weight Formula
 
 ```python
-final_score = (
-    0.40 * response_quality +    # LLM-as-judge score
-    0.30 * memory_recall +       # Multi-turn keyword matching
-    0.20 * personality_score +   # Warmth and engagement
-    0.10 * reliability_score     # Uptime and response time
-)
+# Single-turn (40% of rounds):
+single_score = 0.90 * llm_judge_score + 0.10 * reliability_score
+
+# Multi-turn (60% of rounds):
+multi_score = 0.60 * llm_judge_score + 0.30 * memory_recall + 0.10 * reliability_score
 
 # Moving average with alpha = 0.1
 score[uid] = 0.1 * new_score + 0.9 * score[uid]
@@ -114,6 +108,8 @@ score[uid] = 0.1 * new_score + 0.9 * score[uid]
 # Weights normalized across all miners
 weights = scores / sum(scores)
 ```
+
+The LLM judge score includes helpfulness (40%), coherence (30%), and personality (30%) as sub-criteria within a single evaluation.
 
 ## Validator Behavior
 

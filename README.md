@@ -35,13 +35,18 @@ User (Telegram / Web / App)
 
 ## 📊 Incentive Mechanism
 
-Miners are scored on:
-- **Response Quality** (40%) — LLM-as-judge evaluation
-- **Memory & Continuity** (30%) — Does it remember you?
-- **Personality & Warmth** (20%) — Does it feel like a friend?
-- **Reliability** (10%) — Uptime and response time
+Miners are scored differently depending on the test type:
 
-Fair, transparent, open source. See [INCENTIVE_MECHANISM.md](docs/INCENTIVE_MECHANISM.md) for full details.
+**Single-turn tests (40% of rounds):**
+- **Quality + Personality** (90%) — LLM-as-judge: helpful, coherent, warm
+- **Reliability** (10%) — Response latency
+
+**Multi-turn tests (60% of rounds):**
+- **Quality + Personality** (60%) — LLM-as-judge
+- **Memory Recall** (30%) — Does it remember user details from earlier messages?
+- **Reliability** (10%) — Response latency
+
+All queries are **dynamically generated** — miners can't pre-cache answers. Fair, transparent, open source. See [INCENTIVE_MECHANISM.md](docs/INCENTIVE_MECHANISM.md) for full details.
 
 ## ⛏️ Start Mining
 
