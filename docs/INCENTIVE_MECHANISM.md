@@ -135,10 +135,10 @@ The LLM judge score includes helpfulness (40%), coherence (30%), and personality
 | Server | Any VPS ($5-20/mo) | Dedicated ($20-50/mo) |
 
 ### How to Win
-1. **Use a good model** — quality matters most (40% of score)
-2. **Implement proper memory** — 30% of your score depends on remembering users
-3. **Tune your personality** — be warm, be fun, be a companion
-4. **Stay online** — uptime is easy points
+1. **Use a good model** — quality + personality is 60–90% of your score depending on test type
+2. **Implement proper memory** — memory recall is 30% of your multi-turn score (60% of rounds)
+3. **Tune your personality** — warmth is scored as part of the LLM judge evaluation
+4. **Stay online with low latency** — reliability is 10% of every score
 
 ## Subnet Parameters
 
