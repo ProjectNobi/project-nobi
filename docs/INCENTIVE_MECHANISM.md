@@ -73,15 +73,20 @@ Score:   Does the response mention Alex, Luna, hiking, software, health?
 
 ## Anti-Gaming Measures
 
-### No Copy-Paste Mining
-- Multi-turn tests use **unique user IDs per test session** — miners can't pre-cache answers
-- Memory tests require **actual storage and retrieval** — can't fake recall
-- Validator rotates through **diverse scenarios** — can't optimize for one test type
+### No Pre-Caching (Dynamic Queries)
+- Queries are **dynamically generated** from combinatorial templates — thousands of unique queries
+- Topics, moods, situations, names, careers, hobbies are randomly combined each round
+- Multi-turn scenarios use **randomized characters, interests, and contexts** every time
+- Unique user IDs per test session — miners can't recognize repeat tests
 
-### No Race to the Bottom
-- Quality weight (40%) prevents "fast but dumb" miners from winning
-- Memory weight (30%) rewards miners who invest in proper storage
-- Personality scoring prevents generic copy-paste responses
+### No Keyword Stuffing
+- Quality score (60% weight) uses LLM-as-judge — unnatural responses score low on quality
+- **Heuristic fallback capped at 0.5** — miners can't get top scores without real quality
+- A keyword-stuffed response might score 1.0 on memory but 0.1 on quality → low final score
+
+### No Test Detection
+- Single-turn queries include a **fake user_id** — miners can't tell validator tests from real users
+- Test queries match real user patterns (moods, situations, advice requests)
 
 ### Transparent Scoring
 - All scoring criteria are public (this document)
