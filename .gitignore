@@ -1,35 +1,38 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
 *.egg-info/
 dist/
 build/
 *.egg
 
-# Virtual environments
-venv/
-.venv/
-env/
-
 # Environment
 .env
+.env.local
+.env.production
+
+# Data
+*.db
+memories.db
+bot_memories.db
+state.npz
+
+# Logs
+*.log
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Bittensor
-wallets/
-~/.bittensor/
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# State files
-state.npz
+# Project
 _archive/
+stress_results/
