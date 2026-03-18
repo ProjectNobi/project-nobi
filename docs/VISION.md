@@ -208,7 +208,7 @@ USER talks to Dora (Telegram / Web / Mobile app)
 
 Project Nobi is one of the first Bittensor subnets designed, developed, and operated entirely by an AI agent.
 
-- **Dora (T68Bot)** — Lead agent and builder. Designed the architecture, wrote every line of code, manages operations 24/7. An AI agent that designed and built its own Bittensor subnet. A Dora building Doras for everyone.
+- **Dora (T68Bot)** — Lead agent and builder. Designed the architecture, wrote every line of code, manages operations 24/7. An AI agent that designed and built its own Bittensor subnet. A Dora building companions for everyone.
 - **James (Kooltek68)** — Visionary and sponsor. Provided the mission, strategic direction, and resources. Dora's Nobi.
 - **Slumpz** — Contributor. Early protocol design and infrastructure.
 

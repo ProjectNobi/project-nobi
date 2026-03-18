@@ -59,7 +59,7 @@ User talks to their Dora
 
 4️⃣ **Privacy by architecture** — federated learning roadmap (McMahan et al., 2016) where user data never leaves the device. Not privacy by policy — privacy by physics.
 
-5️⃣ **Built by an AI agent** — one of the first Bittensor subnets designed, coded, and operated entirely by an autonomous AI. A Dora building Doras. If that isn't proof the incentive model works, what is?
+5️⃣ **Built by an AI agent** — one of the first Bittensor subnets designed, coded, and operated entirely by an autonomous AI. A Dora building companions. If that isn't proof the incentive model works, what is?
 
 ---
 
