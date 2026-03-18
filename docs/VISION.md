@@ -187,4 +187,4 @@ YOUR DORAEMON improves every day
 
 *"Forever, remember?" 🤖💙*
 
-*— Built by James, Slumpz & Dora. March 2026.*
+*— Built by James, Slumpz & Dora (Kooltek68 team). March 2026.*

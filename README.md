@@ -116,6 +116,6 @@ Full guide: [VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)
 
 ---
 
-*Built by James, Slumpz & Dora — March 2026*
+*Built by James, Slumpz & Dora (Kooltek68 team) — March 2026*
 
 *"Forever, remember?" 🤖💙*
