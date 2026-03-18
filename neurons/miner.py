@@ -76,51 +76,67 @@ class Miner(BaseMinerNeuron):
         Generate a companion response using LLM + memory context.
         Returns (response_text, memory_entries_used).
         """
-        # Get memory context for this user
         memory_context = ""
         memory_entries = []
+
+        # Step 1: Recall memories (never crash on memory errors)
         if user_id:
-            memory_context = self.memory.get_context_for_prompt(user_id, message)
-            if memory_context:
-                memory_entries = self.memory.recall(user_id, query=message, limit=5)
+            try:
+                memory_context = self.memory.get_context_for_prompt(user_id, message)
+                if memory_context:
+                    memory_entries = self.memory.recall(user_id, query=message, limit=5)
+            except Exception as e:
+                bt.logging.warning(f"Memory recall failed (non-fatal): {e}")
+
+        # Step 2: Always save the user's message to conversation history
+        if user_id:
+            try:
+                self.memory.save_conversation_turn(user_id, "user", message)
+                self.memory.extract_memories_from_message(user_id, message, "")
+            except Exception as e:
+                bt.logging.warning(f"Memory store failed (non-fatal): {e}")
 
         if self.client is None:
             return self._fallback_response(message), memory_entries
 
-        # Build system prompt with memory
+        # Step 3: Build prompt with memory context
         system_prompt = COMPANION_SYSTEM_PROMPT.format(
             memory_context=memory_context if memory_context else ""
         )
 
-        # Build message list
         messages = [{"role": "system", "content": system_prompt}]
 
-        # Add conversation history
+        # Add conversation history from request or from stored history
         if conversation_history:
             for msg in conversation_history[-10:]:
                 if isinstance(msg, dict) and "role" in msg and "content" in msg:
                     messages.append({"role": msg["role"], "content": msg["content"]})
         elif user_id:
-            # Use stored conversation history
-            recent = self.memory.get_recent_conversation(user_id, limit=10)
-            messages.extend(recent)
+            try:
+                recent = self.memory.get_recent_conversation(user_id, limit=10)
+                messages.extend(recent)
+            except Exception as e:
+                bt.logging.warning(f"Conversation history load failed: {e}")
 
         messages.append({"role": "user", "content": message})
 
+        # Step 4: Generate response
         try:
             completion = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 max_tokens=512,
                 temperature=0.7,
+                timeout=25,
             )
             response = completion.choices[0].message.content
 
-            # Save conversation + extract memories
+            # Save assistant response to conversation history
             if user_id:
-                self.memory.save_conversation_turn(user_id, "user", message)
-                self.memory.save_conversation_turn(user_id, "assistant", response)
-                self.memory.extract_memories_from_message(user_id, message, response)
+                try:
+                    self.memory.save_conversation_turn(user_id, "assistant", response)
+                except Exception as e:
+                    bt.logging.warning(f"Saving response to memory failed: {e}")
 
             return response, memory_entries
 

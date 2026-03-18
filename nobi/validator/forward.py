@@ -143,31 +143,49 @@ async def _forward_multi_turn(self, miner_uids):
                    f"with {len(miner_uids)} miners")
 
     # Step 1: Send setup messages to build memory
-    for setup_msg in scenario["setup"]:
-        setup_responses = await self.dendrite(
+    setup_ok = True
+    for i, setup_msg in enumerate(scenario["setup"]):
+        try:
+            setup_responses = await self.dendrite(
+                axons=[self.metagraph.axons[uid] for uid in miner_uids],
+                synapse=CompanionRequest(
+                    message=setup_msg["content"],
+                    user_id=test_user_id,
+                ),
+                deserialize=False,  # Get full synapse to check status
+                timeout=self.config.neuron.timeout,
+            )
+            # Log setup results
+            responded = sum(1 for r in setup_responses if r and r.response)
+            bt.logging.debug(f"[Multi-turn] Setup {i+1}: {responded}/{len(miner_uids)} responded")
+        except Exception as e:
+            bt.logging.warning(f"[Multi-turn] Setup message {i+1} failed: {e}")
+            setup_ok = False
+
+        # Give miners time to process and store the memory
+        await _async_sleep(3)
+
+    if not setup_ok:
+        bt.logging.warning("[Multi-turn] Setup failed, falling back to single-turn")
+        await _forward_single_turn(self, miner_uids)
+        return
+
+    # Step 2: Send test query
+    bt.logging.info(f"[Multi-turn] Test query: '{scenario['test_query']}'")
+
+    try:
+        test_responses = await self.dendrite(
             axons=[self.metagraph.axons[uid] for uid in miner_uids],
             synapse=CompanionRequest(
-                message=setup_msg["content"],
+                message=scenario["test_query"],
                 user_id=test_user_id,
             ),
             deserialize=True,
             timeout=self.config.neuron.timeout,
         )
-        # Small pause between setup messages
-        await _async_sleep(2)
-
-    # Step 2: Send test query
-    bt.logging.info(f"[Multi-turn] Test query: '{scenario['test_query']}'")
-
-    test_responses = await self.dendrite(
-        axons=[self.metagraph.axons[uid] for uid in miner_uids],
-        synapse=CompanionRequest(
-            message=scenario["test_query"],
-            user_id=test_user_id,
-        ),
-        deserialize=True,
-        timeout=self.config.neuron.timeout,
-    )
+    except Exception as e:
+        bt.logging.error(f"[Multi-turn] Test query failed: {e}")
+        return
 
     processed = [
         r if isinstance(r, str) and r else ""

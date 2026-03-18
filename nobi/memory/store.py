@@ -157,15 +157,21 @@ class MemoryManager:
         where = " AND ".join(conditions)
 
         if query:
-            # Keyword relevance scoring via LIKE matching
-            # Each matching keyword adds to the score
-            keywords = [w.lower() for w in query.split() if len(w) > 2]
+            # Keyword relevance scoring via LIKE matching (parameterized)
+            # Sanitize keywords: strip punctuation, skip short words
+            keywords = [
+                w.lower().replace("'", "").replace('"', '')
+                for w in query.split()
+                if len(w) > 2
+            ]
             if keywords:
-                # Order by: keyword matches * importance
+                # CASE WHEN params go BEFORE WHERE params in the SQL
+                # So we need separate param lists and merge in correct order
                 case_parts = []
+                kw_params = []
                 for kw in keywords:
-                    case_parts.append(f"(CASE WHEN LOWER(content) LIKE '%{kw}%' THEN 1 ELSE 0 END)")
-                    params_for_order = []
+                    case_parts.append("(CASE WHEN LOWER(content) LIKE ? THEN 1 ELSE 0 END)")
+                    kw_params.append(f"%{kw}%")
                 relevance = " + ".join(case_parts)
                 sql = f"""
                     SELECT *, ({relevance}) as relevance
@@ -174,6 +180,8 @@ class MemoryManager:
                     ORDER BY relevance DESC, importance DESC, created_at DESC
                     LIMIT ?
                 """
+                # Params order: CASE WHEN params, then WHERE params, then LIMIT
+                params = kw_params + params + [limit]
             else:
                 sql = f"""
                     SELECT *, 0 as relevance FROM memories
@@ -181,6 +189,7 @@ class MemoryManager:
                     ORDER BY importance DESC, created_at DESC
                     LIMIT ?
                 """
+                params.append(limit)
         else:
             sql = f"""
                 SELECT *, 0 as relevance FROM memories
@@ -188,8 +197,7 @@ class MemoryManager:
                 ORDER BY importance DESC, created_at DESC
                 LIMIT ?
             """
-
-        params.append(limit)
+            params.append(limit)
 
         rows = conn.execute(sql, params).fetchall()
 
@@ -274,17 +282,21 @@ class MemoryManager:
         created = []
         msg_lower = message.lower()
 
-        # Name detection
-        for prefix in ["my name is ", "i'm ", "i am ", "call me "]:
+        # Name detection (strict patterns only — avoid false positives)
+        name_patterns = ["my name is ", "call me "]
+        for prefix in name_patterns:
             if prefix in msg_lower:
                 idx = msg_lower.index(prefix) + len(prefix)
-                name = message[idx:].split(".")[0].split(",")[0].split("!")[0].strip()
-                if 1 < len(name) < 30:
+                name = message[idx:].split(".")[0].split(",")[0].split("!")[0].split(" and")[0].strip()
+                # Names are typically 1-3 words, start with uppercase
+                words = name.split()
+                if 1 <= len(words) <= 3 and all(w[0].isupper() for w in words if w):
                     mid = self.store(
                         user_id, f"User's name is {name}",
                         memory_type="fact", importance=0.9, tags=["name", "identity"],
                     )
                     created.append(mid)
+                    break  # Only extract name once
 
         # Preference detection
         pref_signals = [

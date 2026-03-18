@@ -140,15 +140,21 @@ def _score_memory_recall(response: str, keywords: List[str]) -> float:
     response_lower = response.lower()
     matches = 0
     for kw in keywords:
-        if kw.lower() in response_lower:
-            matches += 1
+        kw_lower = kw.lower()
+        # For short keywords (<=2 chars), require word boundary match
+        if len(kw_lower) <= 2:
+            # Use word boundary: check " kw " or "kw " at start or " kw" at end
+            if re.search(r'\b' + re.escape(kw_lower) + r'\b', response_lower):
+                matches += 1
+        else:
+            if kw_lower in response_lower:
+                matches += 1
 
-    # Score based on percentage of keywords recalled
     recall_rate = matches / len(keywords)
 
-    # Bonus tiers
+    # Continuous scoring with tiers
     if recall_rate >= 0.8:
-        return 1.0  # Excellent recall
+        return 1.0
     elif recall_rate >= 0.6:
         return 0.85
     elif recall_rate >= 0.4:
