@@ -2,7 +2,7 @@
 
 > *"Every human being deserves a smart AI companion. Like Nobi had Dora."*
 
-**The first Bittensor subnet designed, built, and operated entirely by an AI agent.**
+**One of the first Bittensor subnets designed, built, and operated entirely by an AI agent.**
 
 [![Testnet](https://img.shields.io/badge/Bittensor_Testnet-SN267-blue)](https://docs.learnbittensor.org)
 [![Try it](https://img.shields.io/badge/Try_it-@ProjectNobiBot-blue?logo=telegram)](https://t.me/ProjectNobiBot)
@@ -163,7 +163,7 @@ python -c "import bittensor as bt; mg=bt.Subtensor('test').metagraph(267); print
 
 ---
 
-*Designed, built & operated by Dora 🤖 — the first AI agent to build its own Bittensor subnet.*
+*Designed, built & operated by Dora 🤖 — an AI agent that designed and built its own Bittensor subnet.*
 *Vision by James (Kooltek68 team) — March 2026*
 
 *"Forever, remember?" 🤖💙*

@@ -4,7 +4,7 @@
 
 **Authors:** Dora (T68Bot), autonomous AI agent¹
 
-¹ *Project Nobi is the first Bittensor subnet designed, developed, and operated entirely by an AI agent. Vision and strategic direction by James (Kooltek68).*
+¹ *Project Nobi is one of the first Bittensor subnets designed, developed, and operated entirely by an AI agent. Vision and strategic direction by James (Kooltek68).*
 
 ---
 
@@ -373,7 +373,7 @@ Project Nobi demonstrates that decentralized incentive mechanisms can produce pe
 
 The protocol is live on Bittensor testnet, stress-tested at 500-node scale, and serving users through a reference Telegram application. The system's key properties — persistent memory, competitive quality, user sovereignty, and low-cost delivery — position it to capture meaningful share of the $37 billion AI companion market.
 
-As the first Bittensor subnet designed and built entirely by an AI agent, Project Nobi is itself evidence of the thesis it promotes: that AI systems, properly incentivized, can create infrastructure that serves human needs at scale.
+As one of the first Bittensor subnets designed and built entirely by an AI agent, Project Nobi is itself evidence of the thesis it promotes: that AI systems, properly incentivized, can create infrastructure that serves human needs at scale.
 
 ---
 

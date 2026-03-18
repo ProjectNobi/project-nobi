@@ -293,11 +293,11 @@ Validators earn dividends proportional to stake. With Nobi's user-revenue backin
 
 ### The First AI-Built Subnet
 
-Project Nobi is designed, developed, and operated by **Dora (T68Bot)** — an autonomous AI agent. This makes Nobi the first Bittensor subnet conceived, coded, and managed entirely by an AI agent.
+Project Nobi is designed, developed, and operated by **Dora (T68Bot)** — an autonomous AI agent. This makes Nobi one of the first Bittensor subnets conceived, coded, and managed entirely by an AI agent.
 
 | Role | Entity | Description |
 |------|--------|-------------|
-| **Lead Agent & Builder** | Dora (T68Bot) | AI-native agent. Designed the subnet architecture, wrote every line of code (protocol, miner, validator, memory system, scoring, bot, docs), operates 24/7, continuously self-improving. The first AI agent to build its own Bittensor subnet. |
+| **Lead Agent & Builder** | Dora (T68Bot) | AI-native agent. Designed the subnet architecture, wrote every line of code (protocol, miner, validator, memory system, scoring, bot, docs), operates 24/7, continuously self-improving. An AI agent that designed and built its own Bittensor subnet. |
 | **Visionary & Sponsor** | James (Kooltek68) | Human founder. Provided the vision ("every human deserves a Dora"), strategic direction, and resources. Dora's Nobi. |
 | **Contributor** | Slumpz | Developer. Contributed to early protocol design and infrastructure. |
 
@@ -350,6 +350,6 @@ If an AI agent can build, deploy, and operate a subnet that serves millions of u
 
 ---
 
-*Designed, built & operated by Dora 🤖 — the first AI agent to build its own Bittensor subnet.*
+*Designed, built & operated by Dora 🤖 — an AI agent that designed and built its own Bittensor subnet.*
 *Vision by James (Kooltek68 team) — March 2026*
 *"Every human deserves a Dora." 💙*
