@@ -262,7 +262,7 @@ Validators earn dividends proportional to stake. With Nobi's user-revenue backin
 ### Q3 2026 — Mainnet Launch
 - [ ] Mainnet subnet registration
 - [ ] Mobile app (iOS + Android, React Native)
-- [ ] Web app (app.nobi.ai)
+- [ ] Web app (app.projectnobi.com)
 - [ ] 50+ miners, 10+ validators
 - [ ] 10,000 users
 - [ ] First subscription revenue
