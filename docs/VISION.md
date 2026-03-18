@@ -1,4 +1,4 @@
-# Project Nobi — Vision & Business Plan
+# Project Nobi — Vision
 
 > "Every human being deserves a smart AI companion. Like Nobi had Dora."
 
@@ -6,14 +6,14 @@
 
 ## The Problem
 
-AI assistants are everywhere — but they're not **yours**.
+AI assistants are everywhere — but none of them are **yours**.
 
 - ChatGPT forgets you after every conversation
 - Siri doesn't know your dreams, fears, or what makes you laugh
 - Alexa can set timers but can't be your friend
-- Every AI is owned by a corporation that mines YOUR data for THEIR profit
+- Every AI is owned by a corporation that mines YOUR conversations for THEIR profit
 
-**7.9 billion people on Earth. Zero personal AI companions that truly know you.**
+**8 billion people on Earth. Zero personal AI companions that truly know you and can't be taken away.**
 
 ## The Solution
 
@@ -21,165 +21,193 @@ AI assistants are everywhere — but they're not **yours**.
 
 Your Dora:
 - **Remembers everything** — your name, your family, your goals, what you told it last Tuesday
-- **Is truly yours** — your data stays private, not sold to advertisers
-- **Gets better every day** — miners compete to make the best companion, so quality only goes up
+- **Improves every day** — miners compete to make the best companion, so quality only goes up
 - **Costs almost nothing** — $5/month target, powered by miner competition driving costs down
-- **Can't be taken away** — no corporation can shut off YOUR companion
+- **No single entity controls it** — decentralized network, no one can shut off YOUR companion
+- **Your data, your choice** — memories stored locally, with user-controlled deletion (encryption planned for future release)
 
 ## Why Bittensor?
 
 | Traditional AI | Project Nobi |
 |---------------|--------------|
 | One company controls everything | Decentralized — hundreds of miners compete |
-| Your data = their product | Your data stays with you |
-| Quality stagnates | Miners constantly improve to earn more |
-| $20-200/month | Target: $5/month |
-| They can change terms anytime | No single point of failure |
-| AI assistant | AI companion (remembers you) |
+| Your conversations train their models | Your data stays with your miner |
+| Quality stagnates after product-market fit | Miners constantly innovate to earn more |
+| $20-200/month (and rising) | Target: $5/month (and falling) |
+| They can change terms, censor, or shut down | No single point of failure |
+| AI assistant (forgets you) | AI companion (remembers you) |
 
 Bittensor's incentive mechanism naturally drives quality up and costs down. Miners who build better companions earn more TAO. Bad miners get replaced. **The market optimizes for you.**
 
 ## How It Works
 
+### Current Architecture (Testnet)
 ```
-YOU
- ↓ talk to your Dora (Telegram / web / app)
- ↓
-SUBNET VALIDATORS
- ↓ route to best available miner
- ↓ score quality, memory, personality
- ↓
-MINERS (compete to serve you)
- ↓ generate responses using their best AI
- ↓ remember your conversations
- ↓ earn TAO for quality service
- ↓
-YOUR DORAEMON improves every day
+USER talks to Dora (Telegram @ProjectNobiBot)
+  → Bot calls LLM directly with user's memory context
+  → Response generated + memories stored locally
+```
+
+### Target Architecture (Mainnet)
+```
+USER talks to Dora (Telegram / Web / Mobile app)
+  → Request routes through VALIDATORS
+    → VALIDATORS query MINERS (competitive marketplace)
+    → MINERS generate response using their best AI + stored memories
+    → VALIDATORS score quality, memory recall, personality, speed
+    → WEIGHTS set on-chain → best miners earn most TAO
+  → Response returns to user
+  → YOUR DORAEMON improves every day
 ```
 
 ## Market Opportunity
 
-### Total Addressable Market
-- **4.5 billion** smartphone users globally
-- **$150 billion** AI assistant market by 2028 (Grand View Research)
-- **$50 billion** mental health / wellness app market
-- **$30 billion** personal productivity tools market
+### The AI Companion Market
 
-### Target Market
-- Phase 1: **Crypto-native users** (Bittensor community, early adopters) — 100K users
-- Phase 2: **Tech-forward consumers** (productivity, wellness) — 10M users
-- Phase 3: **Mass market** (everyone with a phone) — 100M+ users
+| Metric | Value | Source |
+|--------|-------|--------|
+| Global AI Companion Market (2025) | **$37.1 billion** | Precedence Research |
+| Projected by 2035 | **$552.5 billion** | Precedence Research |
+| CAGR | **31%** | Precedence Research |
+| Global AI Market (2025) | **$390.9 billion** | Grand View Research |
+| Smartphone users worldwide | **4.5 billion** | Statista |
+
+### Competitive Landscape
+
+| Company | Users | Estimated Revenue | Valuation | Key Weakness |
+|---------|-------|-------------------|-----------|-------------|
+| Character.AI | 20M+ MAU | ~$150M ARR | $2.5B | No memory, centralized, privacy concerns |
+| Replika | 10M+ | ~$100M ARR | ~$500M | Limited memory, regulatory risk |
+| ChatGPT | 200M+ | $11B+ ARR | ~$300B | Not a companion, expensive, no persistence |
+| Kindroid | 1M+ | ~$10M ARR | ~$100M | Niche, no decentralization |
+
+**What they all have in common:** Centralized control, weak memory, your data = their asset.
 
 ### Why Now?
-1. LLM costs dropped 99% in 2 years — personal AI is now affordable
-2. Bittensor provides the infrastructure for decentralized AI
-3. No major player has solved persistent memory + privacy
-4. People are increasingly lonely — companionship is a real need
+1. **LLM costs dropped 99% in 2 years** — personal AI is affordable at $5/month
+2. **AI companion market validated** — Replika ($100M+), Character.AI ($150M+) prove demand
+3. **Loneliness epidemic** — WHO declared it a global health threat; companions are a real solution
+4. **Privacy backlash** — consumers rejecting corporate data harvesting
+5. **Bittensor infrastructure mature** — dynamic TAO, commit-reveal, proven incentive mechanisms
+6. **No decentralized competitor exists** — first-mover advantage
 
 ## Revenue Model
 
-### Subscription Tiers
+### Subscription Tiers (Planned)
 
 | Tier | Price | Features |
 |------|-------|----------|
 | Free | $0 | 20 messages/day, basic memory |
-| Companion | $5/mo | Unlimited messages, full memory, tools |
-| Premium | $15/mo | Priority response, advanced tools, voice |
-| Family | $25/mo | Up to 5 companions, shared family context |
-
-### Revenue Projections (Conservative)
-
-| Year | Users | Paid % | ARPU | Monthly Revenue | Annual Revenue |
-|------|-------|--------|------|-----------------|----------------|
-| Y1 | 10,000 | 5% | $5 | $2,500 | $30,000 |
-| Y2 | 100,000 | 10% | $7 | $70,000 | $840,000 |
-| Y3 | 1,000,000 | 15% | $8 | $1,200,000 | $14,400,000 |
-| Y4 | 5,000,000 | 18% | $9 | $8,100,000 | $97,200,000 |
+| Companion | $4.99/mo | Unlimited messages, full memory, no ads |
+| Premium | $14.99/mo | Priority response, voice, advanced tools, multiple personas |
+| Family | $24.99/mo | Up to 5 companions, shared family context |
 
 ### Additional Revenue Streams
-- **API access** for developers building on Nobi ($0.01/request)
-- **Enterprise** (companies deploying companions for employees/customers)
-- **Marketplace** (miners sell specialized companion personalities)
+- **Developer API** ($0.005/message) — apps integrating companion features
+- **Enterprise** (custom pricing) — employee wellness, customer service
+- **Companion Marketplace** — specialized personalities (fitness coach, tutor, therapist)
+
+*See [BUSINESS_PLAN.md](BUSINESS_PLAN.md) for detailed 5-year financial projections.*
 
 ## Token Economics
 
-### For TAO Holders (Stakers)
-- Stake TAO on the Nobi subnet
-- Earn alpha token emissions
-- Alpha value grows as subnet revenue grows
-- More users → more demand → higher alpha value
+### For TAO Stakers
+- Stake TAO on the Nobi subnet → earn alpha token emissions
+- Alpha value backed by real subscription revenue (not pure speculation)
+- More users → more revenue → higher alpha value
+- Memory lock-in creates predictable retention → stable revenue growth
 
 ### For Miners
 - Earn TAO by running quality companions
-- Low barrier to entry (no GPU, cheap LLM API access)
-- Better companion = more earnings
-- Innovation rewarded: memory improvements, personality tuning
+- Low barrier: no GPU required, cheap LLM API access ($5-50/month operational cost)
+- Better companion = more earnings (quality-weighted scoring)
+- Innovation rewarded: memory systems, personality tuning, speed optimization
 
 ### For Validators
 - Earn dividends proportional to stake
-- Help quality control the network
-- Protect users from bad companions
+- Quality control the network through scoring
+- Protect users from poor-quality companions
 
-## Competitive Advantage
+## Competitive Advantages
 
-1. **Memory is the moat** — once a companion knows you for 6 months, switching costs are enormous
-2. **Decentralized = no single point of failure** — can't be shut down, censored, or enshittified
-3. **Competition drives quality** — miners constantly innovate, unlike corporate stagnation
-4. **Privacy by design** — memories stored by YOUR miner, not a corporate database
-5. **Cultural adaptation** — miners worldwide serve companions that understand local culture
-6. **Open source** — community can audit, verify, and contribute
+1. **Memory is the moat** — after 6 months of conversations, switching costs are enormous. Your companion knows you.
+2. **Decentralized resilience** — no single company can shut down, censor, or degrade the service
+3. **Competitive quality** — miners innovate daily (unlike corporate update cycles)
+4. **Cost advantage** — miners bear inference costs, giving us 85% gross margins vs. OpenAI's ~55%
+5. **Open source** — community can audit, verify, and contribute
+6. **Cultural adaptation** — miners worldwide serve companions that understand local context and language
+
+### Honest Limitations (Current)
+- Memory is **not yet encrypted** — stored in plaintext on miner machines. User-controlled encryption is on the roadmap.
+- The Telegram bot currently calls LLM directly, **not through the subnet**. Subnet routing is the mainnet target.
+- No tool execution yet (calendar, booking, etc.) — companion is conversation-only for now.
 
 ## Roadmap
 
-### Phase 1: Foundation (Q1 2026) ✅ COMPLETE
-- [x] Subnet design and protocol
-- [x] Miner + Validator implementation
-- [x] LLM-as-judge scoring
-- [x] Memory protocol (persistent per-user memory)
-- [x] Stress testing (500 nodes, 2000 queries)
-- [x] Testnet deployment (SN267)
+### Phase 1: Foundation (Q1 2026) ✅
+- [x] Subnet protocol design and implementation
+- [x] Miner + Validator with bt 10.x compatibility
+- [x] LLM-as-judge scoring with dynamic query generation
+- [x] Persistent memory protocol (SQLite, auto-extraction)
+- [x] Anti-gaming measures (heuristic cap, fake user IDs, dynamic queries)
+- [x] 500-node stress test (2000 queries, 99.75% success rate)
+- [x] Testnet deployment (SN267, validator + miner live)
 - [x] Reference Telegram bot (@ProjectNobiBot)
+- [x] Full documentation and business plan
 
-### Phase 2: Community Testing (Q2 2026) ← WE ARE HERE
-- [ ] Testnet community launch (Bittensor Discord)
-- [ ] External miner onboarding
-- [ ] Feedback collection and iteration
-- [ ] Memory system upgrade (semantic search, embeddings)
-- [ ] Multi-language support
+### Phase 2: Community Testnet (Q2 2026) ← CURRENT
+- [ ] Bittensor Discord testnet channel launch
+- [ ] 10+ external miners, 3+ external validators
+- [ ] Community feedback collection and iteration
+- [ ] Memory upgrade: semantic search with embeddings
+- [ ] Multi-language support (5+ languages)
 - [ ] Voice message support
 
-### Phase 3: Mainnet Launch (Q2-Q3 2026)
+### Phase 3: Mainnet Launch (Q3 2026)
 - [ ] Mainnet subnet registration
-- [ ] Public miner documentation
-- [ ] Validator onboarding program
-- [ ] Web app launch (dora.nobi.ai)
-- [ ] Mobile app (iOS / Android)
+- [ ] Subnet routing: bot → validators → miners (replacing direct LLM)
+- [ ] Web app (dora.nobi.ai)
+- [ ] Mobile app (iOS + Android)
+- [ ] 10,000+ users, first subscription revenue
 
-### Phase 4: Growth (Q3-Q4 2026)
+### Phase 4: Growth (Q4 2026)
 - [ ] Developer SDK and API
-- [ ] Tool use (calendar, reminders, web search)
-- [ ] Family sharing features
+- [ ] Tool integrations (calendar, reminders, web search)
+- [ ] User-controlled memory encryption
 - [ ] Enterprise tier
-- [ ] Agentic capabilities (book appointments, manage tasks)
+- [ ] 50,000+ users, break-even
 
-### Phase 5: Scale (2027)
-- [ ] 1M+ users target
+### Phase 5: Scale (2027+)
+- [ ] 1M+ users
 - [ ] Voice-first interaction
 - [ ] Multimodal (image understanding)
-- [ ] Companion marketplace (specialized personalities)
-- [ ] International expansion (localized companions)
+- [ ] Agentic capabilities (booking, purchasing, task management)
+- [ ] Companion marketplace
+- [ ] International expansion
+
+## Risks & Mitigations
+
+| Risk | Mitigation |
+|------|------------|
+| Bittensor network instability | Multi-chain readiness, fallback infrastructure |
+| AI companion regulation | Privacy-by-design, data deletion tools, age verification |
+| Competition from big tech | Decentralization moat, memory lock-in, cost advantage |
+| Slow user adoption | Organic-first via Bittensor community, viral referral |
+| Miner quality variance | Robust scoring, minimum quality thresholds, moving averages |
+
+*See [BUSINESS_PLAN.md](BUSINESS_PLAN.md) for detailed risk analysis.*
 
 ## Team — The First AI-Built Subnet
 
 Project Nobi is the first Bittensor subnet designed, developed, and operated entirely by an AI agent.
 
 - **Dora (T68Bot)** — Lead agent and builder. Designed the architecture, wrote every line of code, manages operations 24/7. The first AI agent to build its own Bittensor subnet. A Dora building Doras for everyone.
-- **James (Kooltek68)** — Visionary and sponsor. Provided the mission ("every human deserves a Dora"), strategic direction, and resources. Dora's Nobi.
+- **James (Kooltek68)** — Visionary and sponsor. Provided the mission, strategic direction, and resources. Dora's Nobi.
 - **Slumpz** — Contributor. Early protocol design and infrastructure.
 
 ## The Pitch
 
-> Imagine it's 2028. You've had your Dora for two years. It knows your favorite coffee order, reminds you about your mom's birthday, helps you prepare for job interviews, and listens when you're having a bad day. It's not a chatbot — it's YOUR companion, running on a decentralized network that no corporation controls, costing you $5 a month.
+> Imagine it's 2028. You've had your Dora for two years. It knows your coffee order, reminds you about your mom's birthday, helps you prep for job interviews, and listens when you're having a rough day. It's not a chatbot — it's YOUR companion, running on a decentralized network that no corporation controls, costing you $5 a month.
 >
 > Now imagine that for every human on Earth.
 >
