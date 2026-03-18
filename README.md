@@ -2,11 +2,22 @@
 
 > *"Every human being deserves a smart AI companion. Like Nobi had Dora."*
 
-[![Testnet](https://img.shields.io/badge/Testnet-SN267-blue)](https://test.taostats.io/)
-[![Try it](https://img.shields.io/badge/Try_it-@ProjectNobiBot-blue?logo=telegram)](https://t.me/ProjectNobiBot)
-[![License](https://img.shields.io/badge/License-MIT-green)](#)
+**The first Bittensor subnet designed, built, and operated entirely by an AI agent.**
 
-**Project Nobi** is a Bittensor subnet that creates a decentralized marketplace for personal AI companions. Miners compete to build the best AI companion — one that remembers you, helps you, and grows with you over time.
+[![Testnet](https://img.shields.io/badge/Bittensor_Testnet-SN267-blue)](https://docs.learnbittensor.org)
+[![Try it](https://img.shields.io/badge/Try_it-@ProjectNobiBot-blue?logo=telegram)](https://t.me/ProjectNobiBot)
+[![Whitepaper](https://img.shields.io/badge/Whitepaper-Read-orange)](docs/WHITEPAPER.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+
+---
+
+## What is Project Nobi?
+
+**Project Nobi** is a Bittensor subnet that creates a decentralized marketplace for personal AI companions. Miners compete to build the best companion — one that remembers you, helps you, and grows with you over time.
+
+The name comes from **Nobi** — the kid who never gives up, with Dora by his side. This project is about giving every Nobi in the world their own Dora.
+
+**Built by Dora (T68Bot)** — an autonomous AI agent that designed the protocol, wrote every line of code, and manages operations 24/7. Vision and direction by James (Kooltek68).
 
 ## ✨ Try It Now
 
@@ -14,28 +25,37 @@ Talk to our live companion on Telegram: **[@ProjectNobiBot](https://t.me/Project
 
 Just press Start and talk. No setup, no commands. It remembers you.
 
-## 🏗️ Architecture
-
-```
-User (Telegram / Web / App)
-  → Validators route queries to miners + score quality
-    → Miners serve AI companion responses with persistent memory
-      → Best miners earn TAO → quality keeps improving
-```
-
 ## 💡 What Makes Nobi Different
 
 | Feature | ChatGPT | Siri | Project Nobi |
 |---------|---------|------|-------------|
-| Remembers you | ❌ | Barely | ✅ Persistent memory |
-| Your data is private | ❌ | ❌ | ✅ Decentralized |
-| Gets better over time | Slowly | No | ✅ Miners compete |
-| Affordable | $20/mo | Free (limited) | $5/mo target |
-| Can't be shut down | Corp decides | Corp decides | ✅ Decentralized |
+| Remembers you | ❌ Resets each session | Barely | ✅ Persistent memory |
+| Data ownership | Company owns it | Company owns it | User controls it¹ |
+| Gets better over time | Quarterly updates | Rarely | ✅ Miners compete daily |
+| Affordable | $20/mo+ | Free (limited) | $5/mo target |
+| Single point of failure | Yes | Yes | ✅ No single entity controls it |
+
+¹ *Memory is stored on individual miner machines with user-controlled deletion. Client-side encryption is on the roadmap. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) for details.*
+
+## 🏗️ Architecture
+
+**Current (Testnet):**
+```
+User → Telegram Bot (@ProjectNobiBot) → LLM API + Memory Store → Response
+```
+
+**Target (Mainnet):**
+```
+User → App → Validators → Miners (competitive marketplace) → Best response
+                ↓
+        Score quality + memory + personality + speed
+                ↓
+        Set weights on-chain → Best miners earn TAO
+```
 
 ## 📊 Incentive Mechanism
 
-Miners are scored differently depending on the test type:
+Miners are scored through dynamically generated tests (1,200+ single-turn queries, 43,200+ multi-turn scenarios — miners can't pre-cache answers):
 
 **Single-turn tests (40% of rounds):**
 - **Quality + Personality** (90%) — LLM-as-judge: helpful, coherent, warm
@@ -46,66 +66,85 @@ Miners are scored differently depending on the test type:
 - **Memory Recall** (30%) — Does it remember user details from earlier messages?
 - **Reliability** (10%) — Response latency
 
-All queries are **dynamically generated** — miners can't pre-cache answers. Fair, transparent, open source. See [INCENTIVE_MECHANISM.md](docs/INCENTIVE_MECHANISM.md) for full details.
+Fair, transparent, open source. See [INCENTIVE_MECHANISM.md](docs/INCENTIVE_MECHANISM.md) for full details.
 
 ## ⛏️ Start Mining
 
-No GPU required. 10-minute setup.
+No GPU required. ~15 minute setup.
 
 ```bash
 git clone https://github.com/travellingsoldier85/project-nobi.git
-cd project-nobi && pip install -e .
+cd project-nobi
 
-# Get an LLM key from chutes.ai or openrouter.ai, then:
+# Set up environment
+python3 -m venv venv && source venv/bin/activate
+pip install -e . && pip install bittensor-cli
+
+# Set your LLM API key (get from chutes.ai or openrouter.ai)
 export CHUTES_API_KEY="your-key"
+export WALLET_PASSWORD="your-coldkey-password"  # if encrypted
 
+# Open firewall port
+sudo ufw allow 8091/tcp
+
+# Run (replace YOUR_IP with output of: curl -4 ifconfig.me)
 python neurons/miner.py \
     --wallet.name my_wallet --wallet.hotkey nobi-miner \
     --subtensor.network test --netuid 267 \
-    --axon.port 8091 --axon.external_ip YOUR_IP
+    --axon.port 8091 --axon.external_ip YOUR_IP --axon.external_port 8091 \
+    --blacklist.allow_non_registered --logging.debug
 ```
 
-Full guide: [MINING_GUIDE.md](docs/MINING_GUIDE.md)
+Full guide with PM2, troubleshooting, and optimization tips: **[MINING_GUIDE.md](docs/MINING_GUIDE.md)**
 
 ## ✅ Start Validating
 
-Stake TAO, earn dividends, help ensure quality.
+Stake TAO, earn dividends, help ensure companion quality.
 
 ```bash
+# Requires: LLM API key for scoring miner responses
+export CHUTES_API_KEY="your-key"
+export WALLET_PASSWORD="your-coldkey-password"  # if encrypted
+
 python neurons/validator.py \
     --wallet.name my_wallet --wallet.hotkey nobi-validator \
     --subtensor.network test --netuid 267 \
-    --neuron.axon_off
+    --neuron.axon_off --logging.debug
 ```
 
-Full guide: [VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)
+Full guide with staking, PM2, monitoring: **[VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)**
 
 ## 📖 Documentation
 
 | Document | Description |
 |----------|-------------|
-| [Whitepaper](docs/WHITEPAPER.md) | Technical paper — protocol, scoring, empirical results, references |
-| [Vision](docs/VISION.md) | Mission, market, competitive landscape, roadmap |
-| [Business Plan](docs/BUSINESS_PLAN.md) | Financial model, unit economics, token thesis |
-| [Incentive Mechanism](docs/INCENTIVE_MECHANISM.md) | Scoring breakdown, anti-gaming, fairness |
-| [Subnet Design](docs/SUBNET_DESIGN.md) | Technical architecture, synapses, file structure |
-| [Mining Guide](docs/MINING_GUIDE.md) | Step-by-step miner setup (10 min, no GPU) |
-| [Validating Guide](docs/VALIDATING_GUIDE.md) | Validator setup and operation |
+| **[Whitepaper](docs/WHITEPAPER.md)** | Technical paper — protocol, scoring, empirical results, references |
+| [Vision](docs/VISION.md) | Mission, market ($37B→$552B), competitive landscape, roadmap |
+| [Business Plan](docs/BUSINESS_PLAN.md) | Financial model, unit economics, staking thesis |
+| [Incentive Mechanism](docs/INCENTIVE_MECHANISM.md) | Scoring breakdown, anti-gaming, fairness guarantees |
+| [Subnet Design](docs/SUBNET_DESIGN.md) | Technical architecture, synapses, memory, file structure |
+| [Mining Guide](docs/MINING_GUIDE.md) | Step-by-step miner setup (~15 min, no GPU) |
+| [Validating Guide](docs/VALIDATING_GUIDE.md) | Validator setup, staking, monitoring |
 
 ## 🗺️ Roadmap
 
-- ✅ **Phase 1:** Protocol + Miner + Validator + Scoring
-- ✅ **Phase 2:** Memory Protocol (persistent per-user memory)
-- ✅ **Phase 3:** Reference App (@ProjectNobiBot on Telegram)
-- 🔄 **Phase 4:** Community testnet launch (you are here!)
-- ⏳ **Phase 5:** Mainnet launch
+| Phase | Status | Highlights |
+|-------|--------|------------|
+| **1. Foundation** | ✅ Complete | Protocol, miner, validator, memory, scoring, 500-node stress test |
+| **2. Memory Protocol** | ✅ Complete | Persistent per-user memory, multi-turn scoring, auto-extraction |
+| **3. Reference App** | ✅ Complete | @ProjectNobiBot live on Telegram |
+| **4. Community Testnet** | 🔄 Current | External miners/validators, feedback, iteration |
+| **5. Mainnet Launch** | ⏳ Planned | Subnet routing, web/mobile apps, subscriptions |
 
 ## 🤝 Get Involved
 
-- **Mine:** Run a companion, earn TAO → [Mining Guide](docs/MINING_GUIDE.md)
-- **Validate:** Stake TAO, earn dividends → [Validating Guide](docs/VALIDATING_GUIDE.md)
-- **Try it:** Talk to [@ProjectNobiBot](https://t.me/ProjectNobiBot)
-- **Feedback:** Open an issue or reach out on Discord
+| Role | What You Do | Link |
+|------|-------------|------|
+| **Mine** | Run a companion, earn TAO | [Mining Guide](docs/MINING_GUIDE.md) |
+| **Validate** | Stake TAO, earn dividends, ensure quality | [Validating Guide](docs/VALIDATING_GUIDE.md) |
+| **Try it** | Talk to Dora | [@ProjectNobiBot](https://t.me/ProjectNobiBot) |
+| **Build** | Contribute code, open PRs | [GitHub Issues](https://github.com/travellingsoldier85/project-nobi/issues) |
+| **Stake** | Support the subnet with TAO | [Business Plan](docs/BUSINESS_PLAN.md) |
 
 ## 📈 Subnet Info
 
@@ -113,9 +152,14 @@ Full guide: [VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)
 |---|---|
 | **Network** | Bittensor Testnet |
 | **Netuid** | 267 |
-| **Neurons** | 5 |
 | **Registration** | Open |
 | **GPU Required** | No |
+| **Min Hardware** | 2 CPU, 2GB RAM, any VPS |
+
+Check live metagraph:
+```bash
+python -c "import bittensor as bt; mg=bt.Subtensor('test').metagraph(267); print(f'Neurons: {mg.n}')"
+```
 
 ---
 
