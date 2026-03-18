@@ -1,0 +1,8 @@
+Message: I own subnet 272 on Bittensor testnet
+Address: 5GCJSFh3VdLc3BUpUEGetpLc5R6bYW2FUsWxUp8NWgoBzvXP
+Signature: 0x2e8a5d128cb29c412c25d07b2f7781bf0224ef040515ba10bc9c0a4298bdc13244683f63a8463d5c39d42eece1f44777bb01d62a351e33b2261d6b08dd0cc58b
+Network: Bittensor Testnet
+Netuid: 272
+Subnet Name: Project Nobi
+GitHub: https://github.com/ProjectNobi/project-nobi
+Description: Personal AI Companions for Everyone — Decentralized AI companions with persistent memory, powered by Bittensor.
