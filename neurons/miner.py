@@ -4,6 +4,7 @@
 # Phase 2: Persistent memory — remembers users across conversations
 
 import os
+import sys
 import time
 import typing
 import bittensor as bt
@@ -243,6 +244,10 @@ class Miner(BaseMinerNeuron):
 
 
 if __name__ == "__main__":
+    # Task 3: --mock flag deprecation warning (bt 10.x)
+    if "--mock" in sys.argv:
+        bt.logging.warning("--mock flag is deprecated in bt 10.x and has no effect. Running in real mode.")
+
     with Miner() as miner:
         while True:
             bt.logging.info(f"Miner running... {time.time()}")

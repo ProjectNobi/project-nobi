@@ -2,6 +2,7 @@
 # Project Nobi — Validator Neuron
 # Phase 1: Query miners, score companion responses
 
+import sys
 import time
 import bittensor as bt
 
@@ -35,6 +36,10 @@ class Validator(BaseValidatorNeuron):
 
 
 if __name__ == "__main__":
+    # Task 3: --mock flag deprecation warning (bt 10.x)
+    if "--mock" in sys.argv:
+        bt.logging.warning("--mock flag is deprecated in bt 10.x and has no effect. Running in real mode.")
+
     with Validator() as validator:
         while True:
             bt.logging.info(f"Validator running... {time.time()}")

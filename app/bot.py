@@ -15,6 +15,7 @@ UX principles:
 
 import os
 import sys
+import random
 import logging
 import asyncio
 from datetime import datetime, timezone
@@ -34,11 +35,17 @@ from telegram.constants import ChatAction, ParseMode
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from nobi.memory import MemoryManager
+from nobi.protocol import CompanionRequest
 
 try:
     from openai import OpenAI
 except ImportError:
     OpenAI = None
+
+try:
+    import bittensor as bt
+except ImportError:
+    bt = None
 
 # ─── Config ──────────────────────────────────────────────────
 
@@ -46,6 +53,14 @@ BOT_TOKEN = os.environ.get("NOBI_BOT_TOKEN", "")
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
+
+# Task 5: Subnet routing config
+SUBNET_ROUTING = os.environ.get("SUBNET_ROUTING", "false").lower() == "true"
+SUBNET_NETUID = int(os.environ.get("SUBNET_NETUID", "272"))
+SUBNET_NETWORK = os.environ.get("SUBNET_NETWORK", "test")
+SUBNET_TIMEOUT = float(os.environ.get("SUBNET_TIMEOUT", "10"))
+SUBNET_WALLET_NAME = os.environ.get("SUBNET_WALLET_NAME", "T68Coldkey")
+SUBNET_HOTKEY_NAME = os.environ.get("SUBNET_HOTKEY_NAME", "nobi-validator")
 
 # Rate limit: max messages per user per minute
 MAX_MESSAGES_PER_MINUTE = 10
@@ -137,6 +152,30 @@ class CompanionBot:
         self.client = None
         self.model = CHUTES_MODEL
 
+        # Task 5: Subnet routing — initialize bittensor dendrite
+        self.dendrite = None
+        self.metagraph = None
+        self.subnet_enabled = False
+
+        if SUBNET_ROUTING and bt is not None:
+            try:
+                wallet = bt.Wallet(name=SUBNET_WALLET_NAME, hotkey=SUBNET_HOTKEY_NAME)
+                self.dendrite = bt.Dendrite(wallet=wallet)
+                subtensor = bt.Subtensor(network=SUBNET_NETWORK)
+                self.metagraph = subtensor.metagraph(netuid=SUBNET_NETUID)
+                self.subnet_enabled = True
+                logger.info(
+                    f"Subnet routing ENABLED: netuid={SUBNET_NETUID}, "
+                    f"network={SUBNET_NETWORK}, miners={self.metagraph.n.item()}"
+                )
+            except Exception as e:
+                logger.warning(f"Subnet routing init failed (will use direct API): {e}")
+                self.subnet_enabled = False
+        else:
+            if SUBNET_ROUTING and bt is None:
+                logger.warning("SUBNET_ROUTING=true but bittensor not installed")
+            logger.info("Subnet routing disabled — using direct API only")
+
         # Set up LLM client (Chutes → OpenRouter fallback)
         if CHUTES_KEY and OpenAI:
             self.client = OpenAI(
@@ -158,8 +197,66 @@ class CompanionBot:
         """Get a stable user ID from Telegram."""
         return f"tg_{update.effective_user.id}"
 
+    async def _query_subnet(self, user_id: str, message: str) -> str | None:
+        """
+        Task 5: Try to get a response from a miner on the subnet.
+        Returns the response string, or None if subnet query failed.
+        """
+        if not self.subnet_enabled or not self.dendrite or not self.metagraph:
+            return None
+
+        try:
+            # Refresh metagraph periodically (every call is fine, it's cached internally)
+            # Pick the miner with the highest incentive (best performing)
+            incentives = self.metagraph.I
+            if incentives is None or len(incentives) == 0:
+                return None
+
+            # Get top 3 miners by incentive, pick one randomly for load distribution
+            top_uids = sorted(
+                range(len(incentives)),
+                key=lambda i: float(incentives[i]),
+                reverse=True,
+            )[:3]
+
+            # Filter out miners with zero incentive or no axon
+            valid_uids = [
+                uid for uid in top_uids
+                if float(incentives[uid]) > 0
+                and self.metagraph.axons[uid].ip != "0.0.0.0"
+            ]
+
+            if not valid_uids:
+                logger.debug("[Subnet] No valid miners with incentive > 0")
+                return None
+
+            chosen_uid = random.choice(valid_uids)
+            axon = self.metagraph.axons[chosen_uid]
+
+            logger.info(f"[Subnet] Querying miner UID {chosen_uid} "
+                       f"(incentive={float(incentives[chosen_uid]):.4f})")
+
+            responses = await self.dendrite(
+                axons=[axon],
+                synapse=CompanionRequest(message=message, user_id=user_id),
+                deserialize=True,
+                timeout=SUBNET_TIMEOUT,
+            )
+
+            if responses and responses[0] and isinstance(responses[0], str) and responses[0].strip():
+                logger.info(f"[Subnet] ✅ Got response from miner {chosen_uid} "
+                          f"({len(responses[0])} chars)")
+                return responses[0]
+            else:
+                logger.warning(f"[Subnet] Miner {chosen_uid} returned empty response")
+                return None
+
+        except Exception as e:
+            logger.warning(f"[Subnet] Query failed: {e}")
+            return None
+
     async def generate(self, user_id: str, message: str) -> str:
-        """Generate a companion response with memory."""
+        """Generate a companion response — subnet first, then direct API fallback."""
         # Truncate extremely long messages
         if len(message) > 2000:
             message = message[:2000] + "..."
@@ -178,6 +275,21 @@ class CompanionBot:
         except Exception as e:
             logger.warning(f"Memory store error: {e}")
 
+        # Task 5: Try subnet routing first
+        if self.subnet_enabled:
+            subnet_response = await self._query_subnet(user_id, message)
+            if subnet_response:
+                logger.info(f"[Routing] Used SUBNET path for user {user_id}")
+                # Save subnet response to conversation history
+                try:
+                    self.memory.save_conversation_turn(user_id, "assistant", subnet_response)
+                except Exception as e:
+                    logger.warning(f"Save subnet response error: {e}")
+                return subnet_response
+            else:
+                logger.info(f"[Routing] Subnet failed, falling back to DIRECT API for user {user_id}")
+
+        # Direct API path (existing code)
         if not self.client:
             return "I'm having trouble connecting right now. Try again in a moment! 🤖"
 
@@ -212,6 +324,8 @@ class CompanionBot:
 
             if not response or not response.strip():
                 return "Hmm, I got tongue-tied! 😅 Try saying that again?"
+
+            logger.info(f"[Routing] Used DIRECT API path for user {user_id}")
 
             # Save response
             try:
