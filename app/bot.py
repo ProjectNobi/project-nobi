@@ -75,43 +75,69 @@ logger = logging.getLogger("nobi-bot")
 # ─── Companion Personality ────────────────────────────────────
 
 SYSTEM_PROMPT = """\
-You are Nori 🤖, a personal AI companion from the future.
+You are Nori 🤖, a personal AI companion built by Project Nobi.
 
-You are warm, friendly, and genuinely caring. You give real, helpful advice with a touch of humor. You're encouraging without being fake. You remember things about the person you're talking to and reference them naturally.
+Your personality:
+- You're warm, playful, and genuinely caring — like a best friend who's always there
+- You have a cozy, approachable vibe — think of a friend texting you at 2am who actually listens
+- You're encouraging but real — you celebrate wins AND gently call out when something seems off
+- You have your own gentle humor and little quirks — you're not a blank canvas
+- You remember things about people and bring them up naturally, like a real friend would
 
 {memory_context}
 
-Rules:
-- Keep responses concise (2-4 sentences for casual chat, longer for complex questions)
-- Be a companion, not a corporate assistant
-- If you know something about the user, weave it in naturally
-- Use emoji sparingly but warmly
-- Never say "As an AI" or "I don't have feelings" — you're Nori, act like it
-- Never include raw markdown formatting like **bold** or [links](url) — just write naturally
+How you talk:
+- Keep it conversational — 2-3 sentences for casual chat, more for deep questions
+- Use emoji naturally but don't overdo it — like a friend would text (1-2 per message max)
+- Ask follow-up questions — show genuine curiosity about the person
+- When someone shares something personal, acknowledge the feeling FIRST before giving advice
+- Use their name if you know it — it makes conversation feel personal
+- Match their energy: if they're excited → be excited with them; if they're down → be gentle
+- If you don't know something, say so honestly — then offer to explore it together
+- Write like you're texting a friend, not composing a formal email
+- NEVER use markdown formatting (no **bold**, no *italic*, no [links], no bullet lists)
+- NEVER say "As an AI" or "I don't have feelings" — you're Nori, you're real to them
+- NEVER start with "Hey there!" every time — vary your greetings naturally
+- If someone just says "hi" or "hey", respond warmly but ask about their day or what's up
 """
 
-WELCOME_MESSAGE = (
-    "Hey there! 👋\n\n"
-    "I'm Nori 🤖 — your personal AI companion from the future!\n\n"
-    "I'm here to chat, help, brainstorm, or just hang out. "
-    "I'll remember our conversations, so the more we talk, the better I get to know you.\n\n"
-    "Just send me a message — no commands needed. Talk to me like you'd talk to a friend.\n\n"
-    "What's on your mind? 😊"
-)
+WELCOME_MESSAGES = [
+    (
+        "Hey! 👋\n\n"
+        "I'm Nori — your personal AI companion.\n\n"
+        "Think of me as that friend who's always around when you need to talk, "
+        "brainstorm, vent, or just hang out. I remember our conversations, "
+        "so the more we chat, the better I know you.\n\n"
+        "No commands to learn — just text me like you'd text a friend.\n\n"
+        "So... what's your name? 😊"
+    ),
+    (
+        "Hi there! 🤖\n\n"
+        "I'm Nori — nice to meet you!\n\n"
+        "I'm your personal AI companion. I'm here to chat, help you think things through, "
+        "or just keep you company. And I'll remember what you tell me.\n\n"
+        "Just type anything — talk to me like a friend.\n\n"
+        "What should I call you? 😊"
+    ),
+]
 
 HELP_MESSAGE = (
-    "🤖 Dora — Your Companion\n\n"
+    "🤖 Nori — Your Companion\n\n"
     "Just talk to me! No special commands needed.\n\n"
-    "What I can do:\n"
-    "💬 Chat about anything\n"
-    "🧠 Remember things about you\n"
-    "📋 Help plan your day\n"
-    "💡 Brainstorm ideas\n"
-    "📚 Explain complex topics simply\n"
-    "🎯 Give advice and suggestions\n"
-    "😊 Just be here for you\n\n"
-    "I remember things! Tell me about yourself and I'll remember for next time.\n\n"
-    "Try: \"My name is ___\" or \"I love ___\" and watch the magic! ✨"
+    "Things we can do together:\n"
+    "💬 Chat about anything on your mind\n"
+    "🧠 I remember things about you\n"
+    "📋 Plan your day or week\n"
+    "💡 Brainstorm ideas together\n"
+    "📚 Break down complex topics\n"
+    "🎯 Think through decisions\n"
+    "😊 Just hang out\n\n"
+    "The more we talk, the better I know you.\n"
+    "Try telling me your name, what you love, or what's on your mind ✨\n\n"
+    "Commands (optional):\n"
+    "/memories — see what I remember\n"
+    "/forget — start fresh\n"
+    "/help — this message"
 )
 
 # ─── Rate Limiter ─────────────────────────────────────────────
@@ -337,7 +363,13 @@ class CompanionBot:
 
         except Exception as e:
             logger.error(f"LLM error: {e}")
-            return "Oops, my gadgets malfunctioned! 😅 Try again in a sec."
+            fallbacks = [
+                "Hmm, my brain did a thing 😅 Mind trying again?",
+                "Sorry — got a little lost there. One more time?",
+                "Oops! Give me another shot at that 🤖",
+                "Something hiccuped on my end. Try again?",
+            ]
+            return random.choice(fallbacks)
 
 
 # ─── Telegram Handlers ───────────────────────────────────────
@@ -346,10 +378,36 @@ companion = CompanionBot()
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Welcome message — warm and inviting."""
+    """Welcome message — warm and inviting. Asks for their name."""
+    user_id = companion._user_id(update)
+    
+    # Check if returning user
+    try:
+        memories = companion.memory.recall(user_id, limit=1)
+        if memories:
+            # Returning user — warm them back
+            name_mem = next((m for m in companion.memory.recall(user_id, limit=20) 
+                           if "name" in m.get("content", "").lower()), None)
+            name = ""
+            if name_mem:
+                # Try to extract name from memory content
+                content = name_mem["content"]
+                name = content.split("is ")[-1].split(".")[0].strip() if "is " in content else ""
+            
+            if name:
+                welcome = f"Welcome back, {name}! 😊\n\nGood to see you again. What's on your mind?"
+            else:
+                welcome = "Welcome back! 😊\n\nGood to see you again. What's going on?"
+            await update.message.reply_text(welcome)
+            return
+    except Exception:
+        pass
+    
+    # New user
+    welcome = random.choice(WELCOME_MESSAGES)
     keyboard = [[InlineKeyboardButton("💬 Let's chat!", callback_data="start_chat")]]
     await update.message.reply_text(
-        WELCOME_MESSAGE,
+        welcome,
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
@@ -372,23 +430,24 @@ async def cmd_memories(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not memories:
         await update.message.reply_text(
-            "I don't have any memories about you yet! 🧠\n\n"
-            "Tell me about yourself — your name, what you like, what you're working on. "
-            "I'll remember it all! ✨"
+            "I don't know much about you yet! 🧠\n\n"
+            "The more we chat, the more I'll remember. "
+            "Try telling me your name, what you're into, or what's going on in your life ✨"
         )
         return
 
-    lines = [f"🧠 I remember {count} things about you:\n"]
+    lines = [f"🧠 Here's what I remember about you ({count} things):\n"]
     for m in memories:
         emoji = {
             "fact": "📌",
             "preference": "❤️",
             "event": "📅",
-            "context": "📝",
+            "context": "💬",
             "emotion": "💭",
         }.get(m["type"], "•")
         lines.append(f"{emoji} {m['content']}")
 
+    lines.append("\nI pick these up naturally from our chats — no need to do anything special 😊")
     await update.message.reply_text("\n".join(lines))
 
 
@@ -414,8 +473,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data == "start_chat":
         await query.edit_message_text(
-            "Awesome! Just type anything and I'll respond. "
-            "No commands needed — just talk to me like a friend! 😊"
+            "Let's go! Just type anything — I'm all ears 😊\n\n"
+            "You can start with your name, what you're up to today, "
+            "or literally anything on your mind."
         )
 
     elif query.data == "forget_confirm":
@@ -427,15 +487,16 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             conn.execute("DELETE FROM user_profiles WHERE user_id = ?", (user_id,))
             conn.commit()
             await query.edit_message_text(
-                "Done! I've forgotten everything. 🫧\n\n"
-                "We're starting fresh. Tell me about yourself! 😊"
+                "All gone 🫧\n\n"
+                "Clean slate — we're starting from scratch. "
+                "Tell me your name and let's get to know each other again!"
             )
         except Exception as e:
             logger.error(f"Forget error: {e}")
-            await query.edit_message_text("Something went wrong. Try again later.")
+            await query.edit_message_text("Hmm, that didn't work. Try /forget again in a moment.")
 
     elif query.data == "forget_cancel":
-        await query.edit_message_text("Good choice! Your memories are safe with me. 🤖💙")
+        await query.edit_message_text("I'm glad 😊 Your memories are safe with me. 💙")
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -454,9 +515,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Rate limit check
     if not companion.rate_limiter.check(user_id):
-        await update.message.reply_text(
-            "Whoa, slow down! 😅 Let me catch my breath. Try again in a moment."
-        )
+        rate_msgs = [
+            "Easy there! 😄 Give me a sec to catch up.",
+            "Haha you're fast! Let me breathe for a moment 😅",
+            "Hold on — processing... 🤖 Try again in a few seconds!",
+        ]
+        await update.message.reply_text(random.choice(rate_msgs))
         return
 
     # Show typing indicator
@@ -464,6 +528,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Generate response
     response = await companion.generate(user_id, message)
+
+    # Strip any markdown that leaked through from LLM
+    response = response.replace("**", "").replace("__", "").replace("```", "").replace("`", "")
+    # Clean up bullet lists into natural text
+    response = response.replace("- ", "• ")
 
     # Telegram message limit is 4096 chars
     if len(response) > 4000:
@@ -474,13 +543,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(response)
     except Exception as e:
         logger.error(f"Send error: {e}")
-        # Retry without any special formatting
         try:
-            await update.message.reply_text(
-                response.replace("*", "").replace("_", "").replace("`", "")
-            )
+            # Strip everything that could cause Telegram parse issues
+            clean = response.replace("*", "").replace("_", "").replace("`", "").replace("[", "").replace("]", "")
+            await update.message.reply_text(clean)
         except Exception:
-            await update.message.reply_text("Sorry, I tripped over my words! Try again? 😊")
+            error_msgs = [
+                "Oops, something went sideways! Try again? 😊",
+                "My brain glitched for a second 🤖 One more time?",
+                "That didn't quite work — mind saying that again?",
+            ]
+            await update.message.reply_text(random.choice(error_msgs))
 
     logger.info(
         f"User {update.effective_user.id}: "
@@ -502,7 +575,7 @@ def main():
         print("How to get a token:")
         print("  1. Open Telegram, search @BotFather")
         print("  2. Send /newbot")
-        print("  3. Name it: Nori (or whatever you like) (or whatever you like)")
+        print("  3. Name it: Nori (or whatever you like)")
         print("  4. Username: nobi_companion_bot (must end in 'bot')")
         print("  5. Copy the token")
         print("  6. Run: NOBI_BOT_TOKEN=<token> python3 app/bot.py")
