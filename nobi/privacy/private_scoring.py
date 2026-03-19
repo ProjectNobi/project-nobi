@@ -43,7 +43,7 @@ class PrivateScorer:
             audit_logger: Optional audit logger for compliance.
         """
         self.epsilon = epsilon or PRIVACY_CONFIG["epsilon"]
-        self.sensitivity = sensitivity or PRIVACY_CONFIG["max_signal_norm"]
+        self.sensitivity = sensitivity or PRIVACY_CONFIG.get("scorer_sensitivity", 0.1)
         self.dp_engine = DifferentialPrivacyEngine(
             epsilon=self.epsilon, sensitivity=self.sensitivity
         )
@@ -84,9 +84,7 @@ class PrivateScorer:
 
         noised_scores = {}
         for miner_uid, raw_score in raw_scores.items():
-            noised = self.dp_engine.clip_and_noise(
-                raw_score, sensitivity=self.sensitivity, epsilon=eps
-            )
+            noised = self._noise_score(raw_score, eps)
             noised_scores[miner_uid] = noised
 
         # Audit logging
@@ -141,3 +139,16 @@ class PrivateScorer:
     def current_round(self) -> int:
         """Current scoring round number."""
         return self._round
+
+
+    def _noise_score(self, raw_score: float, epsilon: float) -> float:
+        """
+        Add DP noise to a miner score (0-1 range).
+        Clips score to [0,1], adds noise scaled by sensitivity, clips result back to [0,1].
+        """
+        import numpy as np
+        delta = PRIVACY_CONFIG["delta"]
+        sigma = self.sensitivity * np.sqrt(2 * np.log(1.25 / delta)) / epsilon
+        noise = np.random.normal(0, sigma)
+        noised = raw_score + noise
+        return max(0.0, min(1.0, noised))

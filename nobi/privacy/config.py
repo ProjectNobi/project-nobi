@@ -11,7 +11,9 @@ PRIVACY_CONFIG = {
     "noise_mechanism": "gaussian",     # gaussian | laplace
 
     # Sensitivity / clipping
+    "max_signal_norm": 1.0,            # For preference signals (broad range)
     "max_signal_norm": 1.0,            # Clip signals to this norm (bounded sensitivity)
+    "scorer_sensitivity": 0.1,         # For miner scores (0-1 range, one user changes ~10%)
     "adapter_weight_clip": 0.1,        # Max change per federated round
 
     # Aggregation
