@@ -111,3 +111,41 @@ class MemoryRecall(bt.Synapse):
 
     def deserialize(self) -> typing.List[dict]:
         return self.memories or []
+
+
+class FederatedUpdate(bt.Synapse):
+    """
+    Carries federated learning weight updates with privacy-preserving model deltas.
+
+    Raw user data never travels in this synapse — only anonymized preference signals.
+    This is the core synapse for Phase C federated privacy.
+
+    Flow:
+    1. Miner generates preference signals from user interactions (locally).
+    2. Miner adds differential privacy noise to the signal.
+    3. Miner encrypts and sends via this synapse to the validator.
+    4. Validator aggregates signals from all miners (secure aggregation).
+    5. Validator returns the global update to all miners.
+
+    Privacy guarantees:
+    - No raw user data in the synapse (only anonymized preference deltas).
+    - DP noise is applied before transmission.
+    - Encryption for in-transit protection.
+    - k-anonymity enforced at aggregation (min 5 signals).
+    """
+
+    # === Request fields (sent by miner to validator) ===
+    signal_type: str = "preference"    # preference | quality | style
+    encrypted_signal: str = ""         # Encrypted preference delta (JSON)
+    noise_added: bool = False          # Whether DP noise has been applied
+    epsilon: float = 1.0               # Privacy parameter used
+    aggregation_round: int = 0         # Which round of aggregation
+    num_contributions: int = 0         # How many users contributed to this signal
+
+    # === Response fields (filled by validator) ===
+    accepted: typing.Optional[bool] = None
+    global_update: dict = {}           # Aggregated update to apply locally
+
+    def deserialize(self) -> dict:
+        """Returns the global update dict."""
+        return self.global_update
