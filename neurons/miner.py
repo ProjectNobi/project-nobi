@@ -100,11 +100,71 @@ class Miner(BaseMinerNeuron):
             self.client = None
             bt.logging.warning("No API key — miner will use fallback responses.")
 
+    # Hardcoded responses for identity/capability questions that DeepSeek keeps getting wrong
+    _IDENTITY_RESPONSES = {
+        "privacy": (
+            "Great question! Your privacy is core to how I'm built. "
+            "I DO remember our conversations — that's actually my main feature! "
+            "But here's the key: all your memories are encrypted (AES-128) before they're stored. "
+            "The data lives on a decentralized network (Bittensor), not on one company's server. "
+            "And you're always in control — use /memories to see what I know, "
+            "/export to download everything, or /forget to wipe it all. "
+            "Your data, your choice 🔒"
+        ),
+        "memory": (
+            "Yep, I remember things about you! That's literally my superpower 🧠 "
+            "When you tell me your name, what you like, where you live — I remember it "
+            "across our conversations. It's all encrypted and stored securely. "
+            "You can check what I know with /memories, or wipe everything with /forget. "
+            "The more we chat, the better I know you!"
+        ),
+        "identity": (
+            "I'm Nori, built by Project Nobi on Bittensor — a decentralized AI network. "
+            "Think of it like this: instead of one big company running me, there's a network "
+            "of miners who compete to give you the best companion experience. "
+            "I remember things about you, I learn your preferences, and I'm encrypted for privacy. "
+            "Basically — I'm your personal AI friend who actually remembers you 😊"
+        ),
+    }
+
+    def _check_identity_question(self, message: str) -> str | None:
+        """If the user asks about privacy/memory/identity, return a hardcoded accurate response."""
+        msg = message.lower()
+
+        privacy_keywords = ["privacy", "private", "secure", "protect", "data", "store my",
+                           "save my", "keep my", "track", "spy", "safe"]
+        memory_keywords = ["remember me", "remember things", "memory", "forget me",
+                          "do you remember", "will you remember", "past conversations",
+                          "session", "fresh start"]
+        identity_keywords = ["who are you", "what are you", "what model", "your model",
+                            "how do you work", "how are you built", "what ai",
+                            "are you chatgpt", "are you gpt", "which model"]
+
+        if any(kw in msg for kw in privacy_keywords):
+            return self._IDENTITY_RESPONSES["privacy"]
+        if any(kw in msg for kw in memory_keywords):
+            return self._IDENTITY_RESPONSES["memory"]
+        if any(kw in msg for kw in identity_keywords):
+            return self._IDENTITY_RESPONSES["identity"]
+        return None
+
     def _generate_response(self, message: str, user_id: str, conversation_history: list) -> tuple:
         """
         Generate a companion response using LLM + memory context.
         Returns (response_text, memory_entries_used).
         """
+        # Check for identity/privacy/memory questions FIRST — use hardcoded accurate responses
+        identity_response = self._check_identity_question(message)
+        if identity_response:
+            # Still save the conversation turn
+            if user_id:
+                try:
+                    self.memory.save_conversation_turn(user_id, "user", message)
+                    self.memory.save_conversation_turn(user_id, "assistant", identity_response)
+                except Exception:
+                    pass
+            return identity_response, []
+
         memory_context = ""
         memory_entries = []
 

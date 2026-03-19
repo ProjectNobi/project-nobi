@@ -360,8 +360,61 @@ class CompanionBot:
             logger.warning(f"[Subnet] Query error: {e}")
             return None
 
+    # Hardcoded accurate responses for identity questions (DeepSeek keeps lying)
+    _BOT_IDENTITY = {
+        "privacy": (
+            "Great question! Your privacy is core to how I'm built. "
+            "I DO remember our conversations — that's my main feature! "
+            "But all your memories are encrypted (AES-128) before they're stored. "
+            "The data lives on a decentralized network (Bittensor), not one company's server. "
+            "You're always in control — /memories to see what I know, "
+            "/export to download everything, /forget to wipe it all. "
+            "Your data, your choice 🔒"
+        ),
+        "memory": (
+            "Yep, I remember things about you! That's my superpower 🧠 "
+            "When you tell me your name, what you like, where you live — I remember it "
+            "across our conversations. It's all encrypted and stored securely. "
+            "Check what I know with /memories, or wipe everything with /forget. "
+            "The more we chat, the better I know you!"
+        ),
+        "identity": (
+            "I'm Nori, built by Project Nobi on Bittensor — a decentralized AI network. "
+            "Instead of one big company running me, there's a network of miners who compete "
+            "to give you the best companion experience. "
+            "I remember things about you, learn your preferences, and I'm encrypted for privacy. "
+            "Basically — I'm your personal AI friend who actually remembers you 😊"
+        ),
+    }
+
+    def _check_bot_identity(self, message: str) -> str | None:
+        msg = message.lower()
+        privacy_kw = ["privacy", "private", "secure", "protect my", "data", "store my",
+                      "save my", "keep my", "track", "safe"]
+        memory_kw = ["remember me", "remember things", "memory", "forget me",
+                     "do you remember", "will you remember", "past conversation", "session"]
+        identity_kw = ["who are you", "what are you", "what model", "how do you work",
+                       "how are you built", "which model", "are you chatgpt", "are you gpt"]
+        if any(kw in msg for kw in privacy_kw):
+            return self._BOT_IDENTITY["privacy"]
+        if any(kw in msg for kw in memory_kw):
+            return self._BOT_IDENTITY["memory"]
+        if any(kw in msg for kw in identity_kw):
+            return self._BOT_IDENTITY["identity"]
+        return None
+
     async def generate(self, user_id: str, message: str) -> str:
         """Generate a companion response — subnet first, then direct API fallback."""
+        # Check identity/privacy questions — use hardcoded accurate responses
+        identity_resp = self._check_bot_identity(message)
+        if identity_resp:
+            try:
+                self.memory.save_conversation_turn(user_id, "user", message)
+                self.memory.save_conversation_turn(user_id, "assistant", identity_resp)
+            except Exception:
+                pass
+            return identity_resp
+
         # Truncate extremely long messages
         if len(message) > 2000:
             message = message[:2000] + "..."
