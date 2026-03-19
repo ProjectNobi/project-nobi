@@ -39,8 +39,58 @@ class CompanionRequest(bt.Synapse):
     confidence: typing.Optional[float] = None
     memory_context: typing.Optional[typing.List[dict]] = None  # Memory entries used
 
+    # === Phase 4: Miner specialization ===
+    query_type: str = "general"  # advice | creative | technical | social | knowledge
+    miner_specialization: str = ""  # Miner's declared specialty
+
     def deserialize(self) -> str:
         """Returns the response string."""
+        return self.response
+
+
+class VoiceRequest(bt.Synapse):
+    """
+    Voice message handling.
+
+    Carries audio data for speech-to-text transcription,
+    Nori response generation, and text-to-speech synthesis.
+    """
+
+    # === Request fields ===
+    audio_data: str = ""        # Base64 encoded audio
+    audio_format: str = "wav"   # wav | mp3 | ogg
+    language: str = "en"
+    user_id: str = ""
+
+    # === Response fields (filled by miner) ===
+    transcription: str = ""
+    response_text: str = ""
+    response_audio: str = ""    # Base64 encoded audio response
+
+    def deserialize(self) -> str:
+        return self.response_text
+
+
+class ImageRequest(bt.Synapse):
+    """
+    Image understanding request.
+
+    Carries image data for vision model analysis.
+    Returns description, response, and extracted memories.
+    """
+
+    # === Request fields ===
+    image_data: str = ""        # Base64 encoded image
+    image_format: str = "jpg"   # jpg | png | gif | webp
+    caption: str = ""           # User's caption/question about the image
+    user_id: str = ""
+
+    # === Response fields (filled by miner) ===
+    description: str = ""       # What's in the image
+    response: str = ""          # Nori's response about the image
+    extracted_memories: typing.List[str] = []  # Memories extracted from the image
+
+    def deserialize(self) -> str:
         return self.response
 
 
