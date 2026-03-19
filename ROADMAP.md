@@ -97,7 +97,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Neurons | 7 |
+| Neurons | 8 |
 | Miners | 4 |
 | Validators | 2 |
 | Servers | 2 |
