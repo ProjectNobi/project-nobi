@@ -96,7 +96,7 @@
 | Servers | 2 |
 | Avg miner score | 0.82 |
 | Memory recall rate | 75% (3/4 miners) |
-| Bot users | 13+ unique |
+| Bot users | 15+ unique |
 | Subnet routing | Active |
 | Memory system | Phase 2 live |
 
