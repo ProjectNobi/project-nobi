@@ -15,6 +15,8 @@ from nobi.protocol import CompanionRequest, MemoryStore, MemoryRecall
 from nobi.memory import MemoryManager
 from nobi.memory.encryption import ensure_master_secret
 from nobi.memory.adapters import UserAdapterManager
+from nobi.i18n import detect_language, LanguageDetector, get_language_prompt
+from nobi.i18n.prompts import build_multilingual_system_prompt
 
 try:
     from openai import OpenAI
@@ -71,10 +73,11 @@ class Miner(BaseMinerNeuron):
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        # Initialize encryption, memory manager, and adapter manager
+        # Initialize encryption, memory manager, adapter manager, and language detector
         ensure_master_secret()
         self.memory = MemoryManager(db_path="~/.nobi/memories.db")
         self.adapter_manager = UserAdapterManager(db_path="~/.nobi/memories.db")
+        self.lang_detector = LanguageDetector()
         bt.logging.info(f"Memory manager initialized: {self.memory.stats()}")
 
         # Set up LLM client (Chutes low-cost first, OpenRouter as fallback)
@@ -174,6 +177,11 @@ class Miner(BaseMinerNeuron):
         adapter_config: per-user personality adapter (Phase B).
         Returns (response_text, memory_entries_used).
         """
+        # Detect user's language
+        detected_lang = self.lang_detector.detect(message, user_id)
+        if adapter_config and adapter_config.get("preferred_language"):
+            detected_lang = adapter_config["preferred_language"]
+
         # Check for identity/privacy/memory questions FIRST — use hardcoded accurate responses
         identity_response = self._check_identity_question(message)
         if identity_response:
@@ -223,10 +231,13 @@ class Miner(BaseMinerNeuron):
                 bt.logging.debug(f"Adapter load failed (non-fatal): {e}")
                 adapter_config = {}
 
-        # Step 4: Build prompt with memory context + adapter personalization
+        # Step 4: Build prompt with memory context + adapter personalization + language
         system_prompt = COMPANION_SYSTEM_PROMPT.format(
             memory_context=memory_context if memory_context else ""
         )
+
+        # Add language instruction if non-English
+        system_prompt = build_multilingual_system_prompt(system_prompt, detected_lang)
 
         # Apply personality adapter to system prompt
         if adapter_config:

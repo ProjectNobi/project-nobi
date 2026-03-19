@@ -39,6 +39,9 @@ from nobi.memory import MemoryManager
 from nobi.memory.encryption import ensure_master_secret, encrypt_memory, decrypt_memory
 from nobi.memory.adapters import UserAdapterManager
 from nobi.protocol import CompanionRequest
+from nobi.i18n import detect_language, LanguageDetector
+from nobi.i18n.prompts import build_multilingual_system_prompt
+from nobi.i18n.languages import SUPPORTED_LANGUAGES, get_language_name
 import io
 
 try:
@@ -244,7 +247,9 @@ class CompanionBot:
         ensure_master_secret()
         self.memory = MemoryManager(db_path="~/.nobi/bot_memories.db")
         self.adapter_manager = UserAdapterManager(db_path="~/.nobi/bot_memories.db")
+        self.lang_detector = LanguageDetector()
         self.rate_limiter = RateLimiter()
+        self._translation_cache: dict[str, dict[str, str]] = {}  # {lang: {key: translated}}
         self.client = None
         self.model = CHUTES_MODEL
 
@@ -321,7 +326,8 @@ class CompanionBot:
 
     async def _query_subnet(self, user_id: str, message: str,
                             conversation_history: list = None,
-                            memory_context: str = "") -> str | None:
+                            memory_context: str = "",
+                            detected_lang: str = "en") -> str | None:
         """
         Query a miner on the subnet. Includes user's memory context and conversation
         history so the miner can generate personalized responses without its own DB.
@@ -366,6 +372,17 @@ class CompanionBot:
                     except Exception:
                         pass
 
+                    # Build preferences with memory context and language
+                    prefs = {}
+                    if memory_context:
+                        prefs["memory_context"] = memory_context
+                    if detected_lang and detected_lang != "en":
+                        prefs["language"] = detected_lang
+
+                    # Pass language in adapter config too
+                    if detected_lang and detected_lang != "en":
+                        adapter_cfg["preferred_language"] = detected_lang
+
                     # Use deserialize=False for reliability — extract response manually
                     responses = await self.dendrite(
                         axons=[axon],
@@ -373,7 +390,7 @@ class CompanionBot:
                             message=message,
                             user_id=user_id,
                             conversation_history=conversation_history or [],
-                            preferences={"memory_context": memory_context} if memory_context else {},
+                            preferences=prefs,
                             adapter_config=adapter_cfg,
                         ),
                         deserialize=False,
@@ -436,7 +453,49 @@ class CompanionBot:
         ),
     }
 
-    def _check_bot_identity(self, message: str) -> str | None:
+    def _translate_identity_response(self, key: str, lang_code: str) -> str:
+        """Translate a hardcoded identity response using the LLM. Caches results."""
+        if lang_code == "en" or lang_code not in SUPPORTED_LANGUAGES:
+            return self._BOT_IDENTITY[key]
+
+        # Check cache
+        if lang_code in self._translation_cache and key in self._translation_cache[lang_code]:
+            return self._translation_cache[lang_code][key]
+
+        # Translate via LLM
+        if not self.client:
+            return self._BOT_IDENTITY[key]
+
+        try:
+            lang_name = get_language_name(lang_code)
+            completion = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": (
+                        f"Translate the following text to {lang_name}. "
+                        "Keep the same tone (friendly, warm, casual). "
+                        "Keep emoji. Keep command names like /memories, /export, /forget unchanged. "
+                        "Output ONLY the translation, nothing else."
+                    )},
+                    {"role": "user", "content": self._BOT_IDENTITY[key]},
+                ],
+                max_tokens=512,
+                temperature=0.3,
+                timeout=15,
+            )
+            translated = completion.choices[0].message.content
+            if translated and translated.strip():
+                # Cache it
+                if lang_code not in self._translation_cache:
+                    self._translation_cache[lang_code] = {}
+                self._translation_cache[lang_code][key] = translated.strip()
+                return translated.strip()
+        except Exception as e:
+            logger.warning(f"Translation failed for {key}/{lang_code}: {e}")
+
+        return self._BOT_IDENTITY[key]  # fallback to English
+
+    def _check_bot_identity(self, message: str, lang_code: str = "en") -> str | None:
         msg = message.lower()
         privacy_kw = ["privacy", "private", "secure", "protect my", "data", "store my",
                       "save my", "keep my", "track", "safe"]
@@ -448,19 +507,22 @@ class CompanionBot:
         identity_kw = ["who are you", "what are you", "what model", "how do you work",
                        "how are you built", "which model", "are you chatgpt", "are you gpt"]
         if any(kw in msg for kw in privacy_kw):
-            return self._BOT_IDENTITY["privacy"]
+            return self._translate_identity_response("privacy", lang_code)
         if any(kw in msg for kw in memory_kw):
-            return self._BOT_IDENTITY["memory"]
+            return self._translate_identity_response("memory", lang_code)
         if any(kw in msg for kw in learning_kw):
-            return self._BOT_IDENTITY["learning"]
+            return self._translate_identity_response("learning", lang_code)
         if any(kw in msg for kw in identity_kw):
-            return self._BOT_IDENTITY["identity"]
+            return self._translate_identity_response("identity", lang_code)
         return None
 
     async def generate(self, user_id: str, message: str) -> str:
         """Generate a companion response — subnet first, then direct API fallback."""
+        # Detect user's language
+        detected_lang = self.lang_detector.detect(message, user_id)
+
         # Check identity/privacy questions — use hardcoded accurate responses
-        identity_resp = self._check_bot_identity(message)
+        identity_resp = self._check_bot_identity(message, lang_code=detected_lang)
         if identity_resp:
             try:
                 self.memory.save_conversation_turn(user_id, "user", message)
@@ -524,6 +586,7 @@ class CompanionBot:
                 user_id, message,
                 conversation_history=conv_history,
                 memory_context=memory_context,
+                detected_lang=detected_lang,
             )
             if subnet_response:
                 logger.info(f"[Routing] Used SUBNET path for user {user_id}")
@@ -545,10 +608,11 @@ class CompanionBot:
         if not self.client:
             return "I'm having trouble connecting right now. Try again in a moment! 🤖"
 
-        # Build prompt with adapter personalization (Phase B)
+        # Build prompt with adapter personalization (Phase B) + language
         system = SYSTEM_PROMPT.format(
             memory_context=memory_context or ""
         )
+        system = build_multilingual_system_prompt(system, detected_lang)
         try:
             adapter_cfg = self.adapter_manager.get_adapter_config(user_id)
             system = self.adapter_manager.apply_adapter_to_prompt(system, adapter_cfg)
@@ -766,6 +830,36 @@ async def cmd_import(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Something went wrong with the import. Try again in a moment!")
 
 
+async def cmd_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Set preferred language manually: /language fr"""
+    user_id = companion._user_id(update)
+    args = context.args
+
+    if not args:
+        # Show current language and available options
+        current = companion.lang_detector.get_user_language(user_id)
+        current_name = get_language_name(current)
+        lines = [f"🌍 Your current language: {current_name} ({current})\n"]
+        lines.append("Available languages:")
+        for code, info in SUPPORTED_LANGUAGES.items():
+            marker = " ✓" if code == current else ""
+            lines.append(f"  {code} — {info['native']} ({info['name']}){marker}")
+        lines.append(f"\nTo change: /language <code>\nExample: /language fr")
+        await update.message.reply_text("\n".join(lines))
+        return
+
+    lang_code = args[0].lower().strip()
+    if companion.lang_detector.set_user_language(user_id, lang_code):
+        lang_info = SUPPORTED_LANGUAGES[lang_code]
+        await update.message.reply_text(
+            f"{lang_info['greeting']} Language set to {lang_info['native']} ({lang_info['name']}) ✓"
+        )
+    else:
+        await update.message.reply_text(
+            f"Sorry, '{lang_code}' isn't supported yet. Use /language to see available options."
+        )
+
+
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle inline button callbacks."""
     query = update.callback_query
@@ -892,6 +986,7 @@ def main():
     app.add_handler(CommandHandler("forget", cmd_forget))
     app.add_handler(CommandHandler("export", cmd_export))
     app.add_handler(CommandHandler("import", cmd_import))
+    app.add_handler(CommandHandler("language", cmd_language))
 
     # Buttons
     app.add_handler(CallbackQueryHandler(handle_callback))
