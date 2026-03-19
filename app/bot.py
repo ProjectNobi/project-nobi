@@ -281,28 +281,22 @@ class CompanionBot:
 
         try:
             # Refresh metagraph periodically (every call is fine, it's cached internally)
-            # Pick the miner with the highest incentive (best performing)
-            incentives = self.metagraph.I
-            if incentives is None or len(incentives) == 0:
-                return None
-
-            # Get top 3 miners by incentive, pick one randomly for load distribution
-            top_uids = sorted(
-                range(len(incentives)),
-                key=lambda i: float(incentives[i]),
-                reverse=True,
-            )[:3]
-
-            # Filter out miners with zero incentive or no axon
+            # Find miners with active axons
             valid_uids = [
-                uid for uid in top_uids
-                if float(incentives[uid]) > 0
-                and self.metagraph.axons[uid].ip != "0.0.0.0"
+                uid for uid in range(self.metagraph.n.item())
+                if self.metagraph.axons[uid].ip != "0.0.0.0"
+                and self.metagraph.axons[uid].port > 0
             ]
 
             if not valid_uids:
-                logger.debug("[Subnet] No valid miners with incentive > 0")
+                logger.debug("[Subnet] No miners with active axons")
                 return None
+
+            # If incentives exist, prefer higher-incentive miners; otherwise random
+            incentives = self.metagraph.I
+            if incentives is not None and any(float(incentives[uid]) > 0 for uid in valid_uids):
+                valid_uids.sort(key=lambda uid: float(incentives[uid]), reverse=True)
+                valid_uids = valid_uids[:3]
 
             chosen_uid = random.choice(valid_uids)
             axon = self.metagraph.axons[chosen_uid]
