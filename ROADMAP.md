@@ -97,9 +97,9 @@
 
 | Metric | Value |
 |--------|-------|
-| Neurons | 8 |
+| Neurons | 10 |
 | Miners | 4 |
-| Validators | 2 |
+| Validators | 3 |
 | Servers | 2 |
 | Avg miner score | 0.82 |
 | Memory recall rate | 75% (3/4 miners) |
