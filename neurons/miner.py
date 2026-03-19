@@ -14,6 +14,7 @@ from nobi.base.miner import BaseMinerNeuron
 from nobi.protocol import CompanionRequest, MemoryStore, MemoryRecall
 from nobi.memory import MemoryManager
 from nobi.memory.encryption import ensure_master_secret
+from nobi.memory.adapters import UserAdapterManager
 
 try:
     from openai import OpenAI
@@ -70,9 +71,10 @@ class Miner(BaseMinerNeuron):
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        # Initialize encryption and memory manager
+        # Initialize encryption, memory manager, and adapter manager
         ensure_master_secret()
         self.memory = MemoryManager(db_path="~/.nobi/memories.db")
+        self.adapter_manager = UserAdapterManager(db_path="~/.nobi/memories.db")
         bt.logging.info(f"Memory manager initialized: {self.memory.stats()}")
 
         # Set up LLM client (Chutes low-cost first, OpenRouter as fallback)
@@ -164,20 +166,23 @@ class Miner(BaseMinerNeuron):
         return None
 
     def _generate_response(self, message: str, user_id: str, conversation_history: list,
-                           bot_memory_context: str = "") -> tuple:
+                           bot_memory_context: str = "",
+                           adapter_config: dict = None) -> tuple:
         """
-        Generate a companion response using LLM + memory context.
+        Generate a companion response using LLM + memory context + personality adapter.
         bot_memory_context: pre-built memory context from the bot (when subnet routing).
+        adapter_config: per-user personality adapter (Phase B).
         Returns (response_text, memory_entries_used).
         """
         # Check for identity/privacy/memory questions FIRST — use hardcoded accurate responses
         identity_response = self._check_identity_question(message)
         if identity_response:
-            # Still save the conversation turn
+            # Still save the conversation turn and update adapter
             if user_id:
                 try:
                     self.memory.save_conversation_turn(user_id, "user", message)
                     self.memory.save_conversation_turn(user_id, "assistant", identity_response)
+                    self.adapter_manager.update_adapter_from_conversation(user_id, message, identity_response)
                 except Exception:
                     pass
             return identity_response, []
@@ -210,10 +215,27 @@ class Miner(BaseMinerNeuron):
         if self.client is None:
             return self._fallback_response(message), memory_entries
 
-        # Step 3: Build prompt with memory context
+        # Step 3: Load user adapter config (Phase B)
+        if adapter_config is None and user_id:
+            try:
+                adapter_config = self.adapter_manager.get_adapter_config(user_id)
+            except Exception as e:
+                bt.logging.debug(f"Adapter load failed (non-fatal): {e}")
+                adapter_config = {}
+
+        # Step 4: Build prompt with memory context + adapter personalization
         system_prompt = COMPANION_SYSTEM_PROMPT.format(
             memory_context=memory_context if memory_context else ""
         )
+
+        # Apply personality adapter to system prompt
+        if adapter_config:
+            try:
+                system_prompt = self.adapter_manager.apply_adapter_to_prompt(
+                    system_prompt, adapter_config
+                )
+            except Exception as e:
+                bt.logging.debug(f"Adapter apply failed (non-fatal): {e}")
 
         messages = [{"role": "system", "content": system_prompt}]
 
@@ -261,6 +283,13 @@ class Miner(BaseMinerNeuron):
                 except Exception as e:
                     bt.logging.warning(f"Saving response to memory failed: {e}")
 
+            # Phase B: Update adapter based on conversation
+            if user_id:
+                try:
+                    self.adapter_manager.update_adapter_from_conversation(user_id, message, response)
+                except Exception as e:
+                    bt.logging.debug(f"Adapter update failed (non-fatal): {e}")
+
             return response, memory_entries
 
         except Exception as e:
@@ -283,11 +312,15 @@ class Miner(BaseMinerNeuron):
         if synapse.preferences and isinstance(synapse.preferences, dict):
             bot_memory_context = synapse.preferences.get("memory_context", "")
 
+        # Phase B: Extract adapter config from synapse if provided
+        adapter_config = synapse.adapter_config if synapse.adapter_config else None
+
         response, memory_entries = self._generate_response(
             message=synapse.message,
             user_id=synapse.user_id,
             conversation_history=synapse.conversation_history,
             bot_memory_context=bot_memory_context,
+            adapter_config=adapter_config,
         )
 
         synapse.response = response
@@ -302,21 +335,38 @@ class Miner(BaseMinerNeuron):
         return synapse
 
     async def forward_memory_store(self, synapse: MemoryStore) -> MemoryStore:
-        """Handle memory store requests from validators."""
-        bt.logging.info(f"MemoryStore for user '{synapse.user_id}': {synapse.content[:60]}")
+        """
+        Handle memory store requests from validators.
+
+        Phase B: If synapse.encrypted_content is set, store it as-is
+        without decrypting. The miner never sees plaintext.
+        """
+        content_preview = synapse.content[:60] if synapse.content else "(encrypted)"
+        bt.logging.info(f"MemoryStore for user '{synapse.user_id}': {content_preview}")
 
         try:
+            # Phase B: encrypted_content takes priority
+            encrypted_content = getattr(synapse, "encrypted_content", "") or ""
+            content_hash = getattr(synapse, "content_hash", "") or ""
+            enc_version = getattr(synapse, "encryption_version", 0) or 0
+
             memory_id = self.memory.store(
                 user_id=synapse.user_id,
-                content=synapse.content,
+                content=synapse.content or "",  # backward compat: plaintext if provided
                 memory_type=synapse.memory_type,
                 importance=synapse.importance,
                 tags=synapse.tags,
                 expires_at=synapse.expires_at,
+                encrypted_content=encrypted_content,
+                content_hash=content_hash,
+                encryption_version=enc_version,
             )
             synapse.stored = True
             synapse.memory_id = memory_id
-            bt.logging.info(f"Stored memory {memory_id}")
+            if encrypted_content:
+                bt.logging.info(f"Stored encrypted memory {memory_id} (Phase B, hash={content_hash[:16]}...)")
+            else:
+                bt.logging.info(f"Stored memory {memory_id}")
         except Exception as e:
             bt.logging.error(f"Memory store error: {e}")
             synapse.stored = False
@@ -324,20 +374,29 @@ class Miner(BaseMinerNeuron):
         return synapse
 
     async def forward_memory_recall(self, synapse: MemoryRecall) -> MemoryRecall:
-        """Handle memory recall requests from validators."""
-        bt.logging.info(f"MemoryRecall for user '{synapse.user_id}': query='{synapse.query[:60]}'")
+        """
+        Handle memory recall requests from validators.
+
+        Phase B: If synapse.return_encrypted is True, return encrypted blobs
+        as-is without decrypting. The miner never reads user data.
+        """
+        bt.logging.info(f"MemoryRecall for user '{synapse.user_id}': query='{synapse.query[:60]}'"
+                        f" return_encrypted={getattr(synapse, 'return_encrypted', False)}")
 
         try:
+            return_encrypted = getattr(synapse, "return_encrypted", False)
             memories = self.memory.recall(
                 user_id=synapse.user_id,
                 query=synapse.query,
                 memory_type=synapse.memory_type,
                 tags=synapse.tags,
                 limit=synapse.limit,
+                return_encrypted=return_encrypted,
             )
             synapse.memories = memories
             synapse.total_count = self.memory.get_user_memory_count(synapse.user_id)
-            bt.logging.info(f"Recalled {len(memories)} memories (total: {synapse.total_count})")
+            bt.logging.info(f"Recalled {len(memories)} memories (total: {synapse.total_count})"
+                           f" encrypted={return_encrypted}")
         except Exception as e:
             bt.logging.error(f"Memory recall error: {e}")
             synapse.memories = []

@@ -36,7 +36,8 @@ from telegram.constants import ChatAction, ParseMode
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from nobi.memory import MemoryManager
-from nobi.memory.encryption import ensure_master_secret
+from nobi.memory.encryption import ensure_master_secret, encrypt_memory, decrypt_memory
+from nobi.memory.adapters import UserAdapterManager
 from nobi.protocol import CompanionRequest
 import io
 
@@ -242,6 +243,7 @@ class CompanionBot:
         # Ensure encryption secret exists before initializing memory
         ensure_master_secret()
         self.memory = MemoryManager(db_path="~/.nobi/bot_memories.db")
+        self.adapter_manager = UserAdapterManager(db_path="~/.nobi/bot_memories.db")
         self.rate_limiter = RateLimiter()
         self.client = None
         self.model = CHUTES_MODEL
@@ -291,6 +293,30 @@ class CompanionBot:
         """Get a stable user ID from Telegram."""
         return f"tg_{update.effective_user.id}"
 
+    # ─── Phase B: Bot-side encryption for subnet routing ──────
+
+    def _encrypt_for_miner(self, user_id: str, content: str) -> str:
+        """Encrypt content before sending to miner via subnet. Miner stores as-is."""
+        try:
+            return encrypt_memory(user_id, content)
+        except Exception as e:
+            logger.warning(f"[Phase B] Encrypt for miner failed: {e}")
+            return ""
+
+    def _decrypt_from_miner(self, user_id: str, encrypted: str) -> str:
+        """Decrypt encrypted blob received from miner."""
+        try:
+            return decrypt_memory(user_id, encrypted)
+        except Exception as e:
+            logger.warning(f"[Phase B] Decrypt from miner failed: {e}")
+            return encrypted
+
+    @staticmethod
+    def _content_hash(content: str) -> str:
+        """SHA-256 hash of plaintext for dedup without exposing content."""
+        import hashlib
+        return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
     _metagraph_refresh_counter: int = 0
 
     async def _query_subnet(self, user_id: str, message: str,
@@ -333,6 +359,13 @@ class CompanionBot:
                 axon = self.metagraph.axons[chosen_uid]
 
                 try:
+                    # Phase B: Include adapter config in subnet request
+                    adapter_cfg = {}
+                    try:
+                        adapter_cfg = self.adapter_manager.get_adapter_config(user_id)
+                    except Exception:
+                        pass
+
                     # Use deserialize=False for reliability — extract response manually
                     responses = await self.dendrite(
                         axons=[axon],
@@ -341,6 +374,7 @@ class CompanionBot:
                             user_id=user_id,
                             conversation_history=conversation_history or [],
                             preferences={"memory_context": memory_context} if memory_context else {},
+                            adapter_config=adapter_cfg,
                         ),
                         deserialize=False,
                         timeout=SUBNET_TIMEOUT,
@@ -431,6 +465,7 @@ class CompanionBot:
             try:
                 self.memory.save_conversation_turn(user_id, "user", message)
                 self.memory.save_conversation_turn(user_id, "assistant", identity_resp)
+                self.adapter_manager.update_adapter_from_conversation(user_id, message, identity_resp)
             except Exception:
                 pass
             return identity_resp
@@ -497,6 +532,11 @@ class CompanionBot:
                     self.memory.save_conversation_turn(user_id, "assistant", subnet_response)
                 except Exception as e:
                     logger.warning(f"Save subnet response error: {e}")
+                # Phase B: Update adapter after subnet conversation
+                try:
+                    self.adapter_manager.update_adapter_from_conversation(user_id, message, subnet_response)
+                except Exception as e:
+                    logger.debug(f"Adapter update error: {e}")
                 return subnet_response
             else:
                 logger.info(f"[Routing] Subnet failed, falling back to DIRECT API for user {user_id}")
@@ -505,10 +545,15 @@ class CompanionBot:
         if not self.client:
             return "I'm having trouble connecting right now. Try again in a moment! 🤖"
 
-        # Build prompt
+        # Build prompt with adapter personalization (Phase B)
         system = SYSTEM_PROMPT.format(
             memory_context=memory_context or ""
         )
+        try:
+            adapter_cfg = self.adapter_manager.get_adapter_config(user_id)
+            system = self.adapter_manager.apply_adapter_to_prompt(system, adapter_cfg)
+        except Exception as e:
+            logger.debug(f"Adapter apply error: {e}")
 
         # Get recent conversation for context (exclude the one we just saved)
         history = []
@@ -544,6 +589,12 @@ class CompanionBot:
                 self.memory.save_conversation_turn(user_id, "assistant", response)
             except Exception as e:
                 logger.warning(f"Save response error: {e}")
+
+            # Phase B: Update adapter after each conversation turn
+            try:
+                self.adapter_manager.update_adapter_from_conversation(user_id, message, response)
+            except Exception as e:
+                logger.debug(f"Adapter update error: {e}")
 
             return response
 

@@ -138,6 +138,20 @@ class MemoryManager:
             conn.execute("SELECT memory_count_at_last_summary FROM user_profiles LIMIT 1")
         except sqlite3.OperationalError:
             conn.execute("ALTER TABLE user_profiles ADD COLUMN memory_count_at_last_summary INTEGER DEFAULT 0")
+
+        # Phase B migrations: encrypted_content, content_hash, encryption_version columns
+        for col, default in [
+            ("encrypted_content", "''"),
+            ("content_hash", "''"),
+            ("encryption_version", "0"),
+        ]:
+            try:
+                conn.execute(f"SELECT {col} FROM memories LIMIT 1")
+            except sqlite3.OperationalError:
+                col_type = "TEXT" if default == "''" else "INTEGER"
+                conn.execute(f"ALTER TABLE memories ADD COLUMN {col} {col_type} DEFAULT {default}")
+                logger.info(f"[Migration] Added column memories.{col}")
+
         conn.commit()
 
     def store(
@@ -148,28 +162,41 @@ class MemoryManager:
         importance: float = 0.5,
         tags: List[str] = None,
         expires_at: Optional[str] = None,
+        encrypted_content: str = "",
+        content_hash: str = "",
+        encryption_version: int = 0,
     ) -> str:
-        """Store a memory. Encrypts content before writing. Returns the memory ID."""
+        """
+        Store a memory. Returns the memory ID.
+
+        Phase B: If encrypted_content is provided, store it as-is in the
+        encrypted_content column (miner never decrypts). The content field
+        is still encrypted locally for backward compat / miner-side use.
+        """
         memory_id = str(uuid.uuid4())[:12]
         now = datetime.now(timezone.utc).isoformat()
 
-        # Encrypt content before persisting
-        encrypted_content = self._encrypt(user_id, content)
+        # Encrypt content locally (Phase A behavior — backward compat)
+        local_encrypted = self._encrypt(user_id, content) if content else ""
 
         self._conn.execute(
             """INSERT INTO memories (id, user_id, memory_type, content, importance,
-               tags, created_at, updated_at, expires_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               tags, created_at, updated_at, expires_at,
+               encrypted_content, content_hash, encryption_version)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 memory_id,
                 user_id,
                 memory_type,
-                encrypted_content,
+                local_encrypted,
                 max(0.0, min(1.0, importance)),
                 json.dumps(tags or []),
                 now,
                 now,
                 expires_at,
+                encrypted_content,  # Phase B: bot-encrypted blob (stored as-is)
+                content_hash,
+                encryption_version,
             ),
         )
         self._conn.commit()
@@ -182,6 +209,7 @@ class MemoryManager:
         memory_type: Optional[str] = None,
         tags: List[str] = None,
         limit: int = 10,
+        return_encrypted: bool = False,
     ) -> List[Dict]:
         """
         Recall memories for a user.
@@ -270,18 +298,33 @@ class MemoryManager:
             )
             conn.commit()
 
-        return [
-            {
+        results = []
+        for row in rows:
+            entry = {
                 "id": row["id"],
                 "type": row["memory_type"],
-                "content": self._decrypt(user_id, row["content"]),
                 "importance": row["importance"],
                 "tags": json.loads(row["tags"]),
                 "created_at": row["created_at"],
                 "expires_at": row["expires_at"],
             }
-            for row in rows
-        ]
+            if return_encrypted:
+                # Phase B: return encrypted blobs as-is, no decryption
+                try:
+                    entry["encrypted_content"] = row["encrypted_content"] or ""
+                except (IndexError, KeyError):
+                    entry["encrypted_content"] = ""
+                entry["content"] = ""  # Don't leak plaintext
+                try:
+                    entry["content_hash"] = row["content_hash"] or ""
+                    entry["encryption_version"] = row["encryption_version"] or 0
+                except (IndexError, KeyError):
+                    entry["content_hash"] = ""
+                    entry["encryption_version"] = 0
+            else:
+                entry["content"] = self._decrypt(user_id, row["content"])
+            results.append(entry)
+        return results
 
     def get_user_memory_count(self, user_id: str) -> int:
         """Get total memory count for a user."""

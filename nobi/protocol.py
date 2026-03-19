@@ -19,6 +19,7 @@ class CompanionRequest(bt.Synapse):
         conversation_history: Recent messages for context (list of dicts with 'role' and 'content')
         user_id: Anonymous user identifier for session tracking
         preferences: User preferences (language, style, etc.)
+        adapter_config: Per-user personality adapter config (Phase B)
         response: The AI companion's response (filled by miner)
         confidence: Miner's confidence in the response (0.0 to 1.0)
         memory_context: Memory entries the miner used to generate the response
@@ -31,6 +32,7 @@ class CompanionRequest(bt.Synapse):
     conversation_history: typing.List[dict] = []
     user_id: str = ""
     preferences: dict = {}
+    adapter_config: dict = {}  # Phase B: per-user personality adapter
 
     # === Response fields (filled by miner) ===
     response: typing.Optional[str] = None
@@ -65,9 +67,13 @@ class MemoryStore(bt.Synapse):
     tags: typing.List[str] = []  # Searchable tags
     expires_at: typing.Optional[str] = None  # ISO datetime, None = permanent
 
-    # === Encryption metadata ===
+    # === Encryption metadata (Phase A) ===
     encrypted: bool = False  # Whether content is pre-encrypted by the sender
     encryption_version: int = 1  # Encryption protocol version for negotiation
+
+    # === Phase B: End-to-end encrypted content ===
+    encrypted_content: str = ""  # AES-encrypted memory content (miner stores as-is)
+    content_hash: str = ""  # SHA-256 hash of plaintext (for dedup without decryption)
 
     # === Response fields (filled by miner) ===
     stored: typing.Optional[bool] = None
@@ -96,6 +102,7 @@ class MemoryRecall(bt.Synapse):
     memory_type: typing.Optional[str] = None  # Filter by type
     tags: typing.List[str] = []  # Filter by tags
     limit: int = 10  # Max memories to return
+    return_encrypted: bool = False  # Phase B: if True, return encrypted blobs as-is
 
     # === Response fields (filled by miner) ===
     memories: typing.Optional[typing.List[dict]] = None
