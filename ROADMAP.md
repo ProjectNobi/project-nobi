@@ -39,10 +39,17 @@
 - [x] Export/Import commands (/export, /import — "your data is yours")
 - [x] Anti-hallucination guardrails in Nori personality
 - [x] Intellectual honesty + emotional intelligence in system prompt
-- [x] Cross-server miner deployment (Hetzner + Contabo Server3)
+- [x] Cross-server miner deployment (Hetzner + Server3 + Server4)
 - [x] Daily testnet monitoring cron (09:00 UTC)
 - [x] Nori engagement tracking (5-day cycle)
-- [x] Landing page (projectnobi.ai — ready to deploy)
+- [x] Landing page (projectnobi.ai — LIVE)
+
+- [x] Privacy Phase A: Client-side AES-128 encryption for all memories
+- [x] Privacy Phase B: Encrypted synapses + per-user personality adapters
+- [x] Privacy Phase C: Federated learning, differential privacy, secure aggregation (PRIVATE — mainnet only)
+- [x] Nori bot: hardcoded identity responses, memory context passing to subnet miners
+- [x] Brand assets: logo, wordmark, avatar, OG image, X banner
+- [x] projectnobi.ai: Stripe/Linear/Notion-inspired redesign with docs section
 
 ## Phase 3: Stability & Community 🔄 IN PROGRESS
 *March 20+, 2026*
@@ -90,7 +97,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Neurons | 6 |
+| Neurons | 7 |
 | Miners | 4 |
 | Validators | 2 |
 | Servers | 2 |
