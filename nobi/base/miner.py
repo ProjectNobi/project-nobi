@@ -41,12 +41,29 @@ class BaseMinerNeuron(BaseNeuron):
             config=self.config,
         )
 
-        bt.logging.info(f"Attaching forward function to miner axon.")
+        bt.logging.info(f"Attaching forward functions to miner axon.")
         self.axon.attach(
             forward_fn=self.forward,
             blacklist_fn=self.blacklist,
             priority_fn=self.priority,
         )
+
+        # Attach memory protocol handlers if the miner implements them
+        # Note: no blacklist/priority for memory synapses (they have different signatures)
+        if hasattr(self, 'forward_memory_store'):
+            try:
+                self.axon.attach(forward_fn=self.forward_memory_store)
+                bt.logging.info("Attached MemoryStore handler to axon")
+            except Exception as e:
+                bt.logging.debug(f"MemoryStore attach skipped: {e}")
+
+        if hasattr(self, 'forward_memory_recall'):
+            try:
+                self.axon.attach(forward_fn=self.forward_memory_recall)
+                bt.logging.info("Attached MemoryRecall handler to axon")
+            except Exception as e:
+                bt.logging.debug(f"MemoryRecall attach skipped: {e}")
+
         bt.logging.info(f"Axon created: {self.axon}")
 
         self.should_exit: bool = False
