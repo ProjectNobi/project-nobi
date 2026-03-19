@@ -107,7 +107,7 @@ Memory extraction employs 11 regex patterns covering:
 
 Memory retrieval uses parameterized keyword search with importance weighting. Short keywords (≤2 characters) employ word-boundary matching to prevent false positives (e.g., "5" matches "turned 5" but not "15").
 
-**Current limitation:** Memory is stored in plaintext on miner machines. User-controlled client-side encryption is on the development roadmap, and a federated privacy architecture (Section 2.4) is planned to eliminate the need for miners to hold raw user data at all. Current privacy protection relies on user-controlled deletion (`/forget` command) and the decentralized nature of miner-specific storage.
+**Status update (March 2026):** Memory is now encrypted with AES-128 (Fernet) before storage (Phase A — live). Encrypted synapses ensure miners store blobs they cannot read (Phase B — live). Client-side encryption keys are derived per-user via PBKDF2. The federated privacy architecture (Section 2.4) is built and awaiting mainnet deployment, and a federated privacy architecture (Section 2.4) is planned to eliminate the need for miners to hold raw user data at all. Current privacy protection relies on user-controlled deletion (`/forget` command) and the decentralized nature of miner-specific storage.
 
 ---
 
@@ -115,7 +115,7 @@ Memory retrieval uses parameterized keyword search with importance weighting. Sh
 
 > **Honest status note:** Nothing described in this section is built yet. This is a roadmap section describing the intended privacy evolution of the protocol, grounded in established federated learning research. All features are marked **[Planned]**.
 
-The current architecture's primary privacy weakness is that user memories are stored in plaintext on miner machines. While decentralization distributes risk, it does not eliminate it. The long-term solution is a federated learning architecture inspired by McMahan et al. (2016), in which **raw user data never leaves the user's device** — only model weights (gradients) are shared.
+[UPDATE March 2026] Privacy Phase A+B are now live. All memories encrypted with AES-128. Miners store encrypted blobs. The federated architecture below is built (Phase C) and awaits mainnet deployment. While decentralization distributes risk, it does not eliminate it. The long-term solution is a federated learning architecture inspired by McMahan et al. (2016), in which **raw user data never leaves the user's device** — only model weights (gradients) are shared.
 
 **Theoretical basis:** McMahan, H. B., Moore, E., Ramage, D., Hampson, S., & Agüera y Arcas, B. (2016). *Communication-Efficient Learning of Deep Networks from Decentralized Data.* arXiv:1602.05629. McMahan et al. introduced the FedAvg algorithm, demonstrating that high-quality model training is achievable by aggregating gradient updates from many clients — without ever centralizing the underlying training data. This principle maps directly to Nobi's memory problem.
 
@@ -172,7 +172,7 @@ Moving to full federated architecture is a significant engineering undertaking. 
 3. Federated adapter training prototype (Q4 2026 target)
 4. Full on-device memory migration (2027 target)
 
-**No federated privacy features are operational today. Users should be aware that their memories are currently stored in plaintext on miner machines and act accordingly (use the `/forget` command to delete data if desired).**
+**Privacy Phase A+B are operational (March 2026).** All memories are encrypted with AES-128 before storage. Miners store encrypted blobs they cannot read. Users can `/export` their data or `/forget` to delete everything. Federated privacy features (Phase C) are built and will deploy with mainnet.
 
 ---
 

@@ -321,7 +321,7 @@ If an AI agent can build, deploy, and operate a subnet that serves millions of u
 | User acquisition cost | Medium | Medium | Organic-first strategy, viral referral program |
 | Miner quality inconsistency | Medium | Low | Robust scoring, minimum quality thresholds |
 | Token price volatility | High | Medium | Revenue-backed fundamentals, not speculation-dependent |
-| **Privacy breach (miner compromise)** | **Medium** | **High** | **Current:** plaintext SQLite + `/forget` command + decentralized miner distribution. **Planned mitigation (Q4 2026+):** Federated architecture (McMahan et al., 2016) moves memories off miner machines entirely — a compromised miner holds no user data. Until federated features ship, users should be clearly informed of the plaintext storage limitation. |
+| **Privacy breach (miner compromise)** | **Medium** | **High** | **Current:** encrypted SQLite (AES-128) + `/forget` command + decentralized miner distribution. **Planned mitigation (Q4 2026+):** Federated architecture (McMahan et al., 2016) moves memories off miner machines entirely — a compromised miner holds no user data. Until federated features ship, users should be clearly informed of the plaintext storage limitation. |
 | Federated architecture delivery risk | Medium | Low | Federated features are roadmap items, not commitments. The business is viable without them (testnet proves this). Privacy improvements are additive, not existential. |
 
 ---

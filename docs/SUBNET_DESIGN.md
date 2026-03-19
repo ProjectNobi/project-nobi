@@ -95,19 +95,19 @@ class MemoryRecall(bt.Synapse):
 
 ### Current Implementation
 - **Storage:** SQLite per-miner (lightweight, no external dependencies)
-- **Extraction:** Regex-based auto-extraction of names, locations, occupations, preferences, emotions, life events
+- **Extraction:** LLM-powered extraction (with regex fallback) of names, locations, occupations, preferences, emotions, life events
 - **Retrieval:** Keyword matching with importance weighting and word-boundary checks
 - **Conversation history:** Stored per-user, last 20 turns retained
 
-### Memory is NOT encrypted
-Memory is stored in plaintext SQLite on the miner's machine. Users trust their assigned miner with their data. The `/forget` command in the Telegram bot deletes all user data.
+### Memory IS Encrypted (Phase A+B — Live)
+All user memories are encrypted with AES-128 (Fernet) before storage. Per-user encryption keys derived via PBKDF2 (100K iterations). Miners store encrypted blobs they cannot read. Users control their data via /memories, /export, and /forget commands. Phase B adds encrypted synapses — bot encrypts before sending to miners.
 
-### Future Improvements (Not Yet Built)
-- Semantic search with embeddings
-- LLM-based memory extraction (replacing regex)
-- User-controlled encryption (client-side key management)
-- Memory consolidation (merging similar memories)
-- Distributed storage across miners for redundancy
+### Implemented Improvements
+- ✅ LLM-based memory extraction (with regex fallback)
+- ✅ Client-side AES-128 encryption (Phase A+B live)
+- ✅ Per-user personality adapters
+- ✅ Memory importance decay + smart context window
+- ✅ Cross-miner memory sync + bot→miner context passing
 
 ## Federated Privacy Roadmap *(Planned — Not Yet Implemented)*
 

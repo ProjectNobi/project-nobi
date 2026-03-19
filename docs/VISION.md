@@ -139,7 +139,7 @@ USER talks to Dora (Telegram / Web / Mobile app)
 7. **Federated privacy roadmap** — planned architecture where data never leaves your device; only model weights shared (McMahan et al., 2016). *Not yet implemented — planned for Phase 4–5.* When live, this will be a unique, auditable privacy guarantee that no centralized competitor can match.
 
 ### Honest Limitations (Current)
-- Memory is **stored in plaintext on miner machines** — not yet encrypted, not yet on-device. User-controlled encryption is on the near-term roadmap. The long-term solution is a **federated learning architecture** (McMahan et al., 2016 — arXiv:1602.05629) where memories never leave your device at all; only model weight updates are shared. This is planned, not yet built — see the Roadmap below.
+- Memory is **encrypted with AES-128** on miner machines (Phase A+B live). Miners store encrypted blobs they cannot read. User-controlled encryption is live (Phase A+B). The long-term solution is a **federated learning architecture** (McMahan et al., 2016 — arXiv:1602.05629) where memories never leave your device at all; only model weight updates are shared. This is planned, not yet built — see the Roadmap below.
 - The Telegram bot currently calls LLM directly, **not through the subnet**. Subnet routing is the mainnet target.
 - No tool execution yet (calendar, booking, etc.) — companion is conversation-only for now.
 
@@ -175,7 +175,7 @@ USER talks to Dora (Telegram / Web / Mobile app)
 ### Phase 4: Growth (Q4 2026)
 - [ ] Developer SDK and API
 - [ ] Tool integrations (calendar, reminders, web search)
-- [ ] User-controlled memory encryption (interim step before full federated architecture)
+- [x] User-controlled memory encryption (AES-128, Phase A+B — LIVE)
 - [ ] Enterprise tier
 - [ ] 50,000+ users, break-even
 - [ ] **[Federated Milestone]** Federated adapter training prototype: per-user personality adapters trained locally, never transmitted (based on McMahan et al., 2016 FedAvg)
