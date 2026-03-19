@@ -118,6 +118,16 @@ class Miner(BaseMinerNeuron):
             "You can check what I know with /memories, or wipe everything with /forget. "
             "The more we chat, the better I know you!"
         ),
+        "learning": (
+            "Great question! I evolve in a few ways: "
+            "First, I learn about YOU through our conversations — I remember your name, preferences, "
+            "and what matters to you, and I use that to be a better companion over time. "
+            "Second, I'm powered by competing miners on Bittensor — they're constantly improving "
+            "their responses to score higher with validators. Better miners earn more, so there's "
+            "real incentive to keep getting better. "
+            "Third, my developers update my capabilities regularly (like the memory and encryption "
+            "features I have now). So I'm always growing! 🌱"
+        ),
         "identity": (
             "I'm Nori, built by Project Nobi on Bittensor — a decentralized AI network. "
             "Think of it like this: instead of one big company running me, there's a network "
@@ -136,6 +146,9 @@ class Miner(BaseMinerNeuron):
         memory_keywords = ["remember me", "remember things", "memory", "forget me",
                           "do you remember", "will you remember", "past conversations",
                           "session", "fresh start"]
+        learning_keywords = ["self-learn", "self-evolv", "how do you learn", "how do you improve",
+                            "how do you get better", "do you evolve", "do you learn",
+                            "how do you grow", "how are you trained", "upgrade yourself"]
         identity_keywords = ["who are you", "what are you", "what model", "your model",
                             "how do you work", "how are you built", "what ai",
                             "are you chatgpt", "are you gpt", "which model"]
@@ -144,6 +157,8 @@ class Miner(BaseMinerNeuron):
             return self._IDENTITY_RESPONSES["privacy"]
         if any(kw in msg for kw in memory_keywords):
             return self._IDENTITY_RESPONSES["memory"]
+        if any(kw in msg for kw in learning_keywords):
+            return self._IDENTITY_RESPONSES["learning"]
         if any(kw in msg for kw in identity_keywords):
             return self._IDENTITY_RESPONSES["identity"]
         return None

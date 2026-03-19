@@ -378,6 +378,14 @@ class CompanionBot:
             "Check what I know with /memories, or wipe everything with /forget. "
             "The more we chat, the better I know you!"
         ),
+        "learning": (
+            "Great question! I evolve in a few ways: "
+            "First, I learn about YOU through our conversations — I remember your name, preferences, "
+            "and what matters to you, and I use that to be a better companion over time. "
+            "Second, I'm powered by competing miners on Bittensor — they're constantly improving "
+            "their responses to score higher. Better miners earn more, so there's real incentive to keep getting better. "
+            "Third, my developers update my capabilities regularly. So I'm always growing! 🌱"
+        ),
         "identity": (
             "I'm Nori, built by Project Nobi on Bittensor — a decentralized AI network. "
             "Instead of one big company running me, there's a network of miners who compete "
@@ -393,12 +401,17 @@ class CompanionBot:
                       "save my", "keep my", "track", "safe"]
         memory_kw = ["remember me", "remember things", "memory", "forget me",
                      "do you remember", "will you remember", "past conversation", "session"]
+        learning_kw = ["self-learn", "self-evolv", "how do you learn", "how do you improve",
+                       "how do you get better", "do you evolve", "do you learn",
+                       "how do you grow", "upgrade yourself"]
         identity_kw = ["who are you", "what are you", "what model", "how do you work",
                        "how are you built", "which model", "are you chatgpt", "are you gpt"]
         if any(kw in msg for kw in privacy_kw):
             return self._BOT_IDENTITY["privacy"]
         if any(kw in msg for kw in memory_kw):
             return self._BOT_IDENTITY["memory"]
+        if any(kw in msg for kw in learning_kw):
+            return self._BOT_IDENTITY["learning"]
         if any(kw in msg for kw in identity_kw):
             return self._BOT_IDENTITY["identity"]
         return None
