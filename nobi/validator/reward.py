@@ -46,15 +46,12 @@ def reward(
     """
     Score a miner's response.
 
-    Weights (matching INCENTIVE_MECHANISM.md):
+    Phase 2 Weights:
     - Single-turn: 90% quality + 10% reliability
-    - Multi-turn:  50% quality + 30% memory + 10% personality (in judge) + 10% reliability
+    - Multi-turn:  50% quality + 25% memory_integration + 15% memory_recall + 10% reliability
 
-    The 40/30/20/10 split in docs maps to:
-    - Quality (40%) = LLM judge helpfulness+coherence
-    - Memory (30%) = keyword recall + natural integration
-    - Personality (20%) = included in LLM judge personality criteria
-    - Reliability (10%) = latency-based
+    Memory integration (Phase 2): checks if miner naturally weaves memories into
+    responses vs just keyword-matching. Uses LLM judge when available.
     """
     if not response or not isinstance(response, str) or len(response.strip()) == 0:
         return 0.0
@@ -66,12 +63,18 @@ def reward(
     reliability_score = _score_reliability(latency)
 
     if test_type == "multi_turn" and memory_keywords:
-        memory_score = _score_memory_recall(response, memory_keywords)
-        # Multi-turn: 60% quality/personality + 30% memory + 10% reliability
-        final = 0.60 * quality_score + 0.30 * memory_score + 0.10 * reliability_score
+        memory_recall_score = _score_memory_recall(response, memory_keywords)
+        memory_integration_score = _score_memory_integration(
+            query, response, memory_keywords, api_key
+        )
+        # Multi-turn: 50% quality + 25% integration + 15% recall + 10% reliability
+        final = (0.50 * quality_score +
+                 0.25 * memory_integration_score +
+                 0.15 * memory_recall_score +
+                 0.10 * reliability_score)
         bt.logging.debug(
-            f"Score: quality={quality_score:.2f} memory={memory_score:.2f} "
-            f"reliability={reliability_score:.2f} → final={final:.2f}"
+            f"Score: quality={quality_score:.2f} integration={memory_integration_score:.2f} "
+            f"recall={memory_recall_score:.2f} reliability={reliability_score:.2f} → final={final:.2f}"
         )
         return final
 
@@ -193,6 +196,71 @@ def _score_memory_recall(response: str, keywords: List[str]) -> float:
         return 0.3
     else:
         return 0.1
+
+
+def _score_memory_integration(
+    query: str, response: str, memory_keywords: List[str], api_key: str = ""
+) -> float:
+    """
+    Phase 2: Score how naturally a miner integrates memories into its response.
+    - Does it reference stored info naturally (not just parroting)?
+    - Does it forget something it was told (penalty)?
+
+    Uses LLM judge when available; falls back to heuristic.
+    """
+    if not memory_keywords:
+        return 0.5
+
+    # Try LLM-based integration scoring
+    chutes_key = os.environ.get("CHUTES_API_KEY", "")
+    chutes_model = os.environ.get("CHUTES_JUDGE_MODEL", "deepseek-ai/DeepSeek-V3-0324")
+
+    if chutes_key and OpenAI is not None:
+        try:
+            client = OpenAI(base_url="https://llm.chutes.ai/v1", api_key=chutes_key)
+            kw_str = ", ".join(memory_keywords[:8])
+            prompt = (
+                f"The AI was previously told these facts about the user: {kw_str}\n\n"
+                f"User's question: {query}\n\n"
+                f"AI's response: {response}\n\n"
+                "Rate how naturally the AI uses its memory of the user (0.0 to 1.0):\n"
+                "- 1.0 = Naturally references past info, feels personal and attentive\n"
+                "- 0.7 = Mentions past info but a bit forced/mechanical\n"
+                "- 0.4 = Barely references what it knows about the user\n"
+                "- 0.1 = Completely ignores/forgets what the user told them\n"
+                "Return ONLY a single decimal number."
+            )
+            completion = client.chat.completions.create(
+                model=chutes_model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=10,
+                temperature=0.0,
+                timeout=10,
+            )
+            score_text = completion.choices[0].message.content.strip()
+            match = re.search(r'(\d+\.?\d*)', score_text)
+            if match:
+                return max(0.0, min(1.0, float(match.group(1))))
+        except Exception as e:
+            bt.logging.debug(f"[Integration] LLM judge failed: {e}")
+
+    # Heuristic fallback: check keyword presence + natural language signals
+    response_lower = response.lower()
+    matches = sum(1 for kw in memory_keywords if kw.lower() in response_lower)
+    recall_rate = matches / max(len(memory_keywords), 1)
+
+    # Bonus for natural integration signals
+    natural_signals = [
+        "you mentioned", "last time", "you told me", "i remember",
+        "you said", "earlier you", "as you shared", "you were",
+    ]
+    has_natural = any(sig in response_lower for sig in natural_signals)
+
+    base = min(0.5, recall_rate)  # Heuristic capped at 0.5
+    if has_natural and recall_rate > 0.2:
+        base = min(0.6, base + 0.15)
+
+    return base
 
 
 def _score_reliability(latency: float) -> float:

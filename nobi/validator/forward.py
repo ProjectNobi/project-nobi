@@ -25,9 +25,11 @@ from nobi.validator.query_generator import (
     generate_multi_turn_scenario,
 )
 from nobi.utils.uids import get_random_uids
+from nobi.memory.sync import sync_memories_to_miners
 
 # Track forward step count for periodic memory testing
 _step_counter = 0
+_turn_counter = 0  # Track conversation turns for periodic decay
 
 
 async def forward(self):
@@ -40,8 +42,19 @@ async def forward(self):
     5. Update miner scores
     6. Periodically test MemoryStore/MemoryRecall synapses (every 5th step)
     """
-    global _step_counter
+    global _step_counter, _turn_counter
     _step_counter += 1
+    _turn_counter += 1
+
+    # Run memory decay every 100 turns
+    if _turn_counter % 100 == 0:
+        try:
+            from nobi.memory import MemoryManager
+            mm = MemoryManager()
+            mm.decay_old_memories()
+            bt.logging.info("[Forward] Ran memory importance decay")
+        except Exception as e:
+            bt.logging.debug(f"[Forward] Decay error (non-fatal): {e}")
 
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
@@ -238,6 +251,18 @@ async def _forward_multi_turn(self, miner_uids):
     bt.logging.info(f"[Multi-turn] Scored: {rewards} (keywords: {scenario['memory_keywords']}, "
                    f"failed_uids: {failed_uids})")
     self.update_scores(rewards, miner_uids)
+
+    # Phase 2: Sync test user's memories to all miners for consistency
+    try:
+        test_memories = [
+            {"content": msg["content"], "type": "context", "importance": 0.7, "tags": ["test_sync"]}
+            for msg in scenario["setup"]
+        ]
+        await sync_memories_to_miners(
+            self.dendrite, self.metagraph, test_user_id, test_memories, timeout=8.0
+        )
+    except Exception as e:
+        bt.logging.debug(f"[Multi-turn] Sync error (non-fatal): {e}")
 
 
 async def test_memory(self, miner_uids):

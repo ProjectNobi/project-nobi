@@ -15,6 +15,7 @@ UX principles:
 
 import os
 import sys
+import json
 import random
 import logging
 import asyncio
@@ -36,6 +37,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from nobi.memory import MemoryManager
 from nobi.protocol import CompanionRequest
+import io
 
 try:
     from openai import OpenAI
@@ -185,6 +187,8 @@ HELP_MESSAGE = (
     "Commands (optional):\n"
     "/memories — see what I remember\n"
     "/forget — start fresh\n"
+    "/export — download your memories as a file\n"
+    "/import — restore memories from a file\n"
     "/help — this message"
 )
 
@@ -329,19 +333,42 @@ class CompanionBot:
         if len(message) > 2000:
             message = message[:2000] + "..."
 
-        # Recall memories (never crash on error)
+        # Phase 2: Use smart context (falls back to basic on error)
         memory_context = ""
         try:
-            memory_context = self.memory.get_context_for_prompt(user_id, message)
-        except Exception as e:
-            logger.warning(f"Memory recall error: {e}")
+            memory_context = self.memory.get_smart_context(user_id, message)
+        except Exception:
+            try:
+                memory_context = self.memory.get_context_for_prompt(user_id, message)
+            except Exception as e:
+                logger.warning(f"Memory recall error: {e}")
 
-        # Save user message + extract memories
+        # Save user message + extract memories (regex + LLM)
         try:
             self.memory.save_conversation_turn(user_id, "user", message)
+            # Regex extraction (fast, always runs)
             self.memory.extract_memories_from_message(user_id, message, "")
+            # Phase 2: LLM extraction (richer, async-safe)
+            self.memory.extract_memories_llm(user_id, message)
+            # Phase 2: Trigger profile summarization if enough memories
+            self.memory.summarize_user_profile(user_id)
         except Exception as e:
             logger.warning(f"Memory store error: {e}")
+
+        # Phase 2: Track conversation turns for periodic decay
+        if not hasattr(self, '_turn_count'):
+            self._turn_count = 0
+            # Run decay on bot startup
+            try:
+                self.memory.decay_old_memories()
+            except Exception:
+                pass
+        self._turn_count += 1
+        if self._turn_count % 100 == 0:
+            try:
+                self.memory.decay_old_memories()
+            except Exception:
+                pass
 
         # Task 5: Try subnet routing first
         if self.subnet_enabled:
@@ -508,6 +535,69 @@ async def cmd_forget(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def cmd_export(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Export all user memories as a JSON file."""
+    user_id = companion._user_id(update)
+    try:
+        data = companion.memory.export_memories(user_id)
+        if "error" in data:
+            await update.message.reply_text("Something went wrong exporting your data. Try again later!")
+            return
+
+        mem_count = len(data.get("memories", []))
+        if mem_count == 0:
+            await update.message.reply_text(
+                "Nothing to export yet! We need to chat more first 😊"
+            )
+            return
+
+        json_bytes = json.dumps(data, indent=2, ensure_ascii=False).encode("utf-8")
+        await update.message.reply_document(
+            document=io.BytesIO(json_bytes),
+            filename=f"nobi_memories_{user_id}.json",
+            caption=f"📦 Here are your {mem_count} memories! Your data is yours. 💙",
+        )
+    except Exception as e:
+        logger.error(f"Export error: {e}")
+        await update.message.reply_text("Oops, something went wrong. Try again in a moment!")
+
+
+async def cmd_import(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Import memories from a JSON file."""
+    user_id = companion._user_id(update)
+
+    # Check if a document was attached
+    if not update.message.document:
+        await update.message.reply_text(
+            "To import memories, send me a JSON file with this command!\n\n"
+            "Just attach the .json file you got from /export and send it with the caption /import"
+        )
+        return
+
+    try:
+        file = await update.message.document.get_file()
+        raw = await file.download_as_bytearray()
+        data = json.loads(raw.decode("utf-8"))
+
+        if data.get("version") != "nobi-memory-v2":
+            await update.message.reply_text(
+                "Hmm, that doesn't look like a Nobi memory export file. "
+                "Make sure you're using a file from /export! 🤔"
+            )
+            return
+
+        imported = companion.memory.import_memories(user_id, data)
+        await update.message.reply_text(
+            f"✅ Imported {imported} memories! Welcome back 😊\n\n"
+            "I'll start using these right away in our conversations."
+        )
+    except json.JSONDecodeError:
+        await update.message.reply_text("That doesn't look like a valid JSON file. Try again?")
+    except Exception as e:
+        logger.error(f"Import error: {e}")
+        await update.message.reply_text("Something went wrong with the import. Try again in a moment!")
+
+
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle inline button callbacks."""
     query = update.callback_query
@@ -632,6 +722,8 @@ def main():
     app.add_handler(CommandHandler("help", cmd_help))
     app.add_handler(CommandHandler("memories", cmd_memories))
     app.add_handler(CommandHandler("forget", cmd_forget))
+    app.add_handler(CommandHandler("export", cmd_export))
+    app.add_handler(CommandHandler("import", cmd_import))
 
     # Buttons
     app.add_handler(CallbackQueryHandler(handle_callback))
