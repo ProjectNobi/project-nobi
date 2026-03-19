@@ -36,6 +36,7 @@ from telegram.constants import ChatAction, ParseMode
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from nobi.memory import MemoryManager
+from nobi.memory.encryption import ensure_master_secret
 from nobi.protocol import CompanionRequest
 import io
 
@@ -225,6 +226,8 @@ class CompanionBot:
     """The Nobi companion bot — connects users to their personal Dora."""
 
     def __init__(self):
+        # Ensure encryption secret exists before initializing memory
+        ensure_master_secret()
         self.memory = MemoryManager(db_path="~/.nobi/bot_memories.db")
         self.rate_limiter = RateLimiter()
         self.client = None

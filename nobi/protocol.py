@@ -65,6 +65,10 @@ class MemoryStore(bt.Synapse):
     tags: typing.List[str] = []  # Searchable tags
     expires_at: typing.Optional[str] = None  # ISO datetime, None = permanent
 
+    # === Encryption metadata ===
+    encrypted: bool = False  # Whether content is pre-encrypted by the sender
+    encryption_version: int = 1  # Encryption protocol version for negotiation
+
     # === Response fields (filled by miner) ===
     stored: typing.Optional[bool] = None
     memory_id: typing.Optional[str] = None  # Unique ID for the stored memory

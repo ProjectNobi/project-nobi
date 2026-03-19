@@ -24,6 +24,13 @@ import threading
 from typing import List, Dict, Optional
 from datetime import datetime, timezone, timedelta
 
+from nobi.memory.encryption import (
+    encrypt_memory,
+    decrypt_memory,
+    is_encrypted,
+    ensure_master_secret,
+)
+
 logger = logging.getLogger("nobi-memory")
 
 try:
@@ -35,10 +42,13 @@ except ImportError:
 class MemoryManager:
     """Manages persistent user memories with SQLite backend."""
 
-    def __init__(self, db_path: str = "~/.nobi/memories.db"):
+    def __init__(self, db_path: str = "~/.nobi/memories.db", encryption_enabled: bool = True):
         self.db_path = os.path.expanduser(db_path)
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self._local = threading.local()
+        self.encryption_enabled = encryption_enabled
+        if encryption_enabled:
+            ensure_master_secret()
         self._init_db()
 
     @property
@@ -49,6 +59,20 @@ class MemoryManager:
             self._local.conn.row_factory = sqlite3.Row
             self._local.conn.execute("PRAGMA journal_mode=WAL")
         return self._local.conn
+
+    def _encrypt(self, user_id: str, text: str) -> str:
+        """Encrypt text if encryption is enabled."""
+        if not self.encryption_enabled:
+            return text
+        return encrypt_memory(user_id, text)
+
+    def _decrypt(self, user_id: str, text: str) -> str:
+        """Decrypt text if it's encrypted. Backward-compatible with plaintext."""
+        if not text:
+            return text
+        if is_encrypted(text):
+            return decrypt_memory(user_id, text)
+        return text
 
     def _init_db(self):
         """Create tables if they don't exist."""
@@ -125,9 +149,12 @@ class MemoryManager:
         tags: List[str] = None,
         expires_at: Optional[str] = None,
     ) -> str:
-        """Store a memory. Returns the memory ID."""
+        """Store a memory. Encrypts content before writing. Returns the memory ID."""
         memory_id = str(uuid.uuid4())[:12]
         now = datetime.now(timezone.utc).isoformat()
+
+        # Encrypt content before persisting
+        encrypted_content = self._encrypt(user_id, content)
 
         self._conn.execute(
             """INSERT INTO memories (id, user_id, memory_type, content, importance,
@@ -137,7 +164,7 @@ class MemoryManager:
                 memory_id,
                 user_id,
                 memory_type,
-                content,
+                encrypted_content,
                 max(0.0, min(1.0, importance)),
                 json.dumps(tags or []),
                 now,
@@ -247,7 +274,7 @@ class MemoryManager:
             {
                 "id": row["id"],
                 "type": row["memory_type"],
-                "content": row["content"],
+                "content": self._decrypt(user_id, row["content"]),
                 "importance": row["importance"],
                 "tags": json.loads(row["tags"]),
                 "created_at": row["created_at"],
@@ -267,11 +294,12 @@ class MemoryManager:
     def save_conversation_turn(
         self, user_id: str, role: str, content: str
     ):
-        """Save a conversation message."""
+        """Save a conversation message. Encrypts content before writing."""
         now = datetime.now(timezone.utc).isoformat()
+        encrypted_content = self._encrypt(user_id, content)
         self._conn.execute(
             "INSERT INTO conversations (user_id, role, content, created_at) VALUES (?, ?, ?, ?)",
-            (user_id, role, content, now),
+            (user_id, role, encrypted_content, now),
         )
 
         # Update user profile
@@ -288,7 +316,7 @@ class MemoryManager:
     def get_recent_conversation(
         self, user_id: str, limit: int = 20
     ) -> List[Dict]:
-        """Get recent conversation history for a user."""
+        """Get recent conversation history for a user. Decrypts content."""
         rows = self._conn.execute(
             """SELECT role, content, created_at FROM conversations
                WHERE user_id = ?
@@ -297,7 +325,7 @@ class MemoryManager:
         ).fetchall()
 
         return [
-            {"role": row["role"], "content": row["content"]}
+            {"role": row["role"], "content": self._decrypt(user_id, row["content"])}
             for row in reversed(rows)
         ]
 
@@ -771,7 +799,7 @@ class MemoryManager:
                     {
                         "id": r["id"],
                         "type": r["memory_type"],
-                        "content": r["content"],
+                        "content": self._decrypt(user_id, r["content"]),
                         "importance": r["importance"],
                         "tags": json.loads(r["tags"]),
                         "created_at": r["created_at"],

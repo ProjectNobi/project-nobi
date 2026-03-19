@@ -13,6 +13,7 @@ import nobi
 from nobi.base.miner import BaseMinerNeuron
 from nobi.protocol import CompanionRequest, MemoryStore, MemoryRecall
 from nobi.memory import MemoryManager
+from nobi.memory.encryption import ensure_master_secret
 
 try:
     from openai import OpenAI
@@ -43,7 +44,8 @@ class Miner(BaseMinerNeuron):
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        # Initialize memory manager
+        # Initialize encryption and memory manager
+        ensure_master_secret()
         self.memory = MemoryManager(db_path="~/.nobi/memories.db")
         bt.logging.info(f"Memory manager initialized: {self.memory.stats()}")
 
