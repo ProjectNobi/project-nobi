@@ -61,7 +61,7 @@ CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
 SUBNET_ROUTING = os.environ.get("SUBNET_ROUTING", "false").lower() == "true"
 SUBNET_NETUID = int(os.environ.get("SUBNET_NETUID", "272"))
 SUBNET_NETWORK = os.environ.get("SUBNET_NETWORK", "test")
-SUBNET_TIMEOUT = float(os.environ.get("SUBNET_TIMEOUT", "10"))
+SUBNET_TIMEOUT = float(os.environ.get("SUBNET_TIMEOUT", "6"))
 SUBNET_WALLET_NAME = os.environ.get("SUBNET_WALLET_NAME", "T68Coldkey")
 SUBNET_HOTKEY_NAME = os.environ.get("SUBNET_HOTKEY_NAME", "nobi-validator")
 
@@ -278,16 +278,28 @@ class CompanionBot:
         """Get a stable user ID from Telegram."""
         return f"tg_{update.effective_user.id}"
 
+    _metagraph_refresh_counter: int = 0
+
     async def _query_subnet(self, user_id: str, message: str) -> str | None:
         """
-        Task 5: Try to get a response from a miner on the subnet.
-        Returns the response string, or None if subnet query failed.
+        Query a miner on the subnet. Tries up to 2 miners before giving up.
+        Uses deserialize=False for reliability, extracts response manually.
+        Refreshes metagraph every 50 queries.
         """
         if not self.subnet_enabled or not self.dendrite or not self.metagraph:
             return None
 
         try:
-            # Refresh metagraph periodically (every call is fine, it's cached internally)
+            # Refresh metagraph periodically (every 50 calls)
+            self._metagraph_refresh_counter += 1
+            if self._metagraph_refresh_counter % 50 == 0:
+                try:
+                    subtensor = bt.Subtensor(network=SUBNET_NETWORK)
+                    self.metagraph = subtensor.metagraph(netuid=SUBNET_NETUID)
+                    logger.info(f"[Subnet] Metagraph refreshed: {self.metagraph.n.item()} neurons")
+                except Exception as e:
+                    logger.debug(f"[Subnet] Metagraph refresh failed: {e}")
+
             # Find miners with active axons
             valid_uids = [
                 uid for uid in range(self.metagraph.n.item())
@@ -296,38 +308,43 @@ class CompanionBot:
             ]
 
             if not valid_uids:
-                logger.debug("[Subnet] No miners with active axons")
                 return None
 
-            # If incentives exist, prefer higher-incentive miners; otherwise random
-            incentives = self.metagraph.I
-            if incentives is not None and any(float(incentives[uid]) > 0 for uid in valid_uids):
-                valid_uids.sort(key=lambda uid: float(incentives[uid]), reverse=True)
-                valid_uids = valid_uids[:3]
+            # Shuffle for load distribution
+            random.shuffle(valid_uids)
 
-            chosen_uid = random.choice(valid_uids)
-            axon = self.metagraph.axons[chosen_uid]
+            # Try up to 2 miners
+            for attempt, chosen_uid in enumerate(valid_uids[:2]):
+                axon = self.metagraph.axons[chosen_uid]
 
-            logger.info(f"[Subnet] Querying miner UID {chosen_uid} "
-                       f"(incentive={float(incentives[chosen_uid]):.4f})")
+                try:
+                    # Use deserialize=False for reliability — extract response manually
+                    responses = await self.dendrite(
+                        axons=[axon],
+                        synapse=CompanionRequest(message=message, user_id=user_id),
+                        deserialize=False,
+                        timeout=SUBNET_TIMEOUT,
+                    )
 
-            responses = await self.dendrite(
-                axons=[axon],
-                synapse=CompanionRequest(message=message, user_id=user_id),
-                deserialize=True,
-                timeout=SUBNET_TIMEOUT,
-            )
+                    if responses and responses[0]:
+                        r = responses[0]
+                        response_text = r.response if hasattr(r, 'response') and r.response else None
 
-            if responses and responses[0] and isinstance(responses[0], str) and responses[0].strip():
-                logger.info(f"[Subnet] ✅ Got response from miner {chosen_uid} "
-                          f"({len(responses[0])} chars)")
-                return responses[0]
-            else:
-                logger.warning(f"[Subnet] Miner {chosen_uid} returned empty response")
-                return None
+                        if response_text and response_text.strip():
+                            logger.info(f"[Subnet] ✅ UID {chosen_uid} responded ({len(response_text)} chars)")
+                            return response_text
+
+                    logger.debug(f"[Subnet] UID {chosen_uid} empty, trying next...")
+
+                except Exception as e:
+                    logger.debug(f"[Subnet] UID {chosen_uid} failed: {e}")
+                    continue
+
+            logger.info("[Subnet] All miners returned empty")
+            return None
 
         except Exception as e:
-            logger.warning(f"[Subnet] Query failed: {e}")
+            logger.warning(f"[Subnet] Query error: {e}")
             return None
 
     async def generate(self, user_id: str, message: str) -> str:
