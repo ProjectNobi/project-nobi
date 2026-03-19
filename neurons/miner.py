@@ -163,9 +163,11 @@ class Miner(BaseMinerNeuron):
             return self._IDENTITY_RESPONSES["identity"]
         return None
 
-    def _generate_response(self, message: str, user_id: str, conversation_history: list) -> tuple:
+    def _generate_response(self, message: str, user_id: str, conversation_history: list,
+                           bot_memory_context: str = "") -> tuple:
         """
         Generate a companion response using LLM + memory context.
+        bot_memory_context: pre-built memory context from the bot (when subnet routing).
         Returns (response_text, memory_entries_used).
         """
         # Check for identity/privacy/memory questions FIRST — use hardcoded accurate responses
@@ -183,8 +185,13 @@ class Miner(BaseMinerNeuron):
         memory_context = ""
         memory_entries = []
 
-        # Step 1: Recall memories (never crash on memory errors)
-        if user_id:
+        # Step 1: Use bot-provided memory context if available (subnet routing path)
+        # This ensures the miner knows what the bot knows about the user
+        if bot_memory_context:
+            memory_context = bot_memory_context
+            bt.logging.info(f"Using bot-provided memory context ({len(bot_memory_context)} chars)")
+        elif user_id:
+            # Fallback: recall from miner's own memory (validator test path)
             try:
                 memory_context = self.memory.get_context_for_prompt(user_id, message)
                 if memory_context:
@@ -271,10 +278,16 @@ class Miner(BaseMinerNeuron):
         """Process an incoming CompanionRequest and generate a response."""
         bt.logging.info(f"Received query from user '{synapse.user_id}': {synapse.message[:100]}")
 
+        # Extract bot-provided memory context if available (sent via preferences field)
+        bot_memory_context = ""
+        if synapse.preferences and isinstance(synapse.preferences, dict):
+            bot_memory_context = synapse.preferences.get("memory_context", "")
+
         response, memory_entries = self._generate_response(
             message=synapse.message,
             user_id=synapse.user_id,
             conversation_history=synapse.conversation_history,
+            bot_memory_context=bot_memory_context,
         )
 
         synapse.response = response

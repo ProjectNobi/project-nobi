@@ -293,11 +293,13 @@ class CompanionBot:
 
     _metagraph_refresh_counter: int = 0
 
-    async def _query_subnet(self, user_id: str, message: str) -> str | None:
+    async def _query_subnet(self, user_id: str, message: str,
+                            conversation_history: list = None,
+                            memory_context: str = "") -> str | None:
         """
-        Query a miner on the subnet. Tries up to 2 miners before giving up.
-        Uses deserialize=False for reliability, extracts response manually.
-        Refreshes metagraph every 50 queries.
+        Query a miner on the subnet. Includes user's memory context and conversation
+        history so the miner can generate personalized responses without its own DB.
+        Tries up to 2 miners before giving up.
         """
         if not self.subnet_enabled or not self.dendrite or not self.metagraph:
             return None
@@ -334,7 +336,12 @@ class CompanionBot:
                     # Use deserialize=False for reliability — extract response manually
                     responses = await self.dendrite(
                         axons=[axon],
-                        synapse=CompanionRequest(message=message, user_id=user_id),
+                        synapse=CompanionRequest(
+                            message=message,
+                            user_id=user_id,
+                            conversation_history=conversation_history or [],
+                            preferences={"memory_context": memory_context} if memory_context else {},
+                        ),
                         deserialize=False,
                         timeout=SUBNET_TIMEOUT,
                     )
@@ -469,9 +476,20 @@ class CompanionBot:
             except Exception:
                 pass
 
-        # Task 5: Try subnet routing first
+        # Task 5: Try subnet routing first — pass memory context so miner knows the user
         if self.subnet_enabled:
-            subnet_response = await self._query_subnet(user_id, message)
+            # Build conversation history for the miner
+            conv_history = []
+            try:
+                conv_history = self.memory.get_recent_conversation(user_id, limit=8)
+            except Exception:
+                pass
+
+            subnet_response = await self._query_subnet(
+                user_id, message,
+                conversation_history=conv_history,
+                memory_context=memory_context,
+            )
             if subnet_response:
                 logger.info(f"[Routing] Used SUBNET path for user {user_id}")
                 # Save subnet response to conversation history
