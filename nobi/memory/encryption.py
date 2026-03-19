@@ -102,15 +102,21 @@ def ensure_master_secret() -> str:
     return secret
 
 
+_key_cache: dict = {}  # Cache derived keys to avoid repeated PBKDF2 (100K iterations)
+
+
 def get_user_key(user_id: str) -> "Fernet | None":
     """
     Derive a per-user Fernet encryption key.
 
     Key derivation: PBKDF2(master_secret + user_id, salt=sha256(user_id), iterations=100000)
     The result is a 32-byte key, base64-encoded for Fernet.
+    Keys are cached in memory to avoid repeated PBKDF2 computation (~34ms/call without cache).
 
     Returns None if encryption is unavailable.
     """
+    if user_id in _key_cache:
+        return _key_cache[user_id]
     if not CRYPTO_AVAILABLE:
         return None
 
@@ -136,7 +142,9 @@ def get_user_key(user_id: str) -> "Fernet | None":
 
         # Fernet requires url-safe base64 encoded 32-byte key
         fernet_key = base64.urlsafe_b64encode(derived_key)
-        return Fernet(fernet_key)
+        key = Fernet(fernet_key)
+        _key_cache[user_id] = key  # Cache to avoid repeated PBKDF2
+        return key
 
     except Exception as e:
         logger.error(f"Key derivation failed for user {user_id}: {e}")
