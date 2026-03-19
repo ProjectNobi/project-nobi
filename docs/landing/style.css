@@ -783,3 +783,64 @@ img { max-width: 100%; display: block; }
 .fade-in-d2 { animation-delay: 0.2s; }
 .fade-in-d3 { animation-delay: 0.3s; }
 .fade-in-d4 { animation-delay: 0.4s; }
+
+/* ─── Docs Section ─────────────────────────────── */
+.docs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 48px;
+}
+
+.doc-card {
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+}
+
+.doc-card:hover {
+  background: rgba(108,92,231,0.06);
+  border-color: rgba(108,92,231,0.2);
+  transform: translateY(-4px);
+}
+
+.doc-icon {
+  font-size: 2rem;
+  margin-bottom: 16px;
+}
+
+.doc-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.doc-card p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.doc-meta {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 999px;
+}
+
+.section-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-top: 12px;
+}
