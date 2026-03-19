@@ -43,7 +43,7 @@ CLASSIFICATION_KEYWORDS: dict[str, list[str]] = {
         "invent", "create", "compose", "draw", "paint", "novel", "script",
     ],
     "technical": [
-        "code", "program", "bug", "error", "function", "algorithm", "database",
+        "code", "program", "bug", "error", "function", "algorithm", "binary search", "database",
         "python", "javascript", "api", "debug", "math", "calculate", "equation",
         "science", "physics", "chemistry", "biology", "engineering", "compute",
         "server", "deploy", "docker", "linux", "sql", "data", "machine learning",
