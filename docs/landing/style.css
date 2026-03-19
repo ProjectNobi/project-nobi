@@ -844,3 +844,13 @@ img { max-width: 100%; display: block; }
   color: var(--text-secondary);
   margin-top: 12px;
 }
+
+/* ─── Logo Image in Nav ─────────────────────────── */
+.nav-logo-img {
+  height: 32px;
+  width: 32px;
+  border-radius: 8px;
+  vertical-align: middle;
+  margin-right: 8px;
+  object-fit: contain;
+}
