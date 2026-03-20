@@ -99,6 +99,15 @@
 - [x] High-availability validators: automatic failover between Hetzner + Server4
 - [x] App store packaging: EAS config, store descriptions, privacy policy, terms
 
+### Also Completed (cont.)
+- [x] Customer support system: feedback collection, FAQ, support chat across all platforms
+- [x] 5 API endpoints: /api/feedback, /api/support, /api/faq
+- [x] Telegram: /feedback, /support, /faq commands with inline buttons
+- [x] Web app: Support page with chat interface + FAQ cards + feedback form
+- [x] Website: Floating "Need Help?" widget with FAQ
+- [x] 20+ FAQ entries covering all common questions
+- [x] Auto-categorization of feedback (bug, feature request, question, complaint)
+
 ### Remaining
 - [ ] 48h testnet stabilization run — observe, fix edge cases
 - [ ] Invite external miners to testnet (Bittensor Discord, X)
@@ -126,7 +135,7 @@
 | Miners | 11 |
 | Validators | 3 |
 | Servers | 6 |
-| Total tests | 931 |
+| Total tests | 1030 |
 | Languages | 20 |
 | Bot users | 15+ unique |
 | Memory system | Semantic + Relationship Graphs + LLM Extraction + Contradiction Detection |
