@@ -136,5 +136,5 @@ def build_multilingual_system_prompt(base_prompt: str, lang_code: str) -> str:
     lang_instruction = get_language_prompt(lang_code)
     if not lang_instruction:
         # Explicitly enforce English to prevent random language switches
-        return base_prompt + "\n\n== LANGUAGE ==\nALWAYS respond in English. Do NOT switch to any other language unless the user explicitly writes in another language first."
+        return base_prompt + "\n\n== CRITICAL LANGUAGE RULE ==\nYou MUST respond in English. NEVER respond in Dutch, Portuguese, French, German, Spanish, or ANY non-English language. English ONLY. This is non-negotiable. If you catch yourself starting a response in another language, STOP and rewrite it in English."
     return base_prompt + "\n" + lang_instruction

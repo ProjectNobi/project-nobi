@@ -617,7 +617,7 @@ class CompanionBot:
             # Filter out garbage/fallback responses from miners
             _BAD_RESPONSES = ["limited mode", "I received your message:", "Please try again in a moment"]
             # Also reject responses in wrong language
-            _is_bad = any(bad in subnet_response for bad in _BAD_RESPONSES)
+            _is_bad = not subnet_response or any(bad in (subnet_response or "") for bad in _BAD_RESPONSES)
             if not _is_bad and subnet_response:
                 try:
                     resp_lang = self.lang_detector.detect(subnet_response, "check")
@@ -696,6 +696,21 @@ class CompanionBot:
                 response = response.replace("I'm currently running in limited mode and can't send voice messages, but I can still chat with you!", "").strip()
                 if not response:
                     response = "Hey there! 😊 What's on your mind today?"
+
+            # Check if response is in wrong language — retry once if so
+            try:
+                resp_lang = self.lang_detector.detect(response, "check")
+                user_lang = self.lang_detector.get_user_language(user_id) or detected_lang or "en"
+                if user_lang == "en" and resp_lang != "en":
+                    logger.warning(f"[Language] Direct API responded in {resp_lang}, retrying with English enforcement")
+                    # Retry with stronger English instruction
+                    messages[-1] = {"role": "user", "content": f"[RESPOND IN ENGLISH ONLY] {message}"}
+                    retry = self.client.chat.completions.create(
+                        model=self.model, messages=messages, max_tokens=512, temperature=0.7, timeout=25
+                    )
+                    response = retry.choices[0].message.content or response
+            except Exception:
+                pass
 
             logger.info(f"[Routing] Used DIRECT API path for user {user_id}")
 
