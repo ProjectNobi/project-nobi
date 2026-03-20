@@ -46,6 +46,12 @@ except ImportError:
     _EMBEDDINGS_AVAILABLE = False
     np = None
 
+try:
+    from nobi.memory.graph import MemoryGraph
+    _GRAPH_AVAILABLE = True
+except ImportError:
+    _GRAPH_AVAILABLE = False
+
 
 class MemoryManager:
     """Manages persistent user memories with SQLite backend."""
@@ -58,6 +64,15 @@ class MemoryManager:
         if encryption_enabled:
             ensure_master_secret()
         self._init_db()
+        # Initialize relationship graph (shares the same SQLite DB)
+        if _GRAPH_AVAILABLE:
+            try:
+                self.graph = MemoryGraph(self.db_path)
+            except Exception as e:
+                logger.warning(f"[Graph] Failed to initialize MemoryGraph: {e}")
+                self.graph = None
+        else:
+            self.graph = None
 
     @property
     def _conn(self) -> sqlite3.Connection:
@@ -312,6 +327,13 @@ class MemoryManager:
         # Generate embedding for new memory (non-blocking on failure)
         if content:
             self._store_embedding(memory_id, content)
+
+        # Extract entities and relationships into the graph (non-blocking on failure)
+        if content and self.graph is not None:
+            try:
+                self.graph.extract_entities_and_relationships(user_id, content, memory_id)
+            except Exception as e:
+                logger.warning(f"[Graph] Extraction failed for {memory_id}: {e}")
 
         return memory_id
 
@@ -978,6 +1000,16 @@ class MemoryManager:
         max_chars = max_tokens * 4
         parts = []
         used_chars = 0
+
+        # 0. Graph context (relationship knowledge)
+        if self.graph is not None:
+            try:
+                graph_ctx = self.graph.get_graph_context(user_id, current_message)
+                if graph_ctx and len(graph_ctx) < max_chars * 0.25:
+                    parts.append(f"[Relationship knowledge:]\n{graph_ctx}")
+                    used_chars += len(graph_ctx) + 30
+            except Exception as e:
+                logger.warning(f"[Graph] Context generation failed: {e}")
 
         # 1. User profile summary (most efficient)
         try:

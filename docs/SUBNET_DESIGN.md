@@ -103,6 +103,14 @@ class MemoryRecall(bt.Synapse):
   - **Hybrid scoring:** 70% semantic similarity + 20% importance weight + 10% recency (exponential decay, 30-day half-life)
 - **Embeddings:** Stored as BLOB in SQLite `memory_embeddings` table, generated at store time
 - **Migration:** Automatic batch migration for pre-semantic memories via `migrate_embeddings()`
+- **Relationship graph:** SQLite-backed entity-relationship graph
+  - Entities: person, place, organization, animal, object, concept, event, food, activity, language
+  - 30+ relationship types (family, location, work, preferences, activities, etc.)
+  - 10 regex extraction patterns for automatic entity/relationship detection from messages
+  - BFS graph traversal (configurable depth) for connected knowledge
+  - Natural language context generation ("You know that Alice's sister Sarah lives in London")
+  - Entity merging, deduplication, full graph export
+  - Auto-extraction on every memory store (non-blocking, graceful fallback)
 - **Conversation history:** Stored per-user, last 20 turns retained
 
 ### Memory IS Encrypted (Phase A+B — Live)

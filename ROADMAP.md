@@ -77,6 +77,7 @@
 - [x] Web application (Next.js + FastAPI backend, chat/memories/settings/onboarding)
 - [x] Mobile app (Expo/React Native — iOS + Android, 3,600+ lines)
 - [x] FastAPI v1 route aliases for mobile compatibility
+- [x] Relationship graphs (entity extraction, BFS traversal, natural language context)
 - [ ] Deploy landing page to projectnobi.ai
 - [ ] Invite external miners to testnet (Bittensor Discord, X)
 - [ ] Gather community feedback on Nori UX
