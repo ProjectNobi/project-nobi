@@ -107,6 +107,55 @@ export function useChat() {
     [getUserId, isLoading]
   );
 
+  const sendImage = useCallback(
+    async (file: File, caption: string = "") => {
+      if (isLoading) return;
+
+      const userId = getUserId();
+      const userMessage: Message = {
+        id: uuidv4(),
+        role: "user",
+        content: caption ? `📷 ${caption}` : "📷 [Photo]",
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Convert file to base64
+        const buffer = await file.arrayBuffer();
+        const base64 = btoa(
+          new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
+        );
+        const format = file.type.split("/")[1] || "jpg";
+
+        const response = await api.chatWithImage(base64, userId, caption, format);
+        const assistantMessage: Message = {
+          id: uuidv4(),
+          role: "assistant",
+          content: response.response,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "Something went wrong";
+        setError(errorMsg);
+        const errorMessage: Message = {
+          id: uuidv4(),
+          role: "assistant",
+          content: "I had trouble looking at that image 😅 Try again?",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [getUserId, isLoading]
+  );
+
   const clearMessages = useCallback(() => {
     setMessages([]);
   }, []);
@@ -116,6 +165,7 @@ export function useChat() {
     isLoading,
     error,
     sendMessage,
+    sendImage,
     clearMessages,
     messagesEndRef,
     getUserId,

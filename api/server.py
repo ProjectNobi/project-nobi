@@ -1007,3 +1007,63 @@ async def web_tts(request: Request):
     except Exception as e:
         logger.error(f"TTS error: {e}")
         return {"success": True, "use_browser_tts": True, "text": text}
+
+
+# ─── Image Chat ──────────────────────────────────────────────
+
+@app.post("/api/chat/image")
+async def chat_with_image(request: Request):
+    """Chat with an image — analyze and respond."""
+    try:
+        body = await request.json()
+        image_b64 = body.get("image", "")
+        caption = body.get("caption", "")
+        user_id = f"web_{body.get('user_id', 'anon')}"
+        image_format = body.get("format", "jpg")
+
+        if not image_b64:
+            raise HTTPException(status_code=400, detail="Image data required")
+
+        import base64
+        image_bytes = base64.b64decode(image_b64)
+
+        # Get memory context
+        memory_context = ""
+        try:
+            memory_context = memory.get_smart_context(user_id, caption or "photo")
+        except Exception:
+            pass
+
+        # Analyze image
+        from nobi.vision.image_handler import analyze_image
+        result = await analyze_image(
+            image_bytes=image_bytes,
+            user_context=memory_context or "New user",
+            caption=caption,
+            image_format=image_format,
+        )
+
+        response_text = result.get("response", "I had trouble looking at that image.")
+
+        # Store memories
+        if result.get("extracted_memories"):
+            for mem_text in result["extracted_memories"][:5]:
+                try:
+                    memory.store(user_id, mem_text, memory_type="fact", importance=0.6)
+                except Exception:
+                    pass
+
+        # Save conversation
+        try:
+            memory.save_conversation_turn(user_id, "user", f"[Photo] {caption}" if caption else "[Photo shared]")
+            memory.save_conversation_turn(user_id, "assistant", response_text)
+        except Exception:
+            pass
+
+        return {"response": response_text, "success": result.get("success", False)}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Image chat error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process image")

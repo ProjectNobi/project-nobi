@@ -9,7 +9,7 @@ import { useChat } from "@/hooks/useChat";
 import { STORAGE_KEYS } from "@/lib/constants";
 
 export default function ChatPage() {
-  const { messages, isLoading, sendMessage, messagesEndRef } = useChat();
+  const { messages, isLoading, sendMessage, sendImage, messagesEndRef } = useChat();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
@@ -69,7 +69,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <ChatInput onSend={sendMessage} isLoading={isLoading} />
+      <ChatInput onSend={sendMessage} onSendImage={sendImage} isLoading={isLoading} />
     </div>
   );
 }

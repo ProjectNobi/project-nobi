@@ -145,5 +145,23 @@ class ApiClient {
   }
 }
 
+  async chatWithImage(
+    imageBase64: string,
+    userId: string,
+    caption: string = "",
+    format: string = "jpg"
+  ): Promise<{ response: string; success: boolean }> {
+    return this.request("/api/chat/image", {
+      method: "POST",
+      body: JSON.stringify({
+        image: imageBase64,
+        user_id: userId,
+        caption,
+        format,
+      }),
+    });
+  }
+}
+
 export const api = new ApiClient();
 export default api;
