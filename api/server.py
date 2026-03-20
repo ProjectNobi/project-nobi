@@ -367,6 +367,34 @@ async def health():
     }
 
 
+# ─── Mobile-compatible /v1/ route aliases ────────────────────
+# The mobile app uses /v1/ prefix; these aliases forward to the /api/ handlers
+
+@app.post("/v1/chat")
+async def v1_chat(req: ChatRequest):
+    return await chat(req)
+
+@app.get("/v1/memories")
+async def v1_memories(user_id: str, search: Optional[str] = None, limit: int = 50):
+    return await get_memories(user_id, search, limit)
+
+@app.delete("/v1/memories/{memory_id}")
+async def v1_delete_memory(memory_id: str, user_id: str):
+    return await delete_memory(memory_id, user_id)
+
+@app.post("/v1/memories/export")
+async def v1_export(request: Request):
+    return await export_memories(request)
+
+@app.delete("/v1/memories/all")
+async def v1_forget_all(user_id: str):
+    return await forget_all(user_id)
+
+@app.get("/v1/health")
+async def v1_health():
+    return await health()
+
+
 # ─── Run ─────────────────────────────────────────────────────
 
 if __name__ == "__main__":

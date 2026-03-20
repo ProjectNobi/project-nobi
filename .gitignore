@@ -41,3 +41,5 @@ message_and_signature.txt
 webapp/node_modules/
 webapp/.next/
 webapp/out/
+mobile/node_modules/
+mobile/.expo/
