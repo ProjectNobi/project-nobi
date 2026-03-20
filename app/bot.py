@@ -700,7 +700,10 @@ class CompanionBot:
             # Check if response is in wrong language — retry with different model
             try:
                 user_lang = self.lang_detector.get_user_language(user_id) or detected_lang or "en"
-                resp_lang = self.lang_detector.detect(response, "check")
+                # Clean response for detection (strip emoji)
+                clean_resp = ''.join(c for c in response if c.isalpha() or c.isspace())[:200]
+                resp_lang = self.lang_detector.detect(clean_resp, "check") if clean_resp.strip() else "en"
+                logger.info(f"[Language] Response lang={resp_lang}, user lang={user_lang}, first 50 chars: {response[:50]}")
                 if user_lang == "en" and resp_lang != "en":
                     logger.warning(f"[Language] Direct API responded in {resp_lang}, retrying with Qwen3")
                     # Use a different model that follows instructions better
@@ -725,7 +728,7 @@ class CompanionBot:
                         response = retry_text
                         logger.info(f"[Language] Retry with Qwen3 succeeded in English")
             except Exception as e:
-                logger.debug(f"Language retry error: {e}")
+                logger.error(f"Language retry error: {e}", exc_info=True)
 
             logger.info(f"[Routing] Used DIRECT API path for user {user_id}")
 
