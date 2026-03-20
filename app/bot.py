@@ -1159,8 +1159,22 @@ async def _send_response(update: Update, response: str):
             tts.write_to_fp(buf)
             buf.seek(0)
             logger.info(f"[Voice] TTS generated: {buf.getbuffer().nbytes} bytes")
-            await update.message.reply_voice(voice=buf)
-            logger.info(f"[Voice] Voice message sent to user {user_id}")
+            try:
+                await update.message.reply_voice(voice=buf)
+                logger.info(f"[Voice] Voice note sent to user {user_id}")
+            except Exception as voice_err:
+                if "forbidden" in str(voice_err).lower():
+                    # Telegram Premium restriction — send as audio file instead
+                    buf.seek(0)
+                    await update.message.reply_audio(
+                        audio=buf,
+                        title="Nori",
+                        performer="Nori 🤖",
+                        filename="nori_reply.mp3",
+                    )
+                    logger.info(f"[Voice] Audio file sent to user {user_id} (voice forbidden)")
+                else:
+                    raise voice_err
         except Exception as e:
             logger.error(f"[Voice] TTS error: {e}")
 
