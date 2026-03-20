@@ -122,13 +122,19 @@ class LanguageDetector:
         """
         detected = _detect_language_core(text)
 
+        # Override: if core says non-English but text clearly looks English (3+ words),
+        # trust _looks_english (core often confuses English with Dutch/German)
+        if detected != "en" and len(text.split()) >= 5 and _looks_english(text):
+            detected = "en"
+
         if user_id:
             if detected == DEFAULT_LANGUAGE and user_id in self._user_cache:
-                # If detection is uncertain (defaulted to en), use cached
-                # But only if the text doesn't look strongly English
-                if not _looks_english(text):
+                # Short ambiguous messages — use cached language
+                if len(text.split()) < 3 and not _looks_english(text):
                     detected = self._user_cache[user_id]
-            self._user_cache[user_id] = detected
+            # Update cache for non-ambiguous detections
+            if len(text.split()) >= 3:
+                self._user_cache[user_id] = detected
 
         return detected
 
