@@ -706,6 +706,25 @@ class CompanionBot:
             except Exception as e:
                 logger.debug(f"Personality metrics error: {e}")
 
+            # Auto-capture feedback from chat messages
+            try:
+                _FB_KEYWORDS = {
+                    'bug_report': ['bug', 'broken', 'error', 'crash', 'not working', 'doesnt work', "doesn't work", 'glitch'],
+                    'complaint': ['terrible', 'awful', 'horrible', 'worst', 'hate', 'frustrated', 'annoying', 'disappointed', 'useless'],
+                    'feature_request': ['please add', 'would be nice', 'wish you could', 'feature request', 'can you add', 'suggestion'],
+                }
+                msg_lower = message.lower()
+                for cat, kws in _FB_KEYWORDS.items():
+                    if any(kw in msg_lower for kw in kws):
+                        self.feedback_manager.submit_feedback(
+                            user_id=user_id, platform="telegram",
+                            category=cat, message=message,
+                        )
+                        logger.info(f"[Feedback] Auto-captured {cat} from telegram: {message[:60]}")
+                        break
+            except Exception as e:
+                logger.debug(f"Auto-feedback error: {e}")
+
             return response
 
         except Exception as e:

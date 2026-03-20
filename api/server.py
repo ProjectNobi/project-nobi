@@ -312,6 +312,32 @@ async def chat(req: ChatRequest):
     except Exception as e:
         logger.debug(f"Personality metrics error: {e}")
 
+    # Auto-capture feedback from chat messages
+    try:
+        _FEEDBACK_KEYWORDS = {
+            'bug_report': ['bug', 'broken', 'error', 'crash', 'not working', 'doesnt work', "doesn't work", 'glitch', 'issue'],
+            'complaint': ['terrible', 'awful', 'horrible', 'worst', 'hate', 'angry', 'frustrated', 'annoying', 'disappointed', 'useless'],
+            'feature_request': ['please add', 'would be nice', 'wish you could', 'feature request', 'can you add', 'suggestion', 'it would be great if'],
+        }
+        msg_lower = message.lower()
+        detected_category = None
+        for cat, keywords in _FEEDBACK_KEYWORDS.items():
+            if any(kw in msg_lower for kw in keywords):
+                detected_category = cat
+                break
+        if detected_category:
+            from nobi.support.feedback import FeedbackManager
+            fm = FeedbackManager()
+            fm.submit_feedback(
+                user_id=user_id,
+                platform="webapp",
+                category=detected_category,
+                message=message,
+            )
+            logger.info(f"[Feedback] Auto-captured {detected_category} from webapp chat: {message[:60]}")
+    except Exception as e:
+        logger.debug(f"Auto-feedback capture error: {e}")
+
     return ChatResponse(response=response_text, memories_used=memories_used[:5])
 
 
