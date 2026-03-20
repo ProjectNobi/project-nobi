@@ -1,46 +1,41 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyc
-*.pyo
-*.egg-info/
-dist/
+
+*~
+_archive/
+bot_memories.db
 build/
-*.egg
-
-# Environment
-.env
-.env.local
-.env.production
-
 # Data
 *.db
-memories.db
-bot_memories.db
-state.npz
-
-# Logs
-*.log
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
+dist/
 .DS_Store
-Thumbs.db
-
-# Project
-_archive/
-stress_results/
-screenshots/
+*.egg
+*.egg-info/
+.env
+# Environment
+.env.local
+.env.production
+# IDE
+.idea/
+*.log
+# Logs
+memories.db
 message_and_signature.txt
-webapp/node_modules/
-webapp/.next/
-webapp/out/
-mobile/node_modules/
 mobile/.expo/
+mobile/node_modules/
+.next/
+# OS
+# Project
+*.pyc
+__pycache__/
+*.py[cod]
+*.pyo
+# Python
+screenshots/
+state.npz
+stress_results/
+*.swo
+*.swp
+Thumbs.db
+.vscode/
 webapp/.next/
+webapp/node_modules/
+webapp/out/
