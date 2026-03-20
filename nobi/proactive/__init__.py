@@ -6,5 +6,6 @@ caring messages based on memory triggers.
 """
 
 from .engine import ProactiveEngine, ProactiveTrigger
+from .timezone import TimezoneDetector
 
-__all__ = ["ProactiveEngine", "ProactiveTrigger"]
+__all__ = ["ProactiveEngine", "ProactiveTrigger", "TimezoneDetector"]

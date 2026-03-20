@@ -71,18 +71,25 @@ class MemoryGraph:
     Stores entities (people, places, things) and typed relationships
     between them. Supports BFS traversal, natural language context
     generation, and entity merging.
+
+    Optional LLM extraction supplements regex patterns for richer results.
+    Optional contradiction detection flags conflicting information.
     """
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str, llm_extractor=None, contradiction_detector=None):
         """
         Initialize the MemoryGraph.
 
         Args:
             db_path: Path to SQLite database file (shared with MemoryManager).
+            llm_extractor: Optional LLMEntityExtractor instance.
+            contradiction_detector: Optional ContradictionDetector instance.
         """
         self.db_path = os.path.expanduser(db_path)
         os.makedirs(os.path.dirname(self.db_path) or ".", exist_ok=True)
         self._local = threading.local()
+        self.llm_extractor = llm_extractor
+        self.contradiction_detector = contradiction_detector
         self._init_tables()
 
     @property
@@ -469,10 +476,76 @@ class MemoryGraph:
 
         # Deduplicate
         extracted_entities = list(dict.fromkeys(extracted_entities))
-        return {
+        regex_result = {
             "entities": extracted_entities,
             "relationships": extracted_relationships,
         }
+
+        # ── LLM extraction (optional, supplements regex) ─────────────
+        llm_result = {"entities": [], "relationships": []}
+        if self.llm_extractor is not None:
+            try:
+                llm_result = self.llm_extractor.extract_sync(memory_content)
+                if llm_result.get("entities") or llm_result.get("relationships"):
+                    logger.info(
+                        f"[Graph] LLM extracted {len(llm_result.get('entities', []))} entities, "
+                        f"{len(llm_result.get('relationships', []))} relationships"
+                    )
+                    # Persist LLM-extracted entities and relationships into the graph
+                    for ent in llm_result.get("entities", []):
+                        if isinstance(ent, dict):
+                            name = ent.get("name", "").strip()
+                            etype = ent.get("type", "concept")
+                            if etype not in ENTITY_TYPES:
+                                etype = "concept"
+                            if name and len(name) > 0:
+                                self._get_or_create_entity(user_id, name, etype)
+                    for rel in llm_result.get("relationships", []):
+                        if isinstance(rel, dict):
+                            src = rel.get("source", "").strip()
+                            rtype = rel.get("type", "related_to")
+                            tgt = rel.get("target", "").strip()
+                            if src and tgt:
+                                # Determine entity types from LLM entities
+                                src_type = "person" if src.lower() == "user" else "concept"
+                                tgt_type = "concept"
+                                for ent in llm_result.get("entities", []):
+                                    if isinstance(ent, dict):
+                                        if ent.get("name", "").lower() == tgt.lower():
+                                            tgt_type = ent.get("type", "concept")
+                                            if tgt_type not in ENTITY_TYPES:
+                                                tgt_type = "concept"
+                                src_id = self._get_or_create_entity(user_id, src, src_type)
+                                tgt_id = self._get_or_create_entity(user_id, tgt, tgt_type)
+                                self._add_relationship(
+                                    user_id, src_id, rtype, tgt_id, 0.85, memory_id
+                                )
+            except Exception as e:
+                logger.warning(f"[Graph] LLM extraction failed, using regex only: {e}")
+
+        # Merge regex + LLM results for the return value
+        try:
+            from nobi.memory.llm_extractor import merge_extractions
+            merged = merge_extractions(regex_result, llm_result)
+        except ImportError:
+            merged = regex_result
+
+        # ── Contradiction detection (optional) ───────────────────────
+        if self.contradiction_detector is not None and merged.get("relationships"):
+            try:
+                contradictions = self.contradiction_detector.check_contradiction(
+                    user_id, memory_content, merged
+                )
+                for c in contradictions:
+                    logger.info(f"[Graph] Contradiction detected: {c.description}")
+                    # Auto-resolve with newest_wins strategy
+                    self.contradiction_detector.resolve_contradiction(
+                        user_id, c, strategy="newest_wins"
+                    )
+            except Exception as e:
+                logger.warning(f"[Graph] Contradiction detection failed: {e}")
+
+        return merged
 
     # ── Query Methods ─────────────────────────────────────────────────────────
 

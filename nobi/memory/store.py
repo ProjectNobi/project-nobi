@@ -52,6 +52,18 @@ try:
 except ImportError:
     _GRAPH_AVAILABLE = False
 
+try:
+    from nobi.memory.llm_extractor import LLMEntityExtractor
+    _LLM_EXTRACTOR_AVAILABLE = True
+except ImportError:
+    _LLM_EXTRACTOR_AVAILABLE = False
+
+try:
+    from nobi.memory.contradictions import ContradictionDetector
+    _CONTRADICTIONS_AVAILABLE = True
+except ImportError:
+    _CONTRADICTIONS_AVAILABLE = False
+
 
 class MemoryManager:
     """Manages persistent user memories with SQLite backend."""
@@ -64,15 +76,39 @@ class MemoryManager:
         if encryption_enabled:
             ensure_master_secret()
         self._init_db()
+        # Initialize LLM entity extractor (optional)
+        self.llm_extractor = None
+        if _LLM_EXTRACTOR_AVAILABLE:
+            try:
+                self.llm_extractor = LLMEntityExtractor()
+            except Exception as e:
+                logger.warning(f"[LLM Extractor] Failed to initialize: {e}")
+
         # Initialize relationship graph (shares the same SQLite DB)
         if _GRAPH_AVAILABLE:
             try:
-                self.graph = MemoryGraph(self.db_path)
+                self.graph = MemoryGraph(
+                    self.db_path,
+                    llm_extractor=self.llm_extractor,
+                )
             except Exception as e:
                 logger.warning(f"[Graph] Failed to initialize MemoryGraph: {e}")
                 self.graph = None
         else:
             self.graph = None
+
+        # Initialize contradiction detector (optional)
+        self.contradiction_detector = None
+        if _CONTRADICTIONS_AVAILABLE and self.graph is not None:
+            try:
+                self.contradiction_detector = ContradictionDetector(
+                    memory_manager=self,
+                    memory_graph=self.graph,
+                )
+                # Wire up contradiction detector to graph
+                self.graph.contradiction_detector = self.contradiction_detector
+            except Exception as e:
+                logger.warning(f"[Contradictions] Failed to initialize: {e}")
 
     @property
     def _conn(self) -> sqlite3.Connection:
@@ -1234,6 +1270,54 @@ class MemoryManager:
         except Exception as e:
             logger.error(f"[Import] Error for {user_id}: {e}")
             return 0
+
+    # ─── Contradiction Management ──────────────────────────────
+
+    def get_contradictions(self, user_id: str, include_resolved: bool = False) -> List[Dict]:
+        """
+        Get all contradictions detected for a user.
+
+        Args:
+            user_id: User ID.
+            include_resolved: Whether to include already-resolved contradictions.
+
+        Returns:
+            List of contradiction dicts.
+        """
+        if not self.contradiction_detector:
+            return []
+        try:
+            contradictions = self.contradiction_detector.get_contradictions(
+                user_id, include_resolved=include_resolved
+            )
+            return [c.to_dict() for c in contradictions]
+        except Exception as e:
+            logger.warning(f"[Contradictions] get_contradictions error: {e}")
+            return []
+
+    def resolve_contradiction(
+        self, user_id: str, contradiction_id: str, strategy: str = "newest_wins"
+    ) -> bool:
+        """
+        Resolve a specific contradiction by ID.
+
+        Args:
+            user_id: User ID.
+            contradiction_id: The contradiction's unique ID.
+            strategy: Resolution strategy — "newest_wins", "keep_both", "ask_user".
+
+        Returns:
+            True if resolved, False otherwise.
+        """
+        if not self.contradiction_detector:
+            return False
+        try:
+            return self.contradiction_detector.resolve_by_id(
+                user_id, contradiction_id, strategy
+            )
+        except Exception as e:
+            logger.warning(f"[Contradictions] resolve_contradiction error: {e}")
+            return False
 
     def stats(self) -> Dict:
         """Get overall memory stats."""

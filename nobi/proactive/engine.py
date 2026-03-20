@@ -125,6 +125,20 @@ _EMOTION_KEYWORDS = [
     "overwhelmed", "frustrated", "angry", "upset", "lonely",
 ]
 
+# Emotions that signal higher urgency (follow up sooner)
+_HIGH_URGENCY_EMOTIONS = [
+    "stressed", "anxious", "worried", "nervous", "scared",
+    "sad", "depressed", "overwhelmed", "frustrated", "angry",
+    "upset", "lonely",
+]
+
+# Intent phrases for topic_reminder trigger
+_INTENT_PHRASES = [
+    "i should", "i need to", "i want to", "i'm going to",
+    "i am going to", "i have to", "i must", "i ought to",
+    "i gotta", "i gonna", "remind me",
+]
+
 
 # ── Proactive Engine ─────────────────────────────────────────
 
@@ -140,15 +154,26 @@ class ProactiveEngine:
     FOLLOW_UP_MAX_DAYS = 3
     MILESTONE_DAYS = [7, 30, 60, 90, 180, 365]  # Chat anniversaries
 
-    def __init__(self, memory_manager, memory_graph=None):
+    # Follow-up timing by urgency
+    FOLLOW_UP_HIGH_URGENCY_DAYS = 1   # stressed/anxious → follow up in 1 day
+    FOLLOW_UP_LOW_URGENCY_DAYS = 3    # excited/happy → follow up in 3 days
+
+    # Topic reminder timing
+    TOPIC_REMINDER_MIN_DAYS = 2
+    TOPIC_REMINDER_MAX_DAYS = 5
+
+    def __init__(self, memory_manager, memory_graph=None, timezone_detector=None):
         """
         Args:
             memory_manager: MemoryManager instance.
             memory_graph: Optional MemoryGraph instance. If None, uses
                           memory_manager.graph if available.
+            timezone_detector: Optional TimezoneDetector instance for
+                               timezone-aware scheduling.
         """
         self.memory = memory_manager
         self.graph = memory_graph or getattr(memory_manager, "graph", None)
+        self.timezone_detector = timezone_detector
         self._local = threading.local()
         self._init_proactive_tables()
 
@@ -182,6 +207,18 @@ class ProactiveEngine:
                 timezone TEXT DEFAULT 'UTC',
                 updated_at TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS topic_reminders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                intent TEXT NOT NULL,
+                original_message TEXT DEFAULT '',
+                created_at TEXT NOT NULL,
+                reminded INTEGER NOT NULL DEFAULT 0,
+                discussed_since INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE INDEX IF NOT EXISTS idx_topic_reminders_user
+                ON topic_reminders(user_id, reminded);
         """)
         self._conn.commit()
 
@@ -271,12 +308,15 @@ class ProactiveEngine:
     def _is_quiet_hours(self, user_id: str, now: Optional[datetime] = None) -> bool:
         """
         Check if it's quiet hours (22:00–08:00) in the user's timezone.
-        Only supports UTC offset-based checking for simplicity.
+        Uses TimezoneDetector if available, else falls back to UTC.
         """
         if now is None:
             now = datetime.now(timezone.utc)
-        # For simplicity, we only apply quiet hours in UTC
-        # A more complete implementation would parse timezone offsets
+
+        if self.timezone_detector is not None:
+            return self.timezone_detector.is_quiet_hours(user_id, now)
+
+        # Fallback: use UTC
         hour = now.hour
         return hour >= 22 or hour < 8
 
@@ -329,6 +369,128 @@ class ProactiveEngine:
 
     # ── Trigger Checks ───────────────────────────────────────
 
+    # ── Timezone Detection ───────────────────────────────────
+
+    def detect_timezone(self, message: str, current_utc_hour: Optional[int] = None) -> Optional[str]:
+        """
+        Detect user's timezone from a message.
+        Returns timezone string like 'UTC+8' or None.
+        Delegates to TimezoneDetector if available.
+        """
+        if self.timezone_detector is None:
+            return None
+        if current_utc_hour is None:
+            current_utc_hour = datetime.now(timezone.utc).hour
+        return self.timezone_detector.detect_from_message(message, current_utc_hour)
+
+    # ── Intent Extraction for Topic Reminders ─────────────────
+
+    def extract_intents(self, message: str) -> List[str]:
+        """
+        Extract intent phrases from a message.
+        Returns list of intent strings (the action the user wants to do).
+        E.g., "I should call my mom" → ["call my mom"]
+        """
+        intents = []
+        msg_lower = message.lower()
+
+        for phrase in _INTENT_PHRASES:
+            idx = msg_lower.find(phrase)
+            if idx >= 0:
+                # Extract the rest after the intent phrase
+                after = message[idx + len(phrase):].strip()
+                # Clean up: take until end of sentence
+                for sep in (".", "!", "?", ",", "\n"):
+                    pos = after.find(sep)
+                    if pos > 0:
+                        after = after[:pos]
+                after = after.strip()
+                if after and len(after) > 2:
+                    intents.append(after)
+
+        return intents
+
+    def record_intents(self, user_id: str, message: str, now: Optional[datetime] = None):
+        """Extract intents from message and store as topic reminders."""
+        if now is None:
+            now = datetime.now(timezone.utc)
+        intents = self.extract_intents(message)
+        for intent in intents:
+            self._conn.execute(
+                """INSERT INTO topic_reminders
+                   (user_id, intent, original_message, created_at, reminded, discussed_since)
+                   VALUES (?, ?, ?, ?, 0, 0)""",
+                (user_id, intent, message, now.isoformat()),
+            )
+        if intents:
+            self._conn.commit()
+
+    def mark_topic_discussed(self, user_id: str, message: str):
+        """
+        Check if any pending topic reminders are now discussed.
+        If the user talks about a topic they intended to do, mark it as discussed.
+        """
+        msg_lower = message.lower()
+        rows = self._conn.execute(
+            """SELECT id, intent FROM topic_reminders
+               WHERE user_id = ? AND reminded = 0 AND discussed_since = 0""",
+            (user_id,),
+        ).fetchall()
+
+        for row in rows:
+            intent_lower = row["intent"].lower()
+            # Check if key words from the intent appear in the message
+            intent_words = [w for w in intent_lower.split() if len(w) > 3]
+            if intent_words:
+                matches = sum(1 for w in intent_words if w in msg_lower)
+                if matches >= len(intent_words) * 0.5:  # 50% word overlap
+                    self._conn.execute(
+                        "UPDATE topic_reminders SET discussed_since = 1 WHERE id = ?",
+                        (row["id"],),
+                    )
+        self._conn.commit()
+
+    def process_message(self, user_id: str, message: str, current_utc_hour: Optional[int] = None):
+        """
+        Process an incoming user message for proactive features:
+        - Detect and store timezone
+        - Record intents for topic reminders
+        - Mark discussed topics
+        - Record active hours
+        """
+        if current_utc_hour is None:
+            current_utc_hour = datetime.now(timezone.utc).hour
+
+        # Timezone detection
+        if self.timezone_detector is not None:
+            self.timezone_detector.update_timezone_from_message(
+                user_id, message, current_utc_hour
+            )
+            self.timezone_detector.record_activity(user_id, current_utc_hour)
+
+        # Intent extraction
+        self.record_intents(user_id, message)
+
+        # Topic deduplication
+        self.mark_topic_discussed(user_id, message)
+
+    # ── Emotional Urgency Weighting ───────────────────────────
+
+    def _get_follow_up_days(self, content: str) -> tuple:
+        """
+        Get follow-up timing based on emotional urgency.
+        Returns (min_days, max_days).
+        High urgency (stressed, sad) → (0.5, 1.5)
+        Low urgency (happy, excited) → (1, 3)
+        """
+        content_lower = content.lower()
+        for kw in _HIGH_URGENCY_EMOTIONS:
+            if kw in content_lower:
+                return (0.5, 1.5)
+        return (self.FOLLOW_UP_MIN_DAYS, self.FOLLOW_UP_MAX_DAYS)
+
+    # ── Trigger Checks ───────────────────────────────────────
+
     def check_triggers(self, user_id: str, now: Optional[datetime] = None) -> List[ProactiveTrigger]:
         """
         Check all trigger types for a user. Returns list of triggers
@@ -363,6 +525,11 @@ class ProactiveEngine:
             encouragement = self._check_encouragement(user_id, now)
             if encouragement:
                 triggers.append(encouragement)
+
+            # Topic reminders
+            topic = self._check_topic_reminders(user_id, now)
+            if topic:
+                triggers.append(topic)
 
         except Exception as e:
             logger.error(f"[Proactive] Error checking triggers for {user_id}: {e}")
@@ -437,11 +604,15 @@ class ProactiveEngine:
                 continue
 
             age_days = (now - created).total_seconds() / 86400.0
-            if not (self.FOLLOW_UP_MIN_DAYS <= age_days <= self.FOLLOW_UP_MAX_DAYS):
-                continue
 
             content_lower = mem.get("content", "").lower()
             mem_type = mem.get("type", "")
+
+            # Determine urgency-based follow-up window
+            min_days, max_days = self._get_follow_up_days(content_lower)
+
+            if not (min_days <= age_days <= max_days):
+                continue
 
             # Event-based follow-ups
             for kw in _EVENT_KEYWORDS:
@@ -457,12 +628,14 @@ class ProactiveEngine:
 
             # Emotion-based follow-ups
             if mem_type == "emotion" or any(kw in content_lower for kw in _EMOTION_KEYWORDS):
+                is_urgent = any(kw in content_lower for kw in _HIGH_URGENCY_EMOTIONS)
                 triggers.append(ProactiveTrigger(
                     user_id=user_id,
                     trigger_type="follow_up",
-                    priority=2,
+                    priority=1 if is_urgent else 2,
                     context=mem.get("content", ""),
-                    reason=f"User expressed emotion {age_days:.0f} day(s) ago",
+                    reason=f"User expressed emotion {age_days:.0f} day(s) ago"
+                           + (" (high urgency)" if is_urgent else ""),
                 ))
 
         # Deduplicate — only keep first follow-up trigger
@@ -557,6 +730,43 @@ class ProactiveEngine:
                 )
         return None
 
+    def _check_topic_reminders(self, user_id: str, now: datetime) -> Optional[ProactiveTrigger]:
+        """Check for pending topic reminders that are due (2-5 days old, not discussed)."""
+        rows = self._conn.execute(
+            """SELECT id, intent, original_message, created_at
+               FROM topic_reminders
+               WHERE user_id = ? AND reminded = 0 AND discussed_since = 0
+               ORDER BY created_at ASC""",
+            (user_id,),
+        ).fetchall()
+
+        for row in rows:
+            try:
+                created = datetime.fromisoformat(row["created_at"])
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+            except (ValueError, TypeError):
+                continue
+
+            age_days = (now - created).total_seconds() / 86400.0
+            if self.TOPIC_REMINDER_MIN_DAYS <= age_days <= self.TOPIC_REMINDER_MAX_DAYS:
+                # Mark as reminded
+                self._conn.execute(
+                    "UPDATE topic_reminders SET reminded = 1 WHERE id = ?",
+                    (row["id"],),
+                )
+                self._conn.commit()
+
+                return ProactiveTrigger(
+                    user_id=user_id,
+                    trigger_type="topic_reminder",
+                    priority=2,
+                    context=row["intent"],
+                    reason=f"User intended to '{row['intent']}' {age_days:.0f} days ago",
+                )
+
+        return None
+
     # ── Message Generation ────────────────────────────────────
 
     def generate_message(self, trigger: ProactiveTrigger) -> str:
@@ -612,6 +822,12 @@ class ProactiveEngine:
                 f"Just thinking about you! "
                 f"Hope your {activity} is going well. "
                 "You've got this! 💪"
+            )
+
+        if t == "topic_reminder":
+            return (
+                f"Hey! A few days ago you mentioned you wanted to {ctx}. "
+                "Did you get a chance to do that? 😊"
             )
 
         # Fallback

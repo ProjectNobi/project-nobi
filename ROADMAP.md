@@ -92,14 +92,19 @@
 - [x] Production deployment configs (Docker Compose, Nginx, systemd, Vercel)
 - [x] Nori personality tuning (mood detection, dynamic prompts, issue detection, quality scoring)
 
+### Also Completed
+- [x] Webapp + API deployed to production (Server5: 84.247.150.144)
+- [x] Advanced memory v2: LLM-powered entity extraction + contradiction detection
+- [x] Proactive companion v2: timezone detection, smart scheduling, topic reminders
+- [x] High-availability validators: automatic failover between Hetzner + Server4
+- [x] App store packaging: EAS config, store descriptions, privacy policy, terms
+
 ### Remaining
 - [ ] 48h testnet stabilization run — observe, fix edge cases
 - [ ] Invite external miners to testnet (Bittensor Discord, X)
 - [ ] Gather community feedback on Nori UX
-- [ ] Deploy webapp + API to production servers
 - [ ] Mainnet subnet registration (~1000+ TAO)
 - [ ] Funding strategy for registration
-- [ ] Production validator deployment (high-availability)
 
 ## Phase 5: Scale & Growth 📋 PLANNED
 *Target: Q2-Q3 2026*
@@ -111,8 +116,8 @@
 - [ ] App store launch (iOS + Android)
 - [ ] White-label companion solution
 - [ ] Enterprise features
-- [ ] Proactive companion v2 (context-aware scheduling, timezone detection)
-- [ ] Advanced memory v2 (LLM-powered entity extraction, contradiction detection)
+- [x] Proactive companion v2 (timezone detection, smart scheduling, topic reminders) ✅
+- [x] Advanced memory v2 (LLM entity extraction, contradiction detection) ✅
 
 ---
 
@@ -124,7 +129,7 @@
 | Miners | 7 |
 | Validators | 2 |
 | Servers | 5 |
-| Total tests | 683 |
+| Total tests | 931 |
 | Languages | 20 |
 | Bot users | 15+ unique |
 | Memory system | Semantic + Relationship Graphs |

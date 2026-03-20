@@ -1,0 +1,37 @@
+Meet Nori — your personal AI companion that actually remembers you.
+
+🧠 Semantic Memory — Nori understands what she remembers, not just keywords
+🔗 Relationship Graphs — She knows your sister Sarah lives in London
+🎤 Voice Messages — Send voice, get voice back
+📷 Image Understanding — Send photos, Nori sees and remembers them
+🌍 20 Languages — Auto-detected, responds naturally
+🎯 Proactive — Birthday reminders, check-ins, follow-ups
+🔐 Encrypted — AES-128 encryption, you control your data
+💰 Free tier — 50 messages/day, no credit card needed
+
+Unlike other AI chatbots, Nori builds a real relationship with you over time. She remembers your conversations, understands your life context, and proactively helps you stay connected to what matters.
+
+KEY FEATURES:
+
+★ Semantic Memory Engine — Nori doesn't just store chat logs. She understands meaning, context, and connections between your memories.
+
+★ Relationship Awareness — Tell Nori about your friends and family. She'll remember birthdays, life events, and help you stay in touch.
+
+★ Voice & Image — Send voice messages and photos naturally. Nori listens and sees, then remembers.
+
+★ Multilingual — Speak in any of 20 languages. Nori auto-detects and responds naturally.
+
+★ Proactive Companion — Get birthday reminders, thoughtful check-ins, and follow-ups on things you mentioned.
+
+★ Privacy First — Your data is encrypted with AES-128. You own it. You control it. You can delete it anytime.
+
+★ Powered by Bittensor — A decentralized AI network where miners compete to give you the best experience. Nori gets smarter every day.
+
+SUBSCRIPTION OPTIONS:
+
+• Free: 50 messages/day, text only
+• Plus ($9.99/mo): Unlimited messages, voice, image understanding
+• Pro ($19.99/mo): Everything in Plus, priority processing, advanced memory
+
+Privacy Policy: https://projectnobi.ai/privacy
+Terms of Service: https://projectnobi.ai/terms

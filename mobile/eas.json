@@ -1,0 +1,45 @@
+{
+  "cli": {
+    "version": ">= 8.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "buildConfiguration": "Release"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "ios": {
+        "buildConfiguration": "Release",
+        "autoIncrement": "buildNumber"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "autoIncrement": "versionCode"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "",
+        "ascAppId": "",
+        "appleTeamId": ""
+      },
+      "android": {
+        "serviceAccountKeyPath": ""
+      }
+    }
+  }
+}

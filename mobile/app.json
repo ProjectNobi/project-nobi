@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Nori",
+    "name": "Nori - AI Companion",
     "slug": "nori-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,24 +8,96 @@
     "userInterfaceStyle": "dark",
     "scheme": "nori",
     "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
       "backgroundColor": "#0a0a0f"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ai.projectnobi.nori"
+      "bundleIdentifier": "ai.projectnobi.nori",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Nori needs microphone access to send voice messages.",
+        "NSCameraUsageDescription": "Nori needs camera access so you can share photos.",
+        "NSPhotoLibraryUsageDescription": "Nori needs photo library access so you can share images.",
+        "UIBackgroundModes": ["remote-notification"]
+      },
+      "associatedDomains": [
+        "applinks:projectnobi.ai",
+        "applinks:www.projectnobi.ai"
+      ],
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0a0f"
       },
-      "package": "ai.projectnobi.nori"
+      "package": "ai.projectnobi.nori",
+      "versionCode": 1,
+      "permissions": [
+        "RECORD_AUDIO",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "projectnobi.ai",
+              "pathPrefix": "/app"
+            },
+            {
+              "scheme": "https",
+              "host": "www.projectnobi.ai",
+              "pathPrefix": "/app"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#6c5ce7",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Nori needs photo access so you can share images.",
+          "cameraPermission": "Nori needs camera access so you can share photos."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    },
+    "owner": "projectnobi",
+    "updates": {
+      "url": "https://u.expo.dev/projectnobi"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }
