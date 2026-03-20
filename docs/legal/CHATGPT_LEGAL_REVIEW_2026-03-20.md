@@ -141,3 +141,92 @@
 | 🟢 P2 | COPPA compliance | Robust age gate, parental consent flow | FTC risk |
 | 🟢 P2 | CORS restriction | Restrict to projectnobi.ai domains only | Security |
 
+
+---
+
+## Part 3: Vendor Governance, Enterprise, Token Law & Recommended Fix
+
+### 🟡 Issue 6: Vendor Governance & International Transfers
+
+**Third-party dependencies identified:**
+- Chutes.ai / OpenRouter — LLM model calls
+- OpenAI Whisper / local Whisper — STT
+- ElevenLabs / gTTS — TTS
+- Stripe — billing
+- Telegram — core user channel
+
+**Required:**
+- Subprocessor map (who handles what data, where)
+- Contract stack (DPAs with each vendor)
+- Transfer analysis (cross-border data flows)
+- Retention policy per vendor
+- User-facing disclosure of recipients and cross-border handling
+
+### 🟡 Issue 7: Enterprise & Regulated-Vertical Overreach
+
+**Finding:** Business plan pitches future appeal to healthcare, finance, legal sectors.
+
+**Rule:** Do NOT sell as "privacy-ready regulated-industry solution" until controls exist:
+- Real identity and access management
+- Audit logs
+- Admin controls
+- Retention controls
+- DPA/BAA readiness
+- Vendor flowdown
+- Security evidence
+
+### 🟡 Issue 8: Token/Securities Law
+
+**Finding:** Public materials tie service to Bittensor, miner earnings in TAO, staking, "alpha value backed by real subscription revenue."
+
+**Need:** Dedicated securities/commodities/tax/sanctions review before:
+- Public investment-style promotion
+- Any retail program that blurs product usage with financial return expectations
+
+### 📋 RECOMMENDED FIX SET (from ChatGPT 5.4 Pro)
+
+**1. Fix public truth layer IMMEDIATELY**
+- Rewrite EVERY privacy claim to match what architecture actually supports today
+- Do NOT say miners "cannot read" data unless system prevents decryption
+- Do NOT present federated/on-device privacy as current unless live
+
+**2. Ship real identity model for web app (highest engineering priority)**
+- Options: passkeys, magic-link email, or OAuth + server-issued session tokens
+- Every memory/export/delete/settings action authorizes against server identity
+- Lock CORS to known origins (projectnobi.ai domains only)
+- Add CSRF protections
+
+**3. Publish full document stack:**
+- Privacy policy ✅ (exists, needs accuracy update)
+- Terms of service ✅ (exists, needs accuracy update)
+- AI disclosure/safety page
+- Children-and-teens policy
+- Subprocessor list
+- Retention schedule
+- Law enforcement/government request policy
+- Plain-language export/delete rights explanation
+- GDPR Article 30 records-of-processing inventory
+- Data Protection Impact Assessment (DPIA) — prudent default given persistent memory + relationship mapping + emotional/health content
+
+---
+
+## Complete Priority Matrix
+
+| Priority | Issue | Action | Owner |
+|----------|-------|--------|-------|
+| 🔴 P0 | Privacy claims | Fix ALL public claims to match reality | T68Bot NOW |
+| 🔴 P0 | API authentication | Implement session tokens, lock CORS | T68Bot NOW |
+| 🔴 P0 | Therapy language | Remove/reframe in business plan | T68Bot NOW |
+| 🟡 P1 | Privacy/Terms nav links | Add to all pages prominently | T68Bot |
+| 🟡 P1 | Special category consent | Explicit consent flow | T68Bot |
+| 🟡 P1 | AI disclosure | "You are talking to AI" on first use | T68Bot |
+| 🟡 P1 | Subprocessor list | Document all vendors | T68Bot |
+| 🟡 P1 | Retention schedule | Define and publish | T68Bot |
+| 🟢 P2 | COPPA compliance | Robust age gate + parental consent | T68Bot |
+| 🟢 P2 | DPIA | Data Protection Impact Assessment | Lawyer |
+| 🟢 P2 | Token/securities review | Dedicated legal review | Lawyer |
+| 🟢 P2 | Enterprise controls | IAM, audit logs, admin, BAA | Pre-enterprise launch |
+
+---
+
+*Full review saved for team reference. All findings to be addressed before mainnet launch.*
