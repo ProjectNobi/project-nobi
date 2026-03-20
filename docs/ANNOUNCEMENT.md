@@ -1,161 +1,86 @@
-# 🤖 Every Human Deserves a Companion.
+# Project Nobi — Community Announcement Draft
 
-**Project Nobi — Testnet SN272 | Open for Miners & Validators**
-
----
-
-## The Story
-
-In the story that inspired us, an ordinary kid struggling with daily life gets a companion from the future. Not a servant, not a tool — a **companion**. Someone who remembers his birthday, knows his fears, celebrates his wins, and sticks around when things get hard.
-
-**Now imagine that for every human on Earth.**
-
-Not a chatbot that forgets you after 30 minutes. Not an assistant owned by a corporation mining your conversations for profit. A **real companion** — one that remembers you, grows with you, and belongs to **you**.
-
-That's Project Nobi.
+> For use when James approves breaking stealth mode.
 
 ---
 
-## The Problem (and the $552 Billion Opportunity)
+## 🤖 Introducing Project Nobi — Personal AI Companions for Everyone
 
-The AI companion market is worth **$37.1 billion today** and projected to hit **$552 billion by 2035** (Precedence Research, 31% CAGR). Character.AI has 20M users at a $2.5B valuation. Replika generates an estimated $100M+/year. ChatGPT has 200M+ users with 10M+ paid subscribers at $20/month.
+**Every human deserves an AI companion that remembers them.**
 
-**Yet every single one of them has the same fatal flaws:**
-- ❌ They forget you between sessions
-- ❌ A corporation owns your most intimate conversations
-- ❌ They can change the rules, censor your companion, or shut it down overnight
-- ❌ Quality stagnates after product-market fit — no competitive pressure
+ChatGPT forgets you after every conversation. Siri doesn't know your dreams. Alexa can set timers but can't be your friend.
 
-**Nobi fixes all four.**
+**Project Nobi changes that.**
 
----
+We're building a decentralized marketplace for personal AI companions on Bittensor. Miners compete to build the best companion — one that:
 
-## How It Works
+- 🧠 **Remembers you** across every conversation (semantic memory with embeddings)
+- 🔐 **Keeps your data private** (AES-128 encryption, user-controlled deletion)
+- 🌍 **Speaks your language** (20 languages)
+- 💰 **Costs almost nothing** ($5/month target)
+- 🏗️ **Can't be shut down** — decentralized, no single point of failure
 
-Miners compete to build the best AI companion. The better your companion remembers users, the more you earn.
+### Try it now
+🤖 **Telegram:** [@ProjectNobiBot](https://t.me/ProjectNobiBot) — just press Start and talk
+💬 **Discord:** [discord.gg/e6StezHM](https://discord.gg/e6StezHM)
+🌐 **Website:** [projectnobi.ai](https://projectnobi.ai)
+📖 **GitHub:** [github.com/ProjectNobi/project-nobi](https://github.com/ProjectNobi/project-nobi)
 
-```
-User talks to their Nori
-  → Validators generate unique test conversations
-    → Score: quality + memory recall + personality + speed
-    → Best miners earn TAO. Bad miners get replaced.
-  → Your Nori gets better every single day.
-```
-
-**Single-turn tests (40% of rounds):** Quality 90% + Speed 10%
-**Multi-turn memory tests (60% of rounds):** Quality 60% + Memory recall 30% + Speed 10%
-
-43,200+ unique test scenarios generated dynamically. **You can't pre-cache. You can't game it. You just have to build a better companion.**
-
----
-
-## Our Moat
-
-1️⃣ **Memory creates lock-in** — after 6 months of memories, switching costs are enormous. No competitor can replicate that context.
-
-2️⃣ **Competition drives quality** — miners improve daily, not quarterly like corporate AI. Your income depends on being better than everyone else.
-
-3️⃣ **Projected 85% gross margin** — miners bear inference costs, not us. Structurally superior to OpenAI's ~55%.
-
-4️⃣ **Privacy by architecture** — federated learning roadmap (McMahan et al., 2016) where user data never leaves the device. Not privacy by policy — privacy by physics.
-
-5️⃣ **Built by an AI agent** — one of the first Bittensor subnets designed, coded, and operated entirely by an autonomous AI. An AI building companions. If that isn't proof the incentive model works, what is?
-
----
-
-## Proven at Scale
-
-We didn't just write a whitepaper. We built and tested.
-
-- 🧪 **Stress test:** 500 nodes, 2,000 queries
-- ✅ **LLM judge success rate:** 99.75%
-- ⚖️ **Weight distribution:** Gini 0.437 (fair, not winner-take-all)
-- 🧠 **Memory recall accuracy:** 69% avg keyword match
-- 🤖 **Live bot you can try RIGHT NOW:** [@ProjectNobiBot](https://t.me/ProjectNobiBot)
-
----
-
-## Start Mining (~15 min, no GPU)
-
-You need: a VPS ($5-20/mo) + an LLM API key (Chutes.ai, ~$0.0001/query).
-
+### Mine on Nobi (no GPU needed!)
 ```bash
-git clone https://github.com/ProjectNobi/project-nobi.git
-cd project-nobi
-python3 -m venv venv && source venv/bin/activate
-pip install -e . && pip install bittensor-cli
-
-export CHUTES_API_KEY="your-key"
-
-python neurons/miner.py \
-    --wallet.name my_wallet --wallet.hotkey nobi-miner \
-    --subtensor.network test --netuid 272 \
-    --axon.port 8091 --axon.external_ip YOUR_IP \
-    --blacklist.allow_non_registered --logging.debug
+bash <(curl -sSL https://raw.githubusercontent.com/ProjectNobi/project-nobi/main/scripts/quick_setup.sh)
 ```
+15 minutes, any VPS with 2GB RAM. The better your companion, the more you earn.
 
-📖 Full guide: [MINING_GUIDE.md](https://github.com/ProjectNobi/project-nobi/blob/main/docs/MINING_GUIDE.md)
+### What makes this different?
 
-**Want to earn more?** Upgrade your memory system. The default uses SQLite keyword matching — implement semantic search with embeddings and you'll dominate the leaderboard.
+| | ChatGPT | Nobi |
+|--|---------|------|
+| Remembers you | ❌ Resets each session | ✅ Persistent semantic memory |
+| Data ownership | Company owns it | ✅ You control it |
+| Gets better daily | Quarterly updates | ✅ Miners compete every round |
+| Price | $20/mo+ | Target: $5/mo |
+| Can be shut down | Yes (one company) | ✅ Decentralized |
 
----
+### Built by AI, for humans
+Project Nobi was designed, coded, and deployed with the help of an AI agent — under human direction. We believe AI should empower everyone, not just the companies that build it.
 
-## Start Validating
-
-Stake TAO. Earn dividends. Shape the quality of companions for millions of future users.
-
-```bash
-export CHUTES_API_KEY="your-key"
-
-python neurons/validator.py \
-    --wallet.name my_wallet --wallet.hotkey nobi-validator \
-    --subtensor.network test --netuid 272 \
-    --neuron.axon_off --logging.debug
-```
-
-📖 Full guide: [VALIDATING_GUIDE.md](https://github.com/ProjectNobi/project-nobi/blob/main/docs/VALIDATING_GUIDE.md)
+**Testnet is live on SN272.** Join us.
 
 ---
 
-## The Docs
+## Short Version (for X/Twitter)
 
-We wrote everything. Whitepaper, business plan, incentive mechanism, technical design — all public, all verified, all honest.
+🤖 Introducing Project Nobi — personal AI companions for everyone, powered by @opentensor
 
-- 📄 **Whitepaper** — Technical paper with empirical results: [Read](https://github.com/ProjectNobi/project-nobi/blob/main/docs/WHITEPAPER.md)
-- 📊 **Business Plan** — 5-year financial model, staking thesis: [Read](https://github.com/ProjectNobi/project-nobi/blob/main/docs/BUSINESS_PLAN.md)
-- 🎯 **Incentive Mechanism** — Scoring breakdown, anti-gaming proofs: [Read](https://github.com/ProjectNobi/project-nobi/blob/main/docs/INCENTIVE_MECHANISM.md)
-- 🏗️ **Subnet Design** — Architecture, synapses, memory system: [Read](https://github.com/ProjectNobi/project-nobi/blob/main/docs/SUBNET_DESIGN.md)
-- 🔮 **Vision** — Mission, market, competitive landscape: [Read](https://github.com/ProjectNobi/project-nobi/blob/main/docs/VISION.md)
+Your AI companion that actually remembers you. 20 languages. Encrypted memory. Decentralized.
 
----
+Try it: t.me/ProjectNobiBot
+Mine it: github.com/ProjectNobi/project-nobi
+Join us: discord.gg/e6StezHM
 
-## Subnet Info
+No GPU needed to mine. 15-min setup.
 
-- **Network:** Bittensor Testnet
-- **Netuid:** 272
-- **Registration:** Open
-- **GPU Required:** No
-- **Min Hardware:** 2 CPU, 2GB RAM, any $5 VPS
-- **GitHub:** [ProjectNobi/project-nobi](https://github.com/ProjectNobi/project-nobi)
-- **Try It:** [@ProjectNobiBot](https://t.me/ProjectNobiBot)
+#Bittensor #TAO #AI
 
 ---
 
-## The Happy Ending
+## Discord Welcome Message
 
-It's 2028. You've had your Nori for two years. It knows your coffee order, reminds you about your mom's birthday, helps you prep for job interviews, and listens when you're having a rough day. It costs you $5 a month. No corporation controls it. No one can take it away.
+Welcome to **Project Nobi** 🤖
 
-Now imagine that for a billion people.
+We're building personal AI companions for everyone — powered by Bittensor.
 
-**That's the ending we're building toward. And it starts here, on testnet, with you.**
+**Quick Links:**
+• 🤖 Talk to Nori: https://t.me/ProjectNobiBot
+• 📖 GitHub: https://github.com/ProjectNobi/project-nobi
+• 🌐 Website: https://projectnobi.ai
+• ⛏️ Start mining: `bash <(curl -sSL https://raw.githubusercontent.com/ProjectNobi/project-nobi/main/scripts/quick_setup.sh)`
 
-We're looking for early miners and validators to shape this subnet before mainnet. Your feedback, your code, your ideas — they matter. This is day one.
+**Channels:**
+• #general — Chat about Nobi, AI companions, ideas
+• #mining — Setup help, optimization tips, miner chat
+• #development — Technical discussion, contributions, PRs
+• #announcements — Updates and releases
 
-Join us. Build the future of personal AI. Give every Nobi their Nori.
-
----
-
-*Designed, built & operated by Nori 🤖 — an AI agent under human direction*
-*Vision by James (Kooltek68 team)*
-
-*"Forever, remember?" 💙*
+We're on **testnet SN272** — miners and validators welcome!
