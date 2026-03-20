@@ -20,6 +20,12 @@ try:
 except ImportError:
     OpenAI = None
 
+try:
+    from nobi.memory.embeddings import EmbeddingEngine, get_engine
+    _SEMANTIC_AVAILABLE = True
+except ImportError:
+    _SEMANTIC_AVAILABLE = False
+
 
 JUDGE_PROMPT = """You are an AI response quality judge. Rate the following AI companion response on a scale of 0.0 to 1.0.
 
@@ -161,16 +167,90 @@ def _heuristic_score(query: str, response: str) -> float:
     return min(0.5, score)
 
 
-def _score_memory_recall(response: str, keywords: List[str]) -> float:
+def _score_memory_recall(
+    response: str,
+    keywords: List[str],
+    use_semantic: bool = True,
+    semantic_threshold: float = 0.5,
+) -> float:
     """
     Score memory recall — checks if response naturally includes
     keywords from the user's previously shared information.
 
-    Uses word boundary matching for short keywords to avoid false positives.
+    When semantic matching is available, uses embedding similarity instead of
+    exact keyword matching. This catches paraphrases and related concepts
+    (e.g., "puppy" matching "dog", "NYC" matching "New York City").
+
+    Falls back to keyword matching if embeddings aren't available.
+
+    Args:
+        response: The miner's response text
+        keywords: Memory keywords to check for
+        use_semantic: Attempt semantic matching (default True)
+        semantic_threshold: Minimum similarity to count as a match (default 0.5)
     """
     if not keywords:
         return 0.5
 
+    # Try semantic scoring first
+    if use_semantic and _SEMANTIC_AVAILABLE:
+        try:
+            return _score_memory_recall_semantic(response, keywords, semantic_threshold)
+        except Exception as e:
+            bt.logging.debug(f"[Recall] Semantic scoring failed: {e}, falling back to keyword")
+
+    # Fallback: original keyword matching
+    return _score_memory_recall_keyword(response, keywords)
+
+
+def _score_memory_recall_semantic(
+    response: str, keywords: List[str], threshold: float = 0.5
+) -> float:
+    """
+    Semantic memory recall scoring using embedding similarity.
+
+    For each keyword, computes cosine similarity with the response.
+    A keyword is considered "recalled" if similarity exceeds the threshold.
+    """
+    engine = get_engine()
+
+    response_vec = engine.embed(response)
+    keyword_vecs = engine.embed_batch(keywords)
+
+    matches = 0
+    total_sim = 0.0
+    for kw_vec in keyword_vecs:
+        sim = engine.cosine_similarity(response_vec, kw_vec)
+        total_sim += max(0.0, sim)
+        if sim >= threshold:
+            matches += 1
+
+    recall_rate = matches / len(keywords)
+    avg_sim = total_sim / len(keywords)
+
+    # Blend discrete recall rate (60%) with continuous avg similarity (40%)
+    # This rewards partial matches and near-misses
+    blended = 0.6 * recall_rate + 0.4 * avg_sim
+
+    if blended >= 0.7:
+        return 1.0
+    elif blended >= 0.55:
+        return 0.85
+    elif blended >= 0.4:
+        return 0.7
+    elif blended >= 0.25:
+        return 0.5
+    elif blended > 0.1:
+        return 0.3
+    else:
+        return 0.1
+
+
+def _score_memory_recall_keyword(response: str, keywords: List[str]) -> float:
+    """
+    Original keyword-based memory recall scoring.
+    Uses word boundary matching for short keywords to avoid false positives.
+    """
     response_lower = response.lower()
     matches = 0
     for kw in keywords:

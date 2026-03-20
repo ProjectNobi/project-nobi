@@ -51,6 +51,18 @@
 - [x] Brand assets: logo, wordmark, avatar, OG image, X banner
 - [x] projectnobi.ai: Stripe/Linear/Notion-inspired redesign with docs section
 
+## Phase 2.5: Semantic Memory ✅ COMPLETE
+*March 20, 2026*
+
+- [x] Embedding engine (sentence-transformers/all-MiniLM-L6-v2 + TF-IDF fallback)
+- [x] Hybrid semantic recall (70% similarity + 20% importance + 10% recency)
+- [x] Automatic embedding generation at store time
+- [x] Migration tool for existing memories (batch processing)
+- [x] Semantic scoring in validator reward system
+- [x] Graceful fallback to keyword matching when embeddings unavailable
+- [x] 38 comprehensive tests (embedding, recall, migration, scoring, edge cases)
+- [x] Zero regressions — 191/191 total tests pass
+
 ## Phase 3: Stability & Community 🔄 IN PROGRESS
 *March 20+, 2026*
 
@@ -98,14 +110,16 @@
 | Metric | Value |
 |--------|-------|
 | Neurons | 10 |
-| Miners | 4 |
-| Validators | 3 |
-| Servers | 2 |
+| Miners | 7 |
+| Validators | 2 |
+| Servers | 5 |
 | Avg miner score | 0.82 |
 | Memory recall rate | 75% (3/4 miners) |
 | Bot users | 15+ unique |
 | Subnet routing | Active |
-| Memory system | Phase 2 live |
+| Memory system | Semantic (Phase 2.5) |
+| Total tests | 191 |
+| Languages | 20 |
 
 ---
 

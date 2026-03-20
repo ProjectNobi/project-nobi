@@ -96,7 +96,13 @@ class MemoryRecall(bt.Synapse):
 ### Current Implementation
 - **Storage:** SQLite per-miner (lightweight, no external dependencies)
 - **Extraction:** LLM-powered extraction (with regex fallback) of names, locations, occupations, preferences, emotions, life events
-- **Retrieval:** Keyword matching with importance weighting and word-boundary checks
+- **Retrieval:** Hybrid semantic + keyword matching
+  - **Primary:** Embedding-based cosine similarity (sentence-transformers/all-MiniLM-L6-v2, ~80MB model, no GPU required)
+  - **Fallback:** TF-IDF vectorization when sentence-transformers unavailable
+  - **Last resort:** SQL LIKE keyword matching
+  - **Hybrid scoring:** 70% semantic similarity + 20% importance weight + 10% recency (exponential decay, 30-day half-life)
+- **Embeddings:** Stored as BLOB in SQLite `memory_embeddings` table, generated at store time
+- **Migration:** Automatic batch migration for pre-semantic memories via `migrate_embeddings()`
 - **Conversation history:** Stored per-user, last 20 turns retained
 
 ### Memory IS Encrypted (Phase A+B — Live)

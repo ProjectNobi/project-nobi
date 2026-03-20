@@ -38,6 +38,14 @@ try:
 except ImportError:
     OpenAI = None
 
+try:
+    import numpy as np
+    from nobi.memory.embeddings import EmbeddingEngine, get_engine
+    _EMBEDDINGS_AVAILABLE = True
+except ImportError:
+    _EMBEDDINGS_AVAILABLE = False
+    np = None
+
 
 class MemoryManager:
     """Manages persistent user memories with SQLite backend."""
@@ -152,7 +160,107 @@ class MemoryManager:
                 conn.execute(f"ALTER TABLE memories ADD COLUMN {col} {col_type} DEFAULT {default}")
                 logger.info(f"[Migration] Added column memories.{col}")
 
+        # Semantic embedding table (Phase: Semantic Memory)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS memory_embeddings (
+                memory_id TEXT PRIMARY KEY,
+                embedding_vector BLOB NOT NULL,
+                embedding_backend TEXT NOT NULL DEFAULT 'unknown',
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE CASCADE
+            )
+        """)
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_embeddings_memory ON memory_embeddings(memory_id)"
+        )
+
         conn.commit()
+
+    # ─── Embedding helpers ───────────────────────────────────────
+
+    def _get_embedding_engine(self) -> "EmbeddingEngine | None":
+        """Get the embedding engine if available, lazily."""
+        if not _EMBEDDINGS_AVAILABLE:
+            return None
+        if not hasattr(self, "_embedding_engine") or self._embedding_engine is None:
+            self._embedding_engine = get_engine()
+        return self._embedding_engine
+
+    def _store_embedding(self, memory_id: str, text: str):
+        """Generate and store embedding for a memory. Non-blocking on failure."""
+        engine = self._get_embedding_engine()
+        if engine is None:
+            return
+        try:
+            vec = engine.embed(text)
+            blob = EmbeddingEngine.serialize_embedding(vec)
+            now = datetime.now(timezone.utc).isoformat()
+            self._conn.execute(
+                """INSERT OR REPLACE INTO memory_embeddings
+                   (memory_id, embedding_vector, embedding_backend, created_at)
+                   VALUES (?, ?, ?, ?)""",
+                (memory_id, blob, engine.backend, now),
+            )
+            self._conn.commit()
+        except Exception as e:
+            logger.warning(f"[Embedding] Failed to store embedding for {memory_id}: {e}")
+
+    def migrate_embeddings(self, batch_size: int = 50) -> int:
+        """
+        Generate embeddings for all existing memories that don't have one.
+
+        Args:
+            batch_size: Number of memories to process at a time
+
+        Returns:
+            Number of embeddings generated
+        """
+        engine = self._get_embedding_engine()
+        if engine is None:
+            logger.info("[Migration] Embeddings not available, skipping migration")
+            return 0
+
+        conn = self._conn
+        total = 0
+
+        while True:
+            rows = conn.execute(
+                """SELECT m.id, m.user_id, m.content
+                   FROM memories m
+                   LEFT JOIN memory_embeddings e ON m.id = e.memory_id
+                   WHERE e.memory_id IS NULL
+                   LIMIT ?""",
+                (batch_size,),
+            ).fetchall()
+
+            if not rows:
+                break
+
+            texts = []
+            ids = []
+            for row in rows:
+                content = self._decrypt(row["user_id"], row["content"])
+                texts.append(content)
+                ids.append(row["id"])
+
+            embeddings = engine.embed_batch(texts)
+            now = datetime.now(timezone.utc).isoformat()
+
+            for memory_id, vec in zip(ids, embeddings):
+                blob = EmbeddingEngine.serialize_embedding(vec)
+                conn.execute(
+                    """INSERT OR REPLACE INTO memory_embeddings
+                       (memory_id, embedding_vector, embedding_backend, created_at)
+                       VALUES (?, ?, ?, ?)""",
+                    (memory_id, blob, engine.backend, now),
+                )
+
+            conn.commit()
+            total += len(rows)
+            logger.info(f"[Migration] Embedded {total} memories so far")
+
+        logger.info(f"[Migration] Complete — {total} embeddings generated")
+        return total
 
     def store(
         self,
@@ -200,6 +308,11 @@ class MemoryManager:
             ),
         )
         self._conn.commit()
+
+        # Generate embedding for new memory (non-blocking on failure)
+        if content:
+            self._store_embedding(memory_id, content)
+
         return memory_id
 
     def recall(
@@ -210,21 +323,205 @@ class MemoryManager:
         tags: List[str] = None,
         limit: int = 10,
         return_encrypted: bool = False,
+        use_semantic: bool = True,
     ) -> List[Dict]:
         """
         Recall memories for a user.
 
-        Uses simple keyword matching + importance weighting.
-        Future: semantic search with embeddings.
+        When embeddings are available and use_semantic=True, uses hybrid scoring:
+          - 70% semantic similarity
+          - 20% importance weight
+          - 10% recency score
+
+        Falls back to keyword matching if embeddings aren't available.
+
+        Args:
+            user_id: User to recall memories for
+            query: Search query (natural language)
+            memory_type: Filter by memory type
+            tags: Filter by tags (any match)
+            limit: Max results to return
+            return_encrypted: Return encrypted blobs (Phase B)
+            use_semantic: Attempt semantic search (default True)
+        """
+        engine = self._get_embedding_engine() if use_semantic else None
+        has_semantic = engine is not None and query
+
+        # Try semantic recall first if available
+        if has_semantic and query:
+            try:
+                results = self._recall_semantic(
+                    user_id=user_id,
+                    query=query,
+                    engine=engine,
+                    memory_type=memory_type,
+                    tags=tags,
+                    limit=limit,
+                    return_encrypted=return_encrypted,
+                )
+                if results is not None:
+                    return results
+            except Exception as e:
+                logger.warning(f"[Recall] Semantic search failed, falling back to keyword: {e}")
+
+        # Fallback: keyword-based recall (original behavior)
+        return self._recall_keyword(
+            user_id=user_id,
+            query=query,
+            memory_type=memory_type,
+            tags=tags,
+            limit=limit,
+            return_encrypted=return_encrypted,
+        )
+
+    def _recall_semantic(
+        self,
+        user_id: str,
+        query: str,
+        engine: "EmbeddingEngine",
+        memory_type: Optional[str] = None,
+        tags: List[str] = None,
+        limit: int = 10,
+        return_encrypted: bool = False,
+    ) -> Optional[List[Dict]]:
+        """
+        Semantic recall using embedding cosine similarity + hybrid scoring.
+
+        Hybrid score = 0.7 * semantic_similarity + 0.2 * importance + 0.1 * recency
+
+        Returns None if semantic search can't proceed (triggers fallback).
         """
         conn = self._conn
         now = datetime.now(timezone.utc).isoformat()
 
-        # Build query
+        # Build base filters
+        conditions = ["m.user_id = ?"]
+        params: list = [user_id]
+
+        conditions.append("(m.expires_at IS NULL OR m.expires_at > ?)")
+        params.append(now)
+
+        if memory_type:
+            conditions.append("m.memory_type = ?")
+            params.append(memory_type)
+
+        if tags:
+            tag_conditions = []
+            for tag in tags:
+                tag_conditions.append("m.tags LIKE ?")
+                params.append(f"%{tag}%")
+            conditions.append(f"({' OR '.join(tag_conditions)})")
+
+        where = " AND ".join(conditions)
+
+        # Fetch memories that have embeddings
+        sql = f"""
+            SELECT m.*, e.embedding_vector
+            FROM memories m
+            INNER JOIN memory_embeddings e ON m.id = e.memory_id
+            WHERE {where}
+        """
+        rows = conn.execute(sql, params).fetchall()
+
+        if not rows:
+            # No embeddings available — signal fallback
+            return None
+
+        # Generate query embedding
+        query_vec = engine.embed(query)
+
+        # Compute hybrid scores
+        scored = []
+        now_ts = datetime.now(timezone.utc).timestamp()
+
+        for row in rows:
+            embedding = EmbeddingEngine.deserialize_embedding(row["embedding_vector"])
+            if embedding is None:
+                continue
+
+            # Semantic similarity [0, 1]
+            sim = max(0.0, engine.cosine_similarity(query_vec, embedding))
+
+            # Importance [0, 1] — already stored
+            importance = row["importance"]
+
+            # Recency score [0, 1] — exponential decay, half-life ~30 days
+            try:
+                created = datetime.fromisoformat(row["created_at"]).timestamp()
+                age_days = (now_ts - created) / 86400.0
+                recency = max(0.0, min(1.0, 2.0 ** (-age_days / 30.0)))
+            except (ValueError, TypeError):
+                recency = 0.5
+
+            # Hybrid score: 70% semantic + 20% importance + 10% recency
+            hybrid = 0.70 * sim + 0.20 * importance + 0.10 * recency
+            scored.append((row, hybrid, sim))
+
+        # Sort by hybrid score descending, take top `limit`
+        scored.sort(key=lambda x: x[1], reverse=True)
+        top = scored[:limit]
+
+        # Update access counts
+        ids = [row["id"] for row, _, _ in top]
+        if ids:
+            placeholders = ",".join("?" * len(ids))
+            conn.execute(
+                f"UPDATE memories SET access_count = access_count + 1, "
+                f"last_accessed = ? WHERE id IN ({placeholders})",
+                [now] + ids,
+            )
+            conn.commit()
+
+        # Build results
+        results = []
+        for row, hybrid, sim in top:
+            entry = {
+                "id": row["id"],
+                "type": row["memory_type"],
+                "importance": row["importance"],
+                "tags": json.loads(row["tags"]),
+                "created_at": row["created_at"],
+                "expires_at": row["expires_at"],
+                "semantic_score": round(sim, 4),
+                "hybrid_score": round(hybrid, 4),
+            }
+            if return_encrypted:
+                try:
+                    entry["encrypted_content"] = row["encrypted_content"] or ""
+                except (IndexError, KeyError):
+                    entry["encrypted_content"] = ""
+                entry["content"] = ""
+                try:
+                    entry["content_hash"] = row["content_hash"] or ""
+                    entry["encryption_version"] = row["encryption_version"] or 0
+                except (IndexError, KeyError):
+                    entry["content_hash"] = ""
+                    entry["encryption_version"] = 0
+            else:
+                entry["content"] = self._decrypt(user_id, row["content"])
+            results.append(entry)
+
+        return results
+
+    def _recall_keyword(
+        self,
+        user_id: str,
+        query: str = "",
+        memory_type: Optional[str] = None,
+        tags: List[str] = None,
+        limit: int = 10,
+        return_encrypted: bool = False,
+    ) -> List[Dict]:
+        """
+        Original keyword-based recall (LIKE matching + importance).
+        Used as fallback when semantic search is unavailable.
+        """
+        conn = self._conn
+        now = datetime.now(timezone.utc).isoformat()
+
         conditions = ["user_id = ?"]
         params: list = [user_id]
 
-        # Filter expired
         conditions.append("(expires_at IS NULL OR expires_at > ?)")
         params.append(now)
 
@@ -233,7 +530,6 @@ class MemoryManager:
             params.append(memory_type)
 
         if tags:
-            # Match any tag
             tag_conditions = []
             for tag in tags:
                 tag_conditions.append("tags LIKE ?")
@@ -243,16 +539,12 @@ class MemoryManager:
         where = " AND ".join(conditions)
 
         if query:
-            # Keyword relevance scoring via LIKE matching (parameterized)
-            # Sanitize keywords: strip punctuation, skip short words
             keywords = [
                 w.lower().replace("'", "").replace('"', '')
                 for w in query.split()
                 if len(w) > 2
             ]
             if keywords:
-                # CASE WHEN params go BEFORE WHERE params in the SQL
-                # So we need separate param lists and merge in correct order
                 case_parts = []
                 kw_params = []
                 for kw in keywords:
@@ -266,7 +558,6 @@ class MemoryManager:
                     ORDER BY relevance DESC, importance DESC, created_at DESC
                     LIMIT ?
                 """
-                # Params order: CASE WHEN params, then WHERE params, then LIMIT
                 params = kw_params + params + [limit]
             else:
                 sql = f"""
@@ -287,7 +578,6 @@ class MemoryManager:
 
         rows = conn.execute(sql, params).fetchall()
 
-        # Update access counts
         ids = [row["id"] for row in rows]
         if ids:
             placeholders = ",".join("?" * len(ids))
@@ -309,12 +599,11 @@ class MemoryManager:
                 "expires_at": row["expires_at"],
             }
             if return_encrypted:
-                # Phase B: return encrypted blobs as-is, no decryption
                 try:
                     entry["encrypted_content"] = row["encrypted_content"] or ""
                 except (IndexError, KeyError):
                     entry["encrypted_content"] = ""
-                entry["content"] = ""  # Don't leak plaintext
+                entry["content"] = ""
                 try:
                     entry["content_hash"] = row["content_hash"] or ""
                     entry["encryption_version"] = row["encryption_version"] or 0
