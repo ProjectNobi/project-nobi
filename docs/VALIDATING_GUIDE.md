@@ -220,7 +220,7 @@ for uid in range(mg.n):
 ## Questions?
 
 - **GitHub:** [project-nobi](https://github.com/ProjectNobi/project-nobi)
-- **Discord:** Bittensor testnet channel
+- **Discord:** [Join our community](https://discord.gg/e6StezHM)
 - **Full scoring details:** [INCENTIVE_MECHANISM.md](INCENTIVE_MECHANISM.md)
 - **Issues:** [Open a GitHub issue](https://github.com/ProjectNobi/project-nobi/issues)
 

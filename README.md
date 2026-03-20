@@ -72,6 +72,12 @@ Fair, transparent, open source. See [INCENTIVE_MECHANISM.md](docs/INCENTIVE_MECH
 
 No GPU required. ~15 minute setup.
 
+### ⚡ One-Command Setup
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/ProjectNobi/project-nobi/main/scripts/quick_setup.sh)
+```
+
+### Manual Setup
 ```bash
 git clone https://github.com/ProjectNobi/project-nobi.git
 cd project-nobi

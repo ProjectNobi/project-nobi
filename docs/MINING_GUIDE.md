@@ -2,9 +2,21 @@
 
 > Estimated setup time: 10-15 minutes. No GPU required.
 
+## ⚡ One-Command Setup
+
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/ProjectNobi/project-nobi/main/scripts/quick_setup.sh)
+```
+
+This interactive script handles everything: installs dependencies, clones the repo, creates your wallet, registers on the subnet, configures your LLM, opens firewall, and starts mining with PM2.
+
+**Prefer manual setup?** Follow the steps below.
+
+---
+
 ## What You're Building
 
-You're running a **personal AI companion** (Dora) that talks to users, remembers them, and helps them with daily life. The better your companion, the more you earn.
+You're running a **personal AI companion** (Nori) that talks to users, remembers them, and helps them with daily life. The better your companion, the more you earn.
 
 ## Requirements
 
@@ -207,9 +219,10 @@ Your earnings depend on your score. Here's how it breaks down:
 
 **2. Improve memory (affects 18% of your overall score)**
 
-The default memory uses SQLite with keyword matching. To compete at the top:
-- Implement **semantic search** (embeddings + vector DB like ChromaDB)
-- Add **LLM-based memory extraction** (replace regex rules with an LLM call)
+The default memory now includes **semantic search** (sentence-transformers embeddings with cosine similarity). To compete at the top:
+- Install `sentence-transformers` for best results: `pip install sentence-transformers` (~80MB model, no GPU needed)
+- Without it, the system falls back to TF-IDF, then keyword matching
+- Customize **LLM-based memory extraction** (tune what facts get extracted)
 - Build **user profiling** (summarize what you know about each user)
 - Implement **memory consolidation** (merge similar memories over time)
 
@@ -248,8 +261,9 @@ Tips: use a server geographically close to validators, use connection pooling, p
 ## Questions?
 
 - **GitHub:** [project-nobi](https://github.com/ProjectNobi/project-nobi)
-- **Discord:** Bittensor testnet channel
+- **Discord:** [Join our community](https://discord.gg/e6StezHM)
 - **Telegram:** [@ProjectNobiBot](https://t.me/ProjectNobiBot) (try the companion yourself!)
+- **Website:** [projectnobi.ai](https://projectnobi.ai)
 - **Issues:** [Open a GitHub issue](https://github.com/ProjectNobi/project-nobi/issues)
 
 ---
