@@ -181,13 +181,17 @@ class TestHealthCheck:
 # ---------------------------------------------------------------------------
 class TestRestartProcesses:
     def test_restart_all_success(self, updater):
-        with patch.object(updater, "_run_cmd") as mock_cmd:
+        with patch.object(updater, "_run_cmd") as mock_cmd, \
+             patch.object(updater, "_wait_for_step_completion"), \
+             patch.object(updater, "_check_validator_post_restart", return_value={"running": True, "crash_looping": False}):
             mock_cmd.return_value = (0, "restarted", "")
             results = updater.restart_processes()
             assert results == {"nobi-miner": True, "nobi-validator": True}
 
     def test_restart_partial_failure(self, updater):
-        with patch.object(updater, "_run_cmd") as mock_cmd:
+        with patch.object(updater, "_run_cmd") as mock_cmd, \
+             patch.object(updater, "_wait_for_step_completion"), \
+             patch.object(updater, "_check_validator_post_restart", return_value={"running": True, "crash_looping": False}):
             mock_cmd.side_effect = [
                 (0, "ok", ""),  # miner restarts
                 (1, "", "process not found"),  # validator fails

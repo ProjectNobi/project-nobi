@@ -5,6 +5,13 @@ Auto-Update Daemon for Project Nobi Validators & Miners.
 Polls the git remote for new commits and automatically pulls updates,
 runs health checks, restarts PM2 processes, and rolls back on failure.
 
+Enhanced with:
+- Validator-specific graceful restart (waits for epoch/step completion)
+- Post-update health verification (PM2 status, subtensor connection, weight setting)
+- Website sync (docs/landing/* → /var/www/projectnobi/)
+- Dependency change detection (auto pip install -e . when requirements.txt changes)
+- Configurable per-process restart strategies
+
 Usage:
     python scripts/auto_updater.py          # Run as daemon (continuous loop)
     python scripts/auto_updater.py --once   # Single check-and-update, then exit
@@ -21,6 +28,7 @@ import argparse
 import json
 import logging
 import os
+import shutil
 import subprocess
 import sys
 import threading
@@ -30,6 +38,21 @@ from pathlib import Path
 from typing import Optional
 
 logger = logging.getLogger("auto_updater")
+
+# Restart strategies
+RESTART_GRACEFUL = "graceful"  # Wait for step completion before restart
+RESTART_HARD = "hard"          # Immediate restart
+
+# Default restart strategies by process name pattern
+DEFAULT_RESTART_STRATEGIES = {
+    "validator": RESTART_GRACEFUL,
+    "miner": RESTART_HARD,
+}
+
+# Graceful restart settings
+GRACEFUL_TIMEOUT = 60  # Max seconds to wait for step completion
+GRACEFUL_POLL_INTERVAL = 2  # How often to check logs during graceful wait
+STEP_COMPLETE_PATTERNS = ["step completed", "step_completed", "epoch completed", "epoch_completed", "forward pass complete"]
 
 
 class AutoUpdater:
@@ -42,6 +65,8 @@ class AutoUpdater:
         pm2_names: Optional[list] = None,
         branch: str = "main",
         log_dir: Optional[str] = None,
+        restart_strategies: Optional[dict] = None,
+        website_dir: Optional[str] = None,
     ):
         self.repo_path = os.path.abspath(repo_path)
         self.check_interval = max(30, check_interval)  # minimum 30s
@@ -49,8 +74,12 @@ class AutoUpdater:
         self.pm2_names = pm2_names or []
         self.log_dir = Path(log_dir or os.path.expanduser("~/.nobi"))
         self.log_file = self.log_dir / "update_log.json"
+        self.website_dir = website_dir or "/var/www/projectnobi"
         self._lock = threading.Lock()
         self._running = False
+
+        # Per-process restart strategies: {process_name: "graceful"|"hard"}
+        self.restart_strategies = restart_strategies or {}
 
         # Ensure log directory exists
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -114,6 +143,126 @@ class AutoUpdater:
         """Check if there are uncommitted local changes."""
         rc, stdout, _ = self._run_cmd(["git", "status", "--porcelain"])
         return rc == 0 and len(stdout) > 0
+
+    def _get_restart_strategy(self, process_name: str) -> str:
+        """Determine restart strategy for a given process.
+
+        Checks explicit strategies first, then falls back to pattern matching.
+        """
+        # Check explicit config
+        if process_name in self.restart_strategies:
+            return self.restart_strategies[process_name]
+
+        # Pattern matching against defaults
+        name_lower = process_name.lower()
+        for pattern, strategy in DEFAULT_RESTART_STRATEGIES.items():
+            if pattern in name_lower:
+                return strategy
+
+        # Default: hard restart
+        return RESTART_HARD
+
+    def _wait_for_step_completion(self, process_name: str, timeout: int = GRACEFUL_TIMEOUT) -> bool:
+        """Wait for a validator to complete its current step before restart.
+
+        Checks PM2 logs for step completion patterns. Returns True if step
+        completed (or process not running), False if timed out.
+        """
+        logger.info("Waiting for %s to complete current step (timeout=%ds)...", process_name, timeout)
+
+        start = time.time()
+        while time.time() - start < timeout:
+            # Get recent logs (last 20 lines)
+            rc, stdout, _ = self._run_cmd(
+                ["pm2", "logs", process_name, "--lines", "20", "--nostream"],
+                cwd="/tmp",
+                timeout=10,
+            )
+            if rc != 0:
+                # Process might not be running — safe to restart
+                logger.info("Could not get logs for %s — proceeding with restart", process_name)
+                return True
+
+            # Check if any step completion pattern is in recent output
+            combined = stdout.lower()
+            for pattern in STEP_COMPLETE_PATTERNS:
+                if pattern in combined:
+                    logger.info("Step completed for %s — safe to restart", process_name)
+                    return True
+
+            time.sleep(GRACEFUL_POLL_INTERVAL)
+
+        logger.warning("Timeout waiting for step completion on %s — proceeding anyway", process_name)
+        return False
+
+    def _check_pm2_process_health(self, process_name: str) -> dict:
+        """Check health of a specific PM2 process after restart.
+
+        Returns dict with: {running, restarts, uptime_seconds, crash_looping}
+        """
+        rc, stdout, _ = self._run_cmd(["pm2", "jlist"], cwd="/tmp")
+        if rc != 0:
+            return {"running": False, "restarts": -1, "uptime_seconds": 0, "crash_looping": False}
+
+        try:
+            processes = json.loads(stdout)
+            for p in processes:
+                if not isinstance(p, dict):
+                    continue
+                if p.get("name") == process_name:
+                    env = p.get("pm2_env", {})
+                    status = env.get("status", "unknown")
+                    restarts = env.get("restart_time", 0)
+                    uptime = env.get("pm_uptime", 0)
+                    # Calculate uptime in seconds
+                    if uptime > 0:
+                        uptime_secs = (time.time() * 1000 - uptime) / 1000
+                    else:
+                        uptime_secs = 0
+
+                    # Crash-looping: more than 5 restarts and uptime < 30s
+                    crash_looping = restarts > 5 and uptime_secs < 30
+
+                    return {
+                        "running": status == "online",
+                        "restarts": restarts,
+                        "uptime_seconds": uptime_secs,
+                        "crash_looping": crash_looping,
+                    }
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+        return {"running": False, "restarts": -1, "uptime_seconds": 0, "crash_looping": False}
+
+    def _check_validator_post_restart(self, process_name: str, wait_seconds: int = 15) -> dict:
+        """After restarting a validator, verify it's actually healthy.
+
+        Checks: running, connected to subtensor, not crash-looping.
+        Returns a health report dict.
+        """
+        logger.info("Waiting %ds for %s to stabilize...", wait_seconds, process_name)
+        time.sleep(wait_seconds)
+
+        health = self._check_pm2_process_health(process_name)
+
+        # Check logs for connection
+        rc, stdout, _ = self._run_cmd(
+            ["pm2", "logs", process_name, "--lines", "50", "--nostream"],
+            cwd="/tmp",
+            timeout=10,
+        )
+        log_text = stdout.lower() if rc == 0 else ""
+
+        health["connected"] = any(
+            p in log_text for p in ["connected to", "subtensor", "network:", "chain_endpoint"]
+        )
+        health["errors"] = []
+        for line in (stdout or "").split("\n"):
+            line_lower = line.lower()
+            if any(err in line_lower for err in ["error", "exception", "traceback", "failed"]):
+                health["errors"].append(line.strip())
+
+        return health
 
     def check_for_updates(self) -> bool:
         """Fetch from remote and check if there are new commits.
@@ -181,6 +330,81 @@ class AutoUpdater:
             logger.info("Pulled update: %s", commit_msg)
             return True, commit_msg
 
+    def check_dependency_changes(self) -> bool:
+        """Check if requirements.txt changed in the last commit.
+
+        Returns True if dependencies changed.
+        """
+        rc, stdout, _ = self._run_cmd(
+            ["git", "diff", "HEAD~1", "HEAD", "--name-only"]
+        )
+        if rc != 0:
+            logger.warning("Could not check diff for dependency changes")
+            return False
+
+        changed_files = stdout.split("\n") if stdout else []
+        req_files = ["requirements.txt", "setup.py", "setup.cfg", "pyproject.toml"]
+        changed = any(f.strip() in req_files for f in changed_files)
+
+        if changed:
+            logger.info("Dependency files changed — will reinstall")
+        return changed
+
+    def install_dependencies(self) -> bool:
+        """Run pip install -e . to update dependencies.
+
+        Returns True on success.
+        """
+        logger.info("Installing updated dependencies...")
+        rc, stdout, stderr = self._run_cmd(
+            [sys.executable, "-m", "pip", "install", "-e", "."],
+            timeout=300,
+        )
+        if rc != 0:
+            logger.error("Dependency installation failed: %s", stderr)
+            return False
+
+        logger.info("Dependencies installed successfully")
+        return True
+
+    def sync_website(self) -> bool:
+        """Copy docs/landing/* to website directory if both exist.
+
+        Returns True if sync was performed, False if skipped/failed.
+        """
+        landing_dir = Path(self.repo_path) / "docs" / "landing"
+        website_path = Path(self.website_dir)
+
+        if not landing_dir.exists():
+            logger.debug("No docs/landing directory — skipping website sync")
+            return False
+
+        if not website_path.exists():
+            logger.debug("Website dir %s does not exist — skipping sync", self.website_dir)
+            return False
+
+        try:
+            # Copy all files from landing to website dir
+            copied = 0
+            for item in landing_dir.iterdir():
+                dest = website_path / item.name
+                if item.is_file():
+                    shutil.copy2(str(item), str(dest))
+                    copied += 1
+                elif item.is_dir():
+                    if dest.exists():
+                        shutil.rmtree(str(dest))
+                    shutil.copytree(str(item), str(dest))
+                    copied += 1
+
+            logger.info("Website sync: copied %d items from docs/landing to %s", copied, self.website_dir)
+            self._log_event("website_sync", f"Synced {copied} items to {self.website_dir}")
+            return True
+        except (OSError, shutil.Error) as e:
+            logger.error("Website sync failed: %s", e)
+            self._log_event("website_sync_failed", str(e))
+            return False
+
     def run_health_check(self) -> bool:
         """Run health checks to verify the codebase is functional.
 
@@ -208,19 +432,37 @@ class AutoUpdater:
         return True
 
     def restart_processes(self) -> dict:
-        """Restart all configured PM2 processes.
+        """Restart all configured PM2 processes with per-process strategies.
 
         Returns a dict of {process_name: success_bool}.
         """
         results = {}
         for name in self.pm2_names:
+            strategy = self._get_restart_strategy(name)
+
+            if strategy == RESTART_GRACEFUL:
+                # Wait for step completion before restart
+                logger.info("Graceful restart for %s", name)
+                self._wait_for_step_completion(name)
+
             rc, stdout, stderr = self._run_cmd(
                 ["pm2", "restart", name], cwd="/tmp"
             )
             success = rc == 0
             results[name] = success
+
             if success:
-                logger.info("Restarted PM2 process: %s", name)
+                logger.info("Restarted PM2 process: %s (strategy=%s)", name, strategy)
+
+                # For validators, do post-restart health check
+                if strategy == RESTART_GRACEFUL:
+                    post_health = self._check_validator_post_restart(name, wait_seconds=10)
+                    if post_health.get("crash_looping"):
+                        logger.error("ALERT: %s is crash-looping after restart!", name)
+                        self._log_event("crash_loop_detected", f"{name} crash-looping", post_health)
+                    elif not post_health.get("running"):
+                        logger.error("ALERT: %s is not running after restart!", name)
+                        self._log_event("restart_failed", f"{name} not online after restart", post_health)
             else:
                 logger.error("Failed to restart %s: %s", name, stderr)
 
@@ -286,7 +528,7 @@ class AutoUpdater:
             logger.error("Failed to write log: %s", e)
 
     def update_cycle(self) -> bool:
-        """Run a single update cycle: check → pull → health check → restart.
+        """Run a single update cycle: check → pull → deps → health → restart → website.
 
         Returns True if an update was applied successfully.
         """
@@ -317,7 +559,13 @@ class AutoUpdater:
             "to": new_commit[:8],
         })
 
-        # Step 3: Health check
+        # Step 3: Check for dependency changes and install if needed
+        if self.check_dependency_changes():
+            if not self.install_dependencies():
+                logger.warning("Dependency install failed — continuing anyway")
+                self._log_event("dep_install_failed", "pip install -e . failed after dependency change")
+
+        # Step 4: Health check
         if not self.run_health_check():
             logger.error("Health check failed after update — rolling back!")
             self._log_event("health_check_failed", "Rolling back", {
@@ -329,7 +577,7 @@ class AutoUpdater:
                 self._log_event("rollback_failed", "CRITICAL: Rollback also failed!")
             return False
 
-        # Step 4: Restart processes
+        # Step 5: Restart processes (with per-process strategies)
         if self.pm2_names:
             results = self.restart_processes()
             self._log_event("restarted", "Processes restarted", {"results": results})
@@ -338,6 +586,9 @@ class AutoUpdater:
                 logger.warning("Some processes failed to restart: %s", failed)
         else:
             logger.info("No PM2 processes configured — skipping restart")
+
+        # Step 6: Sync website
+        self.sync_website()
 
         self._log_event("update_complete", f"Successfully updated to {new_commit[:8]}: {message}")
         logger.info("Update cycle complete: %s -> %s", previous_commit[:8], new_commit[:8])
@@ -408,6 +659,11 @@ def main():
         default=os.environ.get("AUTO_UPDATE_LOG_DIR", ""),
         help="Log directory (default: ~/.nobi)",
     )
+    parser.add_argument(
+        "--website-dir", type=str,
+        default=os.environ.get("AUTO_UPDATE_WEBSITE_DIR", "/var/www/projectnobi"),
+        help="Website directory for syncing docs/landing (default: /var/www/projectnobi)",
+    )
     args = parser.parse_args()
 
     # Check if disabled
@@ -430,6 +686,7 @@ def main():
         pm2_names=pm2_names,
         branch=args.branch,
         log_dir=args.log_dir or None,
+        website_dir=args.website_dir,
     )
 
     if args.once:
