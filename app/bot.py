@@ -948,13 +948,13 @@ async def cmd_subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if tier in ("plus", "pro"):
         await update.message.reply_text(
             f"You're already on the {tier.title()} plan! 🎉\n\n"
-            "Manage your subscription at nobi.ai/subscription"
+            "Manage your subscription at app.projectnobi.ai/subscription"
         )
         return
 
     keyboard = [
-        [InlineKeyboardButton("⭐ Plus — $4.99/mo", url="https://nobi.ai/subscription")],
-        [InlineKeyboardButton("🚀 Pro — $9.99/mo", url="https://nobi.ai/subscription")],
+        [InlineKeyboardButton("⭐ Plus — $4.99/mo", url="https://app.projectnobi.ai/subscription")],
+        [InlineKeyboardButton("🚀 Pro — $9.99/mo", url="https://app.projectnobi.ai/subscription")],
     ]
     await update.message.reply_text(
         "✨ Upgrade your Nori experience!\n\n"
@@ -962,7 +962,7 @@ async def cmd_subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "  500 messages/day, 1000 memories, voice & image boost, group mode\n\n"
         "🚀 Pro ($9.99/mo)\n"
         "  Unlimited everything, priority responses, all features\n\n"
-        "Visit nobi.ai/subscription to upgrade!",
+        "Visit app.projectnobi.ai/subscription to upgrade!",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 

@@ -22,7 +22,7 @@ TIERS = {
         "name": "Free",
         "price": 0,
         "price_label": "Free",
-        "messages_per_day": 50,
+        "messages_per_day": 200,
         "memory_slots": 100,
         "voice_per_day": 5,
         "image_per_day": 3,
