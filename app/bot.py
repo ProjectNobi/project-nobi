@@ -1148,19 +1148,21 @@ async def _send_response(update: Update, response: str):
     
     # Send voice reply if user has it enabled
     if user_id in _voice_enabled_users and len(response) < 1000:
+        logger.info(f"[Voice] Generating TTS for user {user_id} ({len(response)} chars)")
         try:
-            from nobi.voice.tts import generate_speech
-            user_lang = "en"
-            try:
-                user_lang = companion.lang_detector.get_user_language(f"tg_{user_id}") or "en"
-            except Exception:
-                pass
-            audio = await generate_speech(response, language=user_lang)
-            if audio and len(audio) > 0:
-                import io
-                await update.message.reply_voice(voice=io.BytesIO(audio))
+            import io
+            from gtts import gTTS
+            # Strip emoji and markdown for cleaner speech
+            clean_text = response.replace("🤖", "").replace("😊", "").replace("😄", "").replace("💜", "").replace("*", "").replace("_", "").strip()
+            tts = gTTS(text=clean_text, lang="en", slow=False)
+            buf = io.BytesIO()
+            tts.write_to_fp(buf)
+            buf.seek(0)
+            logger.info(f"[Voice] TTS generated: {buf.getbuffer().nbytes} bytes")
+            await update.message.reply_voice(voice=buf)
+            logger.info(f"[Voice] Voice message sent to user {user_id}")
         except Exception as e:
-            logger.debug(f"Voice reply skipped: {e}")
+            logger.error(f"[Voice] TTS error: {e}")
 
 
 async def cmd_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
