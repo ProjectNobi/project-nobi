@@ -166,26 +166,26 @@ export default function SubscriptionPage() {
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "2rem 1rem" }}>
       <h1 style={{ textAlign: "center", marginBottom: "0.5rem" }}>✨ Nori Subscription</h1>
-      <p style={{ textAlign: "center", color: "#666", marginBottom: "1rem" }}>
+      <p style={{ textAlign: "center", color: "#aaa", marginBottom: "1rem" }}>
         Unlock more of your AI companion
       </p>
 
 
       {successParam && (
-        <div style={{ background: "#d4edda", color: "#155724", padding: "1rem", borderRadius: 8, marginBottom: "1rem", textAlign: "center" }}>
+        <div style={{ background: "rgba(74,222,128,0.1)", color: "#4ade80", padding: "1rem", borderRadius: 8, marginBottom: "1rem", textAlign: "center" }}>
           🎉 Subscription activated! Welcome to the family!
         </div>
       )}
 
       {cancelledParam && (
-        <div style={{ background: "#fff3cd", color: "#856404", padding: "1rem", borderRadius: 8, marginBottom: "1rem", textAlign: "center" }}>
+        <div style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24", padding: "1rem", borderRadius: 8, marginBottom: "1rem", textAlign: "center" }}>
           Checkout cancelled. No worries — you can subscribe anytime!
         </div>
       )}
 
       {/* Usage Stats */}
       {usage && (
-        <div style={{ background: "#f8f9fa", borderRadius: 12, padding: "1.5rem", marginBottom: "2rem" }}>
+        <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "1.5rem", marginBottom: "2rem" }}>
           <h3 style={{ marginTop: 0 }}>📊 Today&apos;s Usage — {usage.tier.charAt(0).toUpperCase() + usage.tier.slice(1)} Plan</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
             <div>💬 Messages: <strong>{formatLimit(usage.messages_today, usage.messages_limit)}</strong></div>
@@ -207,7 +207,7 @@ export default function SubscriptionPage() {
             <div
               key={tierKey}
               style={{
-                border: isPopular ? "2px solid #6c63ff" : "1px solid #ddd",
+                border: isPopular ? "2px solid #6c63ff" : "1px solid rgba(255,255,255,0.15)",
                 borderRadius: 12,
                 padding: "1.5rem",
                 position: "relative",
@@ -232,7 +232,7 @@ export default function SubscriptionPage() {
 
               <ul style={{ listStyle: "none", padding: 0, margin: "1rem 0" }}>
                 {FEATURES.map((f) => (
-                  <li key={f.key} style={{ padding: "4px 0", borderBottom: "1px solid #f0f0f0" }}>
+                  <li key={f.key} style={{ padding: "4px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                     {f.label}: <strong>{f.format((tier as any)[f.key])}</strong>
                   </li>
                 ))}
@@ -242,7 +242,7 @@ export default function SubscriptionPage() {
                 <div>
                   <button disabled style={{
                     width: "100%", padding: "10px", borderRadius: 8,
-                    background: "#e0e0e0", border: "none", cursor: "default"
+                    background: "rgba(255,255,255,0.15)", border: "none", cursor: "default", color: "#ccc"
                   }}>
                     Current Plan ✓
                   </button>
@@ -251,7 +251,7 @@ export default function SubscriptionPage() {
                       onClick={handleCancel}
                       style={{
                         width: "100%", padding: "8px", borderRadius: 8, marginTop: "0.5rem",
-                        background: "transparent", border: "1px solid #dc3545", color: "#dc3545", cursor: "pointer"
+                        background: "transparent", border: "1px solid #f87171", color: "#f87171", cursor: "pointer"
                       }}
                     >
                       Cancel Subscription
