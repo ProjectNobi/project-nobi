@@ -21,9 +21,11 @@ The name comes from **Nobi** — the kid who never gives up, with his companion 
 
 ## ✨ Try It Now
 
-Talk to our live companion on Telegram: **[@ProjectNobiBot](https://t.me/ProjectNobiBot)**
+- **Telegram:** Talk to [@ProjectNobiBot](https://t.me/ProjectNobiBot) — just press Start
+- **Web App:** [Launch Nori](http://84.247.150.144:3000) — full chat + memory interface
+- **Discord:** [Join our server](https://discord.gg/e6StezHM)
 
-Just press Start and talk. No setup, no commands. It remembers you.
+No setup, no commands. It remembers you.
 
 ## 💡 What Makes Nobi Different
 
@@ -167,6 +169,10 @@ Full guide with staking, PM2, monitoring: **[VALIDATING_GUIDE.md](docs/VALIDATIN
 | **Registration** | Open |
 | **GPU Required** | No |
 | **Min Hardware** | 2 CPU, 2GB RAM, any VPS |
+| **Active Neurons** | 14 (11 miners, 3 validators) |
+| **Servers** | 6 |
+| **Tests** | 931 |
+| **Web App** | [Launch](http://84.247.150.144:3000) |
 
 Check live metagraph:
 ```bash

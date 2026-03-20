@@ -291,9 +291,9 @@ Project Nobi is deployed on Bittensor testnet as SN272:
 |-----------|-------|
 | Network | Bittensor Testnet |
 | Netuid | 272 |
-| Registered neurons | 5 |
-| Active miners | 1 (miner UID 3) |
-| Active validators | 1 (validator UID 4) |
+| Registered neurons | 14 |
+| Active miners | 11 (across 6 servers) |
+| Active validators | 3 (Hetzner, Server4, AnonServer) |
 | Validator stake | 28,023 alpha |
 | Tempo | 99 blocks (~20 min) |
 | Weights committed | Yes (commit-reveal) |

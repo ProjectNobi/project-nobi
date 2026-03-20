@@ -116,25 +116,24 @@
 - [ ] App store launch (iOS + Android)
 - [ ] White-label companion solution
 - [ ] Enterprise features
-- [x] Proactive companion v2 (timezone detection, smart scheduling, topic reminders) ✅
-- [x] Advanced memory v2 (LLM entity extraction, contradiction detection) ✅
-
 ---
 
 ## Current Metrics (SN272 Testnet)
 
 | Metric | Value |
 |--------|-------|
-| Neurons | 10 |
-| Miners | 7 |
-| Validators | 2 |
-| Servers | 5 |
+| Neurons | 14 |
+| Miners | 11 |
+| Validators | 3 |
+| Servers | 6 |
 | Total tests | 931 |
 | Languages | 20 |
 | Bot users | 15+ unique |
-| Memory system | Semantic + Relationship Graphs |
-| Platforms | Telegram, Discord, Web, Mobile (iOS/Android) |
-| Auto-update | Active on all servers |
+| Memory system | Semantic + Relationship Graphs + LLM Extraction + Contradiction Detection |
+| Platforms | Telegram, Discord, Web App, Mobile (iOS/Android), REST API |
+| Auto-update | Active on all 6 servers |
+| Production webapp | LIVE (Server5) |
+| Production API | LIVE (Server5:8042) |
 
 ---
 
