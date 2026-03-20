@@ -54,8 +54,8 @@ class StripeHandler:
         self,
         user_id: str,
         tier: str,
-        success_url: str = "https://nobi.ai/subscription?success=true",
-        cancel_url: str = "https://nobi.ai/subscription?cancelled=true",
+        success_url: str = "https://app.projectnobi.ai/subscription?success=true",
+        cancel_url: str = "https://app.projectnobi.ai/subscription?cancelled=true",
     ) -> str:
         """
         Create a Stripe checkout session for subscription.
@@ -198,7 +198,7 @@ class StripeHandler:
     def create_portal_session(
         self,
         customer_id: str,
-        return_url: str = "https://nobi.ai/subscription",
+        return_url: str = "https://app.projectnobi.ai/subscription",
     ) -> str:
         """
         Create a Stripe billing portal session.

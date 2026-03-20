@@ -469,8 +469,8 @@ async def get_languages():
 class SubscribeRequest(BaseModel):
     user_id: str
     tier: str = "plus"
-    success_url: str = "https://nobi.ai/subscription?success=true"
-    cancel_url: str = "https://nobi.ai/subscription?cancelled=true"
+    success_url: str = "https://app.projectnobi.ai/subscription?success=true"
+    cancel_url: str = "https://app.projectnobi.ai/subscription?cancelled=true"
 
 
 class CancelRequest(BaseModel):
