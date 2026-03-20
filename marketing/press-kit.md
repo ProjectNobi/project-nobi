@@ -51,3 +51,5 @@ $37B AI companion market → $552B by 2030 (Precedence Research)
 - **Companion Name:** Nori 🤖
 - **Tagline:** "Every human deserves a companion"
 - **Colors:** Purple/violet primary, dark backgrounds
+
+- Blog: https://kooltek68.medium.com/why-every-human-deserves-an-ai-companion-that-actually-remembers-them-5893e6542a70

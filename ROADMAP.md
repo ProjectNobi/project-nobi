@@ -163,4 +163,5 @@
 
 ---
 
+- **Blog:** [Why Every Human Deserves an AI Companion](https://kooltek68.medium.com/why-every-human-deserves-an-ai-companion-that-actually-remembers-them-5893e6542a70)
 *Built with love on Bittensor. Every human deserves a companion. 🤖*

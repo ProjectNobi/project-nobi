@@ -27,6 +27,8 @@ The name comes from **Nobi** — the kid who never gives up, with his companion 
 
 No setup, no commands. It remembers you.
 
+- **Read:** [Why Every Human Deserves an AI Companion](https://kooltek68.medium.com/why-every-human-deserves-an-ai-companion-that-actually-remembers-them-5893e6542a70) — our Medium article
+
 ## 💡 What Makes Nobi Different
 
 | Feature | ChatGPT | Siri | Project Nobi |
