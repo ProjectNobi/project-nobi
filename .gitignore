@@ -38,3 +38,6 @@ _archive/
 stress_results/
 screenshots/
 message_and_signature.txt
+webapp/node_modules/
+webapp/.next/
+webapp/out/

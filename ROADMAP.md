@@ -74,6 +74,7 @@
 - [x] Mining guide polish + Discord links everywhere
 - [x] Community announcement drafts (Discord, X, welcome message)
 - [x] Voice message support (STT → response → TTS reply)
+- [x] Web application (Next.js + FastAPI backend, chat/memories/settings/onboarding)
 - [ ] Deploy landing page to projectnobi.ai
 - [ ] Invite external miners to testnet (Bittensor Discord, X)
 - [ ] Gather community feedback on Nori UX
