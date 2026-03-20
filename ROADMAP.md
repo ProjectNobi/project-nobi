@@ -79,6 +79,7 @@
 - [x] FastAPI v1 route aliases for mobile compatibility
 - [x] Relationship graphs (entity extraction, BFS traversal, natural language context)
 - [x] Proactive companion (birthday reminders, follow-ups, check-ins, milestones, encouragement)
+- [x] Image understanding wired into Telegram bot (vision → response → memory extraction)
 - [ ] Deploy landing page to projectnobi.ai
 - [ ] Invite external miners to testnet (Bittensor Discord, X)
 - [ ] Gather community feedback on Nori UX

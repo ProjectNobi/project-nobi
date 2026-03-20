@@ -1122,6 +1122,116 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle photo messages — analyze with vision model, extract memories, respond.
+
+    Flow: photo → download → vision API → response + memory extraction
+    """
+    if not update.message or not update.message.photo:
+        return
+
+    user_id = companion._user_id(update)
+
+    # Rate limit
+    if not companion.rate_limiter.check(user_id):
+        await update.message.reply_text("Easy there! 😄 Give me a sec to catch up.")
+        return
+
+    await update.message.chat.send_action(ChatAction.TYPING)
+
+    # Get the largest photo (last in the list)
+    photo = update.message.photo[-1]
+    caption = update.message.caption or ""
+
+    # Download photo
+    try:
+        file = await context.bot.get_file(photo.file_id)
+        photo_bytes = await file.download_as_bytearray()
+        photo_bytes = bytes(photo_bytes)
+
+        logger.info(
+            f"Photo from {update.effective_user.id}: "
+            f"{len(photo_bytes)} bytes, caption='{caption[:50]}'"
+        )
+    except Exception as e:
+        logger.error(f"Photo download error: {e}")
+        await update.message.reply_text(
+            "I couldn't download that photo 😅 Try sending it again?"
+        )
+        return
+
+    # Get user memory context for vision model
+    memory_context = ""
+    try:
+        memory_context = companion.memory.get_smart_context(user_id, caption or "photo")
+    except Exception:
+        try:
+            memory_context = companion.memory.get_context_for_prompt(user_id, caption or "photo")
+        except Exception:
+            pass
+
+    # Analyze image
+    try:
+        from nobi.vision.image_handler import analyze_image
+        result = await analyze_image(
+            image_bytes=photo_bytes,
+            user_context=memory_context or "New user",
+            caption=caption,
+            image_format="jpg",
+        )
+    except ImportError:
+        result = {
+            "response": "I can see you sent a photo! I'd love to look at it but my vision module isn't set up yet 😊",
+            "extracted_memories": [],
+            "success": False,
+        }
+    except Exception as e:
+        logger.error(f"Vision analysis error: {e}")
+        result = {
+            "response": "I had trouble looking at that photo 😅 Could you describe what's in it?",
+            "extracted_memories": [],
+            "success": False,
+        }
+
+    response = result["response"]
+
+    # Store extracted memories
+    if result.get("extracted_memories"):
+        for mem_text in result["extracted_memories"][:5]:
+            try:
+                companion.memory.store(user_id, mem_text, memory_type="fact", importance=0.6)
+            except Exception as e:
+                logger.warning(f"Memory store from image failed: {e}")
+
+    # Save conversation turn
+    try:
+        caption_text = f"[Photo] {caption}" if caption else "[Photo shared]"
+        companion.memory.save_conversation_turn(user_id, "user", caption_text)
+        companion.memory.save_conversation_turn(user_id, "assistant", response)
+    except Exception:
+        pass
+
+    # Clean and send response
+    response = response.replace("**", "").replace("__", "").replace("```", "").replace("`", "")
+    if len(response) > 4000:
+        response = response[:4000] + "..."
+
+    try:
+        await update.message.reply_text(response)
+    except Exception as e:
+        logger.error(f"Photo reply error: {e}")
+        await update.message.reply_text(
+            "I saw your photo but had trouble responding 😅 Try again?"
+        )
+
+    logger.info(
+        f"Photo user {update.effective_user.id}: "
+        f"caption='{caption[:30]}' → '{response[:50]}' "
+        f"(success={result.get('success')}, memories={len(result.get('extracted_memories', []))})"
+    )
+
+
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     """Global error handler — log but don't crash."""
     logger.error(f"Update {update} caused error: {context.error}")
@@ -1164,6 +1274,9 @@ def main():
 
     # Voice messages: transcribe → respond → reply with voice
     app.add_handler(MessageHandler(filters.VOICE | filters.AUDIO, handle_voice))
+
+    # Photo messages: vision analysis → respond → extract memories
+    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
     # Global error handler
     app.add_error_handler(error_handler)
