@@ -143,7 +143,6 @@ class ApiClient {
     if (status) params.set("status", status);
     return this.request<FeedbackHistoryResponse>(`/api/feedback?${params}`);
   }
-}
 
   async chatWithImage(
     imageBase64: string,
