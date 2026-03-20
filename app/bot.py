@@ -670,6 +670,12 @@ class CompanionBot:
             if not response or not response.strip():
                 return "Hmm, I got tongue-tied! 😅 Try saying that again?"
 
+            # Filter out any "limited mode" garbage that leaked into LLM context
+            if "limited mode" in response.lower():
+                response = response.replace("I'm currently running in limited mode and can't send voice messages, but I can still chat with you!", "").strip()
+                if not response:
+                    response = "Hey there! 😊 What's on your mind today?"
+
             logger.info(f"[Routing] Used DIRECT API path for user {user_id}")
 
             # Save response
