@@ -1,0 +1,88 @@
+# Project Nobi — Docker Compose Production Stack
+# Usage: docker compose -f deploy/docker-compose.yml up -d
+#
+# Services:
+#   api     — FastAPI backend (port 8042)
+#   webapp  — Next.js frontend (port 3000)
+#   nginx   — Reverse proxy with SSL (ports 80, 443)
+
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/api/Dockerfile
+    container_name: nobi-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NOBI_API_PORT=8042
+      - NOBI_DB_PATH=/data/memories.db
+      - NOBI_BILLING_DB_PATH=/data/billing.db
+    ports:
+      - "8042:8042"
+    volumes:
+      - nobi-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8042/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - nobi-net
+
+  webapp:
+    build:
+      context: ..
+      dockerfile: deploy/webapp/Dockerfile
+    container_name: nobi-webapp
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://api:8042}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - nobi-net
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nobi-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - nginx-cache:/var/cache/nginx
+    depends_on:
+      api:
+        condition: service_healthy
+      webapp:
+        condition: service_healthy
+    networks:
+      - nobi-net
+
+volumes:
+  nobi-data:
+    driver: local
+  nginx-cache:
+    driver: local
+
+networks:
+  nobi-net:
+    driver: bridge

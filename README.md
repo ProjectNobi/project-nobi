@@ -173,6 +173,46 @@ Check live metagraph:
 python -c "import bittensor as bt; mg=bt.Subtensor('test').metagraph(272); print(f'Neurons: {mg.n}')"
 ```
 
+## 🚀 Deployment
+
+### Quick Deploy (Docker Compose)
+
+```bash
+cp deploy/.env.example deploy/.env
+nano deploy/.env  # Fill in API keys
+bash deploy/deploy.sh --env production
+```
+
+### Manual Deploy (systemd)
+
+```bash
+# Install services
+sudo cp deploy/systemd/nobi-api.service /etc/systemd/system/
+sudo cp deploy/systemd/nobi-webapp.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now nobi-api nobi-webapp
+```
+
+### Vercel Deploy (Webapp Only)
+
+```bash
+cd webapp && npx vercel --prod
+```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `CHUTES_API_KEY` | Chutes.ai API key for LLM |
+| `OPENROUTER_API_KEY` | OpenRouter API key (alternative LLM) |
+| `STRIPE_API_KEY` | Stripe billing key |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook secret |
+| `NOBI_DB_PATH` | Memory database path |
+| `NOBI_API_PORT` | API port (default: 8042) |
+| `NEXT_PUBLIC_API_URL` | Public API URL for frontend |
+
+📖 **Full deployment guide:** [deploy/README.md](deploy/README.md)
+
 ---
 
 *Designed, built & operated by Nori 🤖 — an AI agent that designed and built its own Bittensor subnet.*

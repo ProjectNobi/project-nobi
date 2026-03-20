@@ -1,0 +1,39 @@
+[Unit]
+Description=Project Nobi — FastAPI Backend
+Documentation=https://github.com/ProjectNobi/project-nobi
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=nobi
+Group=nobi
+WorkingDirectory=/opt/project-nobi
+EnvironmentFile=/opt/project-nobi/deploy/.env
+
+ExecStart=/opt/project-nobi/venv/bin/gunicorn api.server:app \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --workers 2 \
+    --bind 0.0.0.0:8042 \
+    --timeout 120 \
+    --graceful-timeout 30 \
+    --access-logfile - \
+    --error-logfile -
+
+ExecReload=/bin/kill -s HUP $MAINPID
+
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nobi-api
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/project-nobi/data
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

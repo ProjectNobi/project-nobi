@@ -1,0 +1,34 @@
+[Unit]
+Description=Project Nobi — Next.js Webapp (PM2)
+Documentation=https://github.com/ProjectNobi/project-nobi
+After=network.target nobi-api.service
+Wants=nobi-api.service
+
+[Service]
+Type=forking
+User=nobi
+Group=nobi
+WorkingDirectory=/opt/project-nobi/webapp
+EnvironmentFile=/opt/project-nobi/deploy/.env
+Environment=NODE_ENV=production
+Environment=PM2_HOME=/opt/project-nobi/.pm2
+
+ExecStart=/usr/bin/pm2 start npm --name nobi-webapp -- start
+ExecReload=/usr/bin/pm2 reload nobi-webapp
+ExecStop=/usr/bin/pm2 stop nobi-webapp
+
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nobi-webapp
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/project-nobi
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

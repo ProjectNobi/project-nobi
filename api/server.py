@@ -14,7 +14,7 @@ import asyncio
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -30,6 +30,7 @@ from nobi.i18n.prompts import build_multilingual_system_prompt
 from nobi.i18n.languages import SUPPORTED_LANGUAGES, get_language_name
 from nobi.billing.subscription import SubscriptionManager, TIERS
 from nobi.billing.stripe_handler import StripeHandler
+from nobi.api_auth import ApiKeyManager
 
 try:
     from openai import OpenAI
@@ -46,6 +47,7 @@ BILLING_DB_PATH = os.environ.get("NOBI_BILLING_DB_PATH", "~/.nobi/billing.db")
 API_PORT = int(os.environ.get("NOBI_API_PORT", "8042"))
 STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+API_KEYS_DB_PATH = os.environ.get("NOBI_API_KEYS_DB_PATH", "~/.nobi/api_keys.db")
 
 logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
@@ -140,16 +142,21 @@ llm_model: str = CHUTES_MODEL
 user_settings: Dict[str, Dict[str, Any]] = {}  # In-memory settings cache
 billing: Optional[SubscriptionManager] = None
 stripe_handler: Optional[StripeHandler] = None
+api_key_mgr: Optional[ApiKeyManager] = None
 
 
 @app.on_event("startup")
 async def startup():
-    global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler
+    global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler, api_key_mgr
 
     ensure_master_secret()
     memory = MemoryManager(db_path=DB_PATH)
     adapter_manager = UserAdapterManager(db_path=DB_PATH)
     lang_detector = LanguageDetector()
+
+    # Initialize API key manager
+    api_key_mgr = ApiKeyManager(db_path=os.path.expanduser(API_KEYS_DB_PATH))
+    logger.info("API key manager initialized")
 
     # Initialize billing
     billing = SubscriptionManager(db_path=BILLING_DB_PATH)
@@ -512,6 +519,245 @@ async def get_usage(user_id: str):
 async def get_tiers():
     """Get all available subscription tiers."""
     return {"tiers": TIERS}
+
+
+# ─── Public API — Auth Dependency ─────────────────────────────
+
+async def require_api_key(authorization: str = Header(...)) -> dict:
+    """
+    Extract and validate API key from Authorization header.
+    Expected format: "Bearer nobi_..."
+    Returns key info dict on success, raises 401/403 on failure.
+    """
+    if not api_key_mgr:
+        raise HTTPException(status_code=503, detail="API key service not initialized")
+
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header. Expected: Bearer nobi_...")
+
+    api_key = authorization[7:].strip()
+    if not api_key.startswith("nobi_"):
+        raise HTTPException(status_code=401, detail="Invalid API key format. Keys must start with nobi_")
+
+    key_info = api_key_mgr.validate_key(api_key)
+    if not key_info:
+        raise HTTPException(status_code=401, detail="Invalid or revoked API key")
+
+    # Check rate limit
+    allowed, reason = api_key_mgr.check_rate_limit(api_key)
+    if not allowed:
+        raise HTTPException(status_code=429, detail=reason)
+
+    # Attach raw key for usage recording
+    key_info["_raw_key"] = api_key
+    return key_info
+
+
+# ─── Public API — Chat ───────────────────────────────────────
+
+class PublicChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=4000)
+    conversation_history: List[Dict[str, str]] = Field(default_factory=list)
+
+
+@app.post("/v1/api/chat")
+async def public_chat(req: PublicChatRequest, key_info: dict = Depends(require_api_key)):
+    """Chat with Nori via the public API."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/chat")
+
+    chat_req = ChatRequest(
+        message=req.message,
+        user_id=key_info["user_id"],
+        conversation_history=req.conversation_history,
+    )
+    return await chat(chat_req)
+
+
+# ─── Public API — Memories ───────────────────────────────────
+
+class PublicMemoryRequest(BaseModel):
+    content: str = Field(..., min_length=1, max_length=4000)
+    memory_type: str = "fact"
+    importance: float = 0.5
+    tags: List[str] = Field(default_factory=list)
+
+
+@app.get("/v1/api/memories")
+async def public_list_memories(
+    search: Optional[str] = None,
+    limit: int = 50,
+    key_info: dict = Depends(require_api_key),
+):
+    """List memories via the public API."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/memories")
+    return await get_memories(key_info["user_id"], search, limit)
+
+
+@app.post("/v1/api/memories")
+async def public_store_memory(req: PublicMemoryRequest, key_info: dict = Depends(require_api_key)):
+    """Store a new memory via the public API."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/memories")
+
+    uid = f"web_{key_info['user_id']}"
+    try:
+        mem_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc).isoformat()
+        tags_json = json.dumps(req.tags) if req.tags else "[]"
+        conn = memory._conn
+        conn.execute(
+            """INSERT INTO memories (id, user_id, memory_type, content, importance, tags, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (mem_id, uid, req.memory_type, req.content, req.importance, tags_json, now, now),
+        )
+        conn.commit()
+        return {
+            "success": True,
+            "memory": {
+                "id": mem_id,
+                "memory_type": req.memory_type,
+                "content": req.content,
+                "importance": req.importance,
+                "tags": req.tags,
+                "created_at": now,
+                "updated_at": now,
+            },
+        }
+    except Exception as e:
+        logger.error(f"Public store memory error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to store memory")
+
+
+@app.delete("/v1/api/memories/{memory_id}")
+async def public_delete_memory(memory_id: str, key_info: dict = Depends(require_api_key)):
+    """Delete a memory via the public API."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/memories")
+    return await delete_memory(memory_id, key_info["user_id"])
+
+
+# ─── Public API — Graph ─────────────────────────────────────
+
+@app.get("/v1/api/graph")
+async def public_get_graph(key_info: dict = Depends(require_api_key)):
+    """Get the relationship graph for the authenticated user."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/graph")
+
+    uid = f"web_{key_info['user_id']}"
+    try:
+        from nobi.memory.graph import MemoryGraph
+        graph = MemoryGraph(db_path=DB_PATH)
+        data = graph.export_graph(uid)
+        return {"success": True, "graph": data}
+    except Exception as e:
+        logger.error(f"Graph export error: {e}")
+        return {"success": True, "graph": {"entities": [], "relationships": []}}
+
+
+@app.get("/v1/api/graph/context")
+async def public_get_graph_context(
+    query: str,
+    key_info: dict = Depends(require_api_key),
+):
+    """Get graph context for a query."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/graph/context")
+
+    uid = f"web_{key_info['user_id']}"
+    try:
+        from nobi.memory.graph import MemoryGraph
+        graph = MemoryGraph(db_path=DB_PATH)
+        context = graph.get_context(uid, query)
+        return {"success": True, "context": context}
+    except Exception as e:
+        logger.error(f"Graph context error: {e}")
+        return {"success": True, "context": ""}
+
+
+# ─── Public API — Voice ──────────────────────────────────────
+
+@app.post("/v1/api/voice/transcribe")
+async def public_transcribe(request: Request, key_info: dict = Depends(require_api_key)):
+    """Transcribe audio to text."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/voice/transcribe")
+
+    try:
+        from nobi.voice.stt import transcribe_audio
+        body = await request.json()
+        audio_data = body.get("audio", "")
+        language = body.get("language", "en")
+        result = transcribe_audio(audio_data, language=language)
+        return {"success": True, "text": result.get("text", ""), "language": result.get("language", language)}
+    except Exception as e:
+        logger.error(f"Transcribe error: {e}")
+        raise HTTPException(status_code=500, detail="Transcription failed")
+
+
+@app.post("/v1/api/voice/synthesize")
+async def public_synthesize(request: Request, key_info: dict = Depends(require_api_key)):
+    """Synthesize text to speech."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/voice/synthesize")
+
+    try:
+        from nobi.voice.tts import synthesize_speech
+        body = await request.json()
+        text = body.get("text", "")
+        voice = body.get("voice", "default")
+        if not text:
+            raise HTTPException(status_code=400, detail="Text is required")
+        result = synthesize_speech(text, voice=voice)
+        return {"success": True, "audio": result.get("audio", ""), "format": result.get("format", "mp3")}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Synthesize error: {e}")
+        raise HTTPException(status_code=500, detail="Speech synthesis failed")
+
+
+# ─── Public API — Key Management ─────────────────────────────
+
+class CreateKeyRequest(BaseModel):
+    name: str = "default"
+
+
+@app.post("/v1/api/keys")
+async def public_create_key(req: CreateKeyRequest, key_info: dict = Depends(require_api_key)):
+    """Create a new API key for the authenticated user."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/keys")
+
+    # New keys inherit the tier of the creating key
+    result = api_key_mgr.create_key(
+        user_id=key_info["user_id"],
+        name=req.name,
+        tier=key_info["tier"],
+    )
+    return {"success": True, "key": result}
+
+
+@app.get("/v1/api/keys")
+async def public_list_keys(key_info: dict = Depends(require_api_key)):
+    """List all API keys for the authenticated user."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/keys")
+
+    keys = api_key_mgr.list_keys(key_info["user_id"])
+    return {"success": True, "keys": keys}
+
+
+@app.delete("/v1/api/keys/{key_prefix}")
+async def public_revoke_key(key_prefix: str, key_info: dict = Depends(require_api_key)):
+    """Revoke an API key by its prefix."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/keys")
+
+    revoked = api_key_mgr.revoke_key_by_prefix(key_prefix)
+    if not revoked:
+        raise HTTPException(status_code=404, detail="Key not found or already revoked")
+    return {"success": True, "message": f"Key {key_prefix}... revoked"}
+
+
+@app.get("/v1/api/keys/usage")
+async def public_key_usage(days: int = 30, key_info: dict = Depends(require_api_key)):
+    """Get usage statistics for the authenticated API key."""
+    api_key_mgr.record_usage(key_info["_raw_key"], "/v1/api/keys/usage")
+
+    usage = api_key_mgr.get_usage_by_hash(key_info["key_hash"], days=days)
+    return {"success": True, "usage": usage}
 
 
 # ─── Health ──────────────────────────────────────────────────
