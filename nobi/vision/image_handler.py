@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 CHUTES_API_KEY = os.environ.get("CHUTES_API_KEY", "")
 CHUTES_API_URL = os.environ.get(
-    "CHUTES_API_URL", "https://chutes-api.chutes.ai/v1"
+    "CHUTES_API_URL", "https://llm.chutes.ai/v1"
 )
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 VISION_MODEL = os.environ.get("VISION_MODEL", "gpt-4o-mini")
@@ -157,7 +157,7 @@ async def _analyze_with_chutes(
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "Qwen/Qwen2.5-VL-72B-Instruct",
+                    "model": "Qwen/Qwen2.5-VL-32B-Instruct",
                     "messages": messages,
                     "max_tokens": 500,
                     "temperature": 0.7,
