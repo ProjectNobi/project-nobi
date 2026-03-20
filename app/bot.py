@@ -697,23 +697,33 @@ class CompanionBot:
                 if not response:
                     response = "Hey there! 😊 What's on your mind today?"
 
-            # Check if response is in wrong language — retry up to 2 times
+            # Check if response is in wrong language — retry with different model
             try:
                 user_lang = self.lang_detector.get_user_language(user_id) or detected_lang or "en"
-                for _retry_i in range(2):
-                    resp_lang = self.lang_detector.detect(response, "check")
-                    if user_lang == "en" and resp_lang != "en":
-                        logger.warning(f"[Language] Direct API responded in {resp_lang} (attempt {_retry_i+1}), retrying")
-                        retry_msgs = [
-                            {"role": "system", "content": "You are Nori, a friendly AI companion. You MUST respond ONLY in English. No other language."},
-                            {"role": "user", "content": message}
-                        ]
-                        retry = self.client.chat.completions.create(
-                            model=self.model, messages=retry_msgs, max_tokens=512, temperature=0.5, timeout=25
-                        )
-                        response = retry.choices[0].message.content or response
-                    else:
-                        break  # Language is correct
+                resp_lang = self.lang_detector.detect(response, "check")
+                if user_lang == "en" and resp_lang != "en":
+                    logger.warning(f"[Language] Direct API responded in {resp_lang}, retrying with Qwen3")
+                    # Use a different model that follows instructions better
+                    from openai import OpenAI
+                    retry_client = OpenAI(
+                        base_url="https://llm.chutes.ai/v1",
+                        api_key=os.environ.get("CHUTES_API_KEY", ""),
+                    )
+                    retry_msgs = [
+                        {"role": "system", "content": "You are Nori, a warm friendly AI companion. Respond ONLY in English."},
+                        {"role": "user", "content": message}
+                    ]
+                    retry = retry_client.chat.completions.create(
+                        model="Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",
+                        messages=retry_msgs, max_tokens=512, temperature=0.5, timeout=25
+                    )
+                    retry_text = retry.choices[0].message.content or ""
+                    # Strip Qwen3 thinking tags if present
+                    import re
+                    retry_text = re.sub(r'<think>.*?</think>', '', retry_text, flags=re.DOTALL).strip()
+                    if retry_text:
+                        response = retry_text
+                        logger.info(f"[Language] Retry with Qwen3 succeeded in English")
             except Exception as e:
                 logger.debug(f"Language retry error: {e}")
 
