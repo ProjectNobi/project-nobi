@@ -135,7 +135,7 @@
 | Miners | 11 |
 | Validators | 3 |
 | Servers | 6 |
-| Total tests | 1030 |
+| Total tests | 1089 |
 | Languages | 20 |
 | Bot users | 15+ unique |
 | Memory system | Semantic + Relationship Graphs + LLM Extraction + Contradiction Detection |

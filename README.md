@@ -173,7 +173,7 @@ Full guide with staking, PM2, monitoring: **[VALIDATING_GUIDE.md](docs/VALIDATIN
 | **Min Hardware** | 2 CPU, 2GB RAM, any VPS |
 | **Active Neurons** | 14 (11 miners, 3 validators) |
 | **Servers** | 6 |
-| **Tests** | 1030 |
+| **Tests** | 1089 |
 | **Web App** | [Launch](https://app.projectnobi.ai) |
 
 Check live metagraph:
