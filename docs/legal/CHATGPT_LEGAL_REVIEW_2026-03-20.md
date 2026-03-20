@@ -70,3 +70,74 @@
 ---
 
 *This review was conducted by ChatGPT 5.4 Pro Research Mode and saved as reference for the team.*
+
+---
+
+## Part 2: Additional Issues
+
+### 🔴 Issue 2: Access Control & Account Integrity
+
+**Finding:** Public web-app backend uses client-provided `user_id` for all endpoints:
+- /api/chat, /api/memories, /api/memories/export, /api/memories/all
+- /api/settings, /api/feedback, /api/support
+- CORS: `allow_origins=["*"]`, `allow_credentials=True`
+
+**Risk:** Anyone can access anyone else's memories by guessing/supplying their user_id. Serious security and privacy problem under GDPR "security of processing" requirement.
+
+**Fix needed:** Proper session/token authentication for web app users.
+
+### 🟡 Issue 3: Transparency Paperwork
+
+**Finding:** No publicly linked privacy policy or terms page found on the main site/app navigation.
+
+**Risk:** GDPR Articles 12-14 require transparent information about controller identity, legal basis, recipients, storage period, transfers, and rights. CCPA gives consumers rights to know, delete, correct, opt out.
+
+**Fix needed:** Prominent links to Privacy Policy and ToS from every page.
+
+### 🟡 Issue 4: Sensitive & Special-Category Data
+
+**Finding:** Nobi stores emotions, relationships, life events, dialogue history, voice, and photos. Users may disclose health, sexuality, religion, politics — all GDPR Article 9 special categories.
+
+**Implications:**
+- GDPR Article 9: special category data requires explicit consent
+- California: consumers have rights re sensitive personal information
+- Washington My Health My Data Act: reaches consumer health data outside HIPAA
+- HIPAA: Nobi could become a business associate if serving covered entities
+
+**Fix needed:** Explicit consent for special category data processing. Clear disclosure that conversation content may include sensitive data.
+
+### 🔴 Issue 5: Companion Safety, Minors & Therapy Positioning
+
+**Finding:** Business materials mention:
+- Product as answer to loneliness
+- Enterprise "employee wellness"
+- Family tier with parental controls
+- Marketplace for "therapist" companion personalities
+
+**Risk:**
+- FTC (Sept 2025): formal inquiry into AI companion chatbots — safety testing, impacts on children, disclosures, age restrictions, data handling
+- COPPA: requirements when services directed to under-13 or collecting data from them
+- EU AI Act: transparency rules require users to be informed they're interacting with AI
+- Moving beyond "fun chatbot" into wellness/therapy territory significantly increases regulatory scrutiny
+
+**Fix needed:**
+- Clear "NOT a therapist" disclaimers
+- Remove or reframe "therapist" marketplace personality
+- Robust age verification
+- AI interaction disclosure on first use
+
+---
+
+## Priority Action Matrix (from full review)
+
+| Priority | Issue | Action | Risk Level |
+|----------|-------|--------|------------|
+| 🔴 P0 | Privacy claims mismatch | Fix ALL public claims to match reality | Legal liability |
+| 🔴 P0 | API auth (user_id) | Implement proper session tokens | Data breach risk |
+| 🔴 P0 | Therapy positioning | Remove "therapist" language, add disclaimers | FTC inquiry risk |
+| 🟡 P1 | Privacy/Terms links | Add to all page navigation | GDPR violation |
+| 🟡 P1 | Special category consent | Add explicit consent for sensitive data | GDPR Art 9 |
+| 🟡 P1 | AI disclosure | "You are talking to an AI" on first interaction | EU AI Act |
+| 🟢 P2 | COPPA compliance | Robust age gate, parental consent flow | FTC risk |
+| 🟢 P2 | CORS restriction | Restrict to projectnobi.ai domains only | Security |
+
