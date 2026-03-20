@@ -697,20 +697,25 @@ class CompanionBot:
                 if not response:
                     response = "Hey there! 😊 What's on your mind today?"
 
-            # Check if response is in wrong language — retry once if so
+            # Check if response is in wrong language — retry up to 2 times
             try:
-                resp_lang = self.lang_detector.detect(response, "check")
                 user_lang = self.lang_detector.get_user_language(user_id) or detected_lang or "en"
-                if user_lang == "en" and resp_lang != "en":
-                    logger.warning(f"[Language] Direct API responded in {resp_lang}, retrying with English enforcement")
-                    # Retry with stronger English instruction
-                    messages[-1] = {"role": "user", "content": f"[RESPOND IN ENGLISH ONLY] {message}"}
-                    retry = self.client.chat.completions.create(
-                        model=self.model, messages=messages, max_tokens=512, temperature=0.7, timeout=25
-                    )
-                    response = retry.choices[0].message.content or response
-            except Exception:
-                pass
+                for _retry_i in range(2):
+                    resp_lang = self.lang_detector.detect(response, "check")
+                    if user_lang == "en" and resp_lang != "en":
+                        logger.warning(f"[Language] Direct API responded in {resp_lang} (attempt {_retry_i+1}), retrying")
+                        retry_msgs = [
+                            {"role": "system", "content": "You are Nori, a friendly AI companion. You MUST respond ONLY in English. No other language."},
+                            {"role": "user", "content": message}
+                        ]
+                        retry = self.client.chat.completions.create(
+                            model=self.model, messages=retry_msgs, max_tokens=512, temperature=0.5, timeout=25
+                        )
+                        response = retry.choices[0].message.content or response
+                    else:
+                        break  # Language is correct
+            except Exception as e:
+                logger.debug(f"Language retry error: {e}")
 
             logger.info(f"[Routing] Used DIRECT API path for user {user_id}")
 
