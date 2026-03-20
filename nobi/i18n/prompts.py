@@ -131,9 +131,10 @@ def get_cultural_notes(lang_code: str) -> str:
 def build_multilingual_system_prompt(base_prompt: str, lang_code: str) -> str:
     """
     Append language instructions to an existing system prompt.
-    Returns the original prompt if language is English or unsupported.
+    Always includes an explicit language instruction, even for English.
     """
     lang_instruction = get_language_prompt(lang_code)
     if not lang_instruction:
-        return base_prompt
+        # Explicitly enforce English to prevent random language switches
+        return base_prompt + "\n\n== LANGUAGE ==\nALWAYS respond in English. Do NOT switch to any other language unless the user explicitly writes in another language first."
     return base_prompt + "\n" + lang_instruction

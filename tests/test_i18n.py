@@ -212,10 +212,11 @@ class TestLanguagePrompts:
         assert "Japanese" in result
         assert "LANGUAGE INSTRUCTION" in result
 
-    def test_build_english_prompt_unchanged(self):
+    def test_build_english_prompt_has_language_enforcement(self):
         base = "You are Nori, a friendly companion."
         result = build_multilingual_system_prompt(base, "en")
-        assert result == base
+        assert base in result
+        assert "English" in result  # Should enforce English explicitly
 
     def test_unsupported_language_prompt(self):
         prompt = get_language_prompt("xx")

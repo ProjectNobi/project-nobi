@@ -616,7 +616,18 @@ class CompanionBot:
             )
             # Filter out garbage/fallback responses from miners
             _BAD_RESPONSES = ["limited mode", "I received your message:", "Please try again in a moment"]
-            if subnet_response and not any(bad in subnet_response for bad in _BAD_RESPONSES):
+            # Also reject responses in wrong language
+            _is_bad = any(bad in subnet_response for bad in _BAD_RESPONSES)
+            if not _is_bad and subnet_response:
+                try:
+                    resp_lang = self.lang_detector.detect(subnet_response, "check")
+                    user_lang = self.lang_detector.get_user_language(user_id) or detected_lang or "en"
+                    if resp_lang != user_lang and user_lang == "en" and resp_lang != "en":
+                        logger.info(f"[Routing] Subnet response in wrong language ({resp_lang} vs {user_lang}), rejecting")
+                        _is_bad = True
+                except Exception:
+                    pass
+            if subnet_response and not _is_bad:
                 logger.info(f"[Routing] Used SUBNET path for user {user_id}")
                 # Save subnet response to conversation history
                 try:
