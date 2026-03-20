@@ -60,6 +60,15 @@ logger = logging.getLogger("nobi-api")
 
 # ─── Companion System Prompt ─────────────────────────────────
 
+def _get_user_max_tokens(user_id: str) -> int:
+    """Get max response tokens based on user's subscription tier."""
+    try:
+        from nobi.billing.subscription import TIERS
+        # Web users are on free tier by default
+        return TIERS.get("free", {}).get("max_tokens", 512)
+    except Exception:
+        return 512
+
 SYSTEM_PROMPT = """\
 You are Nori 🤖, a personal AI companion built by Project Nobi.
 
@@ -291,7 +300,7 @@ async def chat(req: ChatRequest):
             lambda: llm_client.chat.completions.create(
                 model=llm_model,
                 messages=messages,
-                max_tokens=1024,
+                max_tokens=_get_user_max_tokens(user_id),
                 temperature=0.8,
             ),
         )

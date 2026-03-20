@@ -30,6 +30,7 @@ TIERS = {
         "priority_response": False,
         "export_memories": True,
         "group_mode": False,
+        "max_tokens": 512,
     },
     "plus": {
         "name": "Plus",
@@ -43,6 +44,7 @@ TIERS = {
         "priority_response": True,
         "export_memories": True,
         "group_mode": True,
+        "max_tokens": 1536,
     },
     "pro": {
         "name": "Pro",
@@ -56,6 +58,7 @@ TIERS = {
         "priority_response": True,
         "export_memories": True,
         "group_mode": True,
+        "max_tokens": 4608,
     },
     "lifetime": {
         "name": "Lifetime",
@@ -69,6 +72,7 @@ TIERS = {
         "priority_response": True,
         "export_memories": True,
         "group_mode": True,
+        "max_tokens": 12800,
     },
 }
 

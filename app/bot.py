@@ -505,7 +505,7 @@ class CompanionBot:
                     )},
                     {"role": "user", "content": self._BOT_IDENTITY[key]},
                 ],
-                max_tokens=512,
+                max_tokens=self._get_max_tokens(user_id),
                 temperature=0.3,
                 timeout=15,
             )
@@ -520,6 +520,15 @@ class CompanionBot:
             logger.warning(f"Translation failed for {key}/{lang_code}: {e}")
 
         return self._BOT_IDENTITY[key]  # fallback to English
+
+    def _get_max_tokens(self, user_id: str) -> int:
+        """Get max response tokens based on user's subscription tier."""
+        try:
+            tier = self.billing.get_user_tier(user_id)
+            from nobi.billing.subscription import TIERS
+            return TIERS.get(tier, {}).get("max_tokens", 512)
+        except Exception:
+            return 512
 
     def _check_bot_identity(self, message: str, lang_code: str = "en") -> str | None:
         msg = message.lower()
@@ -682,7 +691,7 @@ class CompanionBot:
             completion = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                max_tokens=512,
+                max_tokens=self._get_max_tokens(user_id),
                 temperature=0.7,
                 timeout=25,
             )

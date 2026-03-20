@@ -33,6 +33,7 @@ const TIER_EMOJI: Record<string, string> = { free: "🆓", plus: "⭐", pro: "�
 
 const FEATURES = [
   { key: "messages_per_day", label: "Messages / day" },
+  { key: "max_tokens", label: "Response length (tokens)" },
   { key: "memory_slots", label: "Memory slots" },
   { key: "voice_per_day", label: "Voice / day" },
   { key: "image_per_day", label: "Images / day" },
