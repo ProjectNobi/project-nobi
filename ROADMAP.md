@@ -137,7 +137,7 @@
 | Servers | 6 |
 | Total tests | 1089 |
 | Languages | 20 |
-| Bot users | 15+ unique |
+| Bot users | 10+ unique |
 | Memory system | Semantic + Relationship Graphs + LLM Extraction + Contradiction Detection |
 | Platforms | Telegram, Discord, Web App, Mobile (iOS/Android), REST API |
 | Auto-update | Active on all 6 servers |
