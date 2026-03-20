@@ -343,5 +343,427 @@
     </div>
   </footer>
 
+
+<!-- ── Support Widget ─────────────────────────────────────── -->
+
+<div id="support-widget" class="support-widget" role="complementary" aria-label="Support widget">
+  <!-- Floating button -->
+  <button
+    id="support-toggle"
+    class="support-toggle-btn"
+    onclick="toggleSupportWidget()"
+    aria-expanded="false"
+    aria-controls="support-panel"
+    title="Need Help?"
+  >
+    <span id="support-btn-icon">💬</span>
+    <span id="support-btn-label">Need Help?</span>
+  </button>
+
+  <!-- Panel -->
+  <div id="support-panel" class="support-panel" aria-hidden="true">
+    <!-- Header -->
+    <div class="support-panel-header">
+      <div class="support-panel-avatar">🤖</div>
+      <div>
+        <div class="support-panel-title">Ask Nori</div>
+        <div class="support-panel-sub">Usually answers instantly</div>
+      </div>
+      <button class="support-panel-close" onclick="toggleSupportWidget()" aria-label="Close support">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="support-panel-body">
+      <!-- FAQ list -->
+      <div id="support-faq-section">
+        <div class="support-section-label">Common questions</div>
+        <div id="support-faq-list" class="support-faq-list">
+          <!-- Populated by JS -->
+          <div class="support-loading">Loading…</div>
+        </div>
+      </div>
+
+      <!-- FAQ answer area -->
+      <div id="support-answer" class="support-answer" style="display:none"></div>
+
+      <!-- Divider -->
+      <div class="support-divider"></div>
+
+      <!-- Ask custom question -->
+      <div class="support-ask-section">
+        <div class="support-section-label">Ask a question</div>
+        <div class="support-input-row">
+          <input
+            id="support-input"
+            type="text"
+            placeholder="Type your question…"
+            class="support-input"
+            onkeydown="if(event.key==='Enter') submitSupportQuestion()"
+            maxlength="500"
+          />
+          <button class="support-send-btn" onclick="submitSupportQuestion()">→</button>
+        </div>
+        <div id="support-response" class="support-response" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="support-panel-footer">
+      <a href="https://app.projectnobi.ai/support" target="_blank" rel="noopener" class="support-footer-link">
+        📝 Send detailed feedback
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Support Widget Styles -->
+<style>
+  .support-widget {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .support-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #7c3aed, #db2777);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .support-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 28px rgba(124, 58, 237, 0.5);
+  }
+
+  .support-panel {
+    position: absolute;
+    bottom: 64px;
+    right: 0;
+    width: 340px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 60px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    max-height: 560px;
+    transform-origin: bottom right;
+    animation: supportPanelIn 0.22s ease;
+  }
+
+  @media (max-width: 400px) {
+    .support-panel { width: 90vw; right: -4px; }
+  }
+
+  .support-panel.open {
+    display: flex;
+  }
+
+  @keyframes supportPanelIn {
+    from { opacity: 0; transform: scale(0.92) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .support-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    background: linear-gradient(135deg, #7c3aed, #db2777);
+    color: #fff;
+  }
+
+  .support-panel-avatar {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .support-panel-title {
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+
+  .support-panel-sub {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-top: 1px;
+  }
+
+  .support-panel-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .support-panel-close:hover { color: #fff; }
+
+  .support-panel-body {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .support-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9ca3af;
+    margin-bottom: 8px;
+  }
+
+  .support-faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .support-faq-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+  }
+  .support-faq-item:hover { background: #ede9fe; border-color: #c4b5fd; color: #6d28d9; }
+
+  .support-loading {
+    color: #9ca3af;
+    font-size: 13px;
+    text-align: center;
+    padding: 8px 0;
+  }
+
+  .support-answer {
+    background: #f3f4f6;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.55;
+    margin-top: 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .support-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 14px 0;
+  }
+
+  .support-input-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .support-input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  .support-input:focus { border-color: #7c3aed; }
+
+  .support-send-btn {
+    background: linear-gradient(135deg, #7c3aed, #db2777);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .support-send-btn:hover { opacity: 0.88; }
+
+  .support-response {
+    margin-top: 10px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #166534;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  .support-response.ticket {
+    background: #fefce8;
+    border-color: #fde68a;
+    color: #92400e;
+  }
+
+  .support-response.error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+  }
+
+  .support-panel-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #f3f4f6;
+    text-align: center;
+  }
+
+  .support-footer-link {
+    font-size: 13px;
+    color: #7c3aed;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .support-footer-link:hover { text-decoration: underline; }
+</style>
+
+<!-- Support Widget Script -->
+<script>
+  const SUPPORT_API = 'https://api.projectnobi.ai';
+  const TOP_FAQ_LIMIT = 5;
+  let supportOpen = false;
+  let faqData = [];
+
+  function toggleSupportWidget() {
+    supportOpen = !supportOpen;
+    const panel = document.getElementById('support-panel');
+    const btn = document.getElementById('support-toggle');
+    const icon = document.getElementById('support-btn-icon');
+
+    if (supportOpen) {
+      panel.classList.add('open');
+      panel.setAttribute('aria-hidden', 'false');
+      btn.setAttribute('aria-expanded', 'true');
+      icon.textContent = '✕';
+      if (faqData.length === 0) loadFaq();
+    } else {
+      panel.classList.remove('open');
+      panel.setAttribute('aria-hidden', 'true');
+      btn.setAttribute('aria-expanded', 'false');
+      icon.textContent = '💬';
+    }
+  }
+
+  async function loadFaq() {
+    try {
+      const res = await fetch(SUPPORT_API + '/api/faq');
+      if (!res.ok) throw new Error('fetch failed');
+      const data = await res.json();
+      faqData = data.faq || [];
+    } catch {
+      faqData = [
+        { id: 'what_is_nobi', topic: 'What is Project Nobi?', answer: 'Project Nobi is a decentralized AI companion built on Bittensor. Nori remembers you, grows with you, and keeps your data private.' },
+        { id: 'how_memory_works', topic: 'How does memory work?', answer: 'Nori automatically extracts and stores facts from your conversations — encrypted, on your server. You can view or delete them anytime.' },
+        { id: 'privacy', topic: 'Is my data private?', answer: 'Yes. All memories are AES-256 encrypted. Your data never leaves your server without permission. You can export or delete everything.' },
+        { id: 'how_to_mine', topic: 'How do I mine on the subnet?', answer: 'Install Bittensor, register a wallet, register on the Nobi subnet, and run the miner script. Check our GitHub for the full Mining Guide.' },
+        { id: 'pricing', topic: 'How much does Nori cost?', answer: 'Free tier includes core chat + memory. Pro unlocks unlimited messages, voice, advanced memory graph, and group chat.' },
+      ];
+    }
+    renderFaq();
+  }
+
+  function renderFaq() {
+    const list = document.getElementById('support-faq-list');
+    const top = faqData.slice(0, TOP_FAQ_LIMIT);
+    list.innerHTML = top.map(entry =>
+      `<button class="support-faq-item" onclick="showFaqAnswer('${entry.id}')">${entry.topic}</button>`
+    ).join('');
+  }
+
+  function showFaqAnswer(faqId) {
+    const entry = faqData.find(e => e.id === faqId);
+    if (!entry) return;
+
+    document.getElementById('support-faq-section').style.display = 'none';
+
+    const answerEl = document.getElementById('support-answer');
+    const preview = entry.answer.length > 300 ? entry.answer.slice(0, 300) + '…' : entry.answer;
+    answerEl.innerHTML = `
+      <button onclick="backToFaq()" style="background:none;border:none;cursor:pointer;font-size:12px;color:#7c3aed;margin-bottom:8px;padding:0;font-family:inherit;">← Back</button>
+      <div style="font-weight:600;margin-bottom:6px;color:#111827;font-size:13px;">${entry.topic}</div>
+      <div>${preview}</div>
+    `;
+    answerEl.style.display = 'block';
+  }
+
+  function backToFaq() {
+    document.getElementById('support-faq-section').style.display = 'block';
+    document.getElementById('support-answer').style.display = 'none';
+  }
+
+  async function submitSupportQuestion() {
+    const input = document.getElementById('support-input');
+    const question = input.value.trim();
+    if (!question) return;
+
+    const responseEl = document.getElementById('support-response');
+    responseEl.textContent = 'Checking…';
+    responseEl.className = 'support-response';
+    responseEl.style.display = 'block';
+    input.disabled = true;
+
+    try {
+      const res = await fetch(SUPPORT_API + '/api/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, user_id: 'landing_visitor', platform: 'landing' }),
+      });
+      const data = await res.json();
+
+      if (data.type === 'faq') {
+        const preview = data.answer.length > 400 ? data.answer.slice(0, 400) + '…' : data.answer;
+        responseEl.textContent = preview;
+        responseEl.className = 'support-response';
+      } else if (data.type === 'ticket') {
+        responseEl.textContent = data.answer;
+        responseEl.className = 'support-response ticket';
+      } else {
+        responseEl.textContent = "I couldn't answer that right now — please try the full support page.";
+        responseEl.className = 'support-response error';
+      }
+    } catch {
+      responseEl.textContent = "Couldn't reach support right now. Try the web app for full support.";
+      responseEl.className = 'support-response error';
+    }
+
+    input.value = '';
+    input.disabled = false;
+  }
+</script>
+
 </body>
 </html>

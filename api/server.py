@@ -33,6 +33,7 @@ from nobi.billing.stripe_handler import StripeHandler
 from nobi.api_auth import ApiKeyManager
 from nobi.personality import PersonalityTuner, detect_mood
 from nobi.personality.prompts import get_dynamic_prompt
+from nobi.support import FeedbackManager, SupportHandler
 
 try:
     from openai import OpenAI
@@ -134,6 +135,8 @@ billing: Optional[SubscriptionManager] = None
 stripe_handler: Optional[StripeHandler] = None
 api_key_mgr: Optional[ApiKeyManager] = None
 personality_tuner: Optional[PersonalityTuner] = None
+feedback_manager: Optional[FeedbackManager] = None
+support_handler: Optional[SupportHandler] = None
 
 
 @asynccontextmanager
@@ -161,7 +164,7 @@ app.add_middleware(
 
 
 async def startup():
-    global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler, api_key_mgr, personality_tuner
+    global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler, api_key_mgr, personality_tuner, feedback_manager, support_handler
 
     ensure_master_secret()
     memory = MemoryManager(db_path=DB_PATH)
@@ -174,6 +177,11 @@ async def startup():
 
     # Initialize personality tuner
     personality_tuner = PersonalityTuner(db_path=os.path.expanduser("~/.nobi/personality_api.db"))
+
+    # Initialize support & feedback
+    feedback_manager = FeedbackManager(db_path=os.path.expanduser("~/.nobi/feedback.db"))
+    support_handler = SupportHandler(feedback_manager=feedback_manager)
+    logger.info("Support/feedback system initialized")
 
     # Initialize billing
     billing = SubscriptionManager(db_path=BILLING_DB_PATH)
@@ -798,6 +806,107 @@ async def health():
         "billing_enabled": billing is not None,
         "stripe_configured": stripe_handler.stripe_configured if stripe_handler else False,
     }
+
+
+# ─── Support & Feedback Models ───────────────────────────────
+
+class FeedbackRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=10000)
+    user_id: str = Field(..., min_length=1)
+    platform: str = Field(default="web")
+    category: Optional[str] = None  # auto-detect if omitted
+
+
+class SupportRequest(BaseModel):
+    question: str = Field(..., min_length=1, max_length=2000)
+    user_id: str = Field(..., min_length=1)
+    platform: str = Field(default="web")
+
+
+# ─── Support & Feedback Endpoints ────────────────────────────
+
+@app.post("/api/feedback")
+async def submit_feedback(req: FeedbackRequest):
+    """Submit feedback (bug report, feature request, general, etc.)"""
+    if support_handler is None:
+        raise HTTPException(status_code=503, detail="Support system not initialized")
+    try:
+        result = support_handler.submit_feedback(
+            message=req.message,
+            user_id=req.user_id,
+            platform=req.platform,
+            category=req.category,
+        )
+        return {"success": True, **result}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error("Error submitting feedback: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to submit feedback")
+
+
+@app.get("/api/feedback")
+async def get_feedback(
+    user_id: str,
+    status: Optional[str] = None,
+    category: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+):
+    """Get feedback history for a user."""
+    if feedback_manager is None:
+        raise HTTPException(status_code=503, detail="Support system not initialized")
+    try:
+        entries = feedback_manager.get_feedback(
+            user_id=user_id,
+            status=status,
+            category=category,
+            limit=min(limit, 200),
+            offset=offset,
+        )
+        return {"success": True, "feedback": entries, "count": len(entries)}
+    except Exception as e:
+        logger.error("Error fetching feedback: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to fetch feedback")
+
+
+@app.get("/api/feedback/stats")
+async def feedback_stats():
+    """Public stats: total, resolved count, avg response time."""
+    if feedback_manager is None:
+        raise HTTPException(status_code=503, detail="Support system not initialized")
+    try:
+        stats = feedback_manager.get_stats()
+        return {"success": True, **stats}
+    except Exception as e:
+        logger.error("Error fetching feedback stats: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to fetch stats")
+
+
+@app.post("/api/support")
+async def ask_support(req: SupportRequest):
+    """Ask a support question — returns FAQ match or creates a ticket."""
+    if support_handler is None:
+        raise HTTPException(status_code=503, detail="Support system not initialized")
+    try:
+        result = support_handler.ask(
+            question=req.question,
+            user_id=req.user_id,
+            platform=req.platform,
+        )
+        return {"success": True, **result}
+    except Exception as e:
+        logger.error("Error processing support request: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to process support request")
+
+
+@app.get("/api/faq")
+async def get_faq():
+    """Return all FAQ entries."""
+    if support_handler is None:
+        raise HTTPException(status_code=503, detail="Support system not initialized")
+    faq = support_handler.get_faq()
+    return {"success": True, "faq": faq, "count": len(faq)}
 
 
 # ─── Mobile-compatible /v1/ route aliases ────────────────────

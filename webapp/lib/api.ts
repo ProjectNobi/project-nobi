@@ -1,5 +1,15 @@
 import { API_BASE_URL } from "./constants";
-import type { ChatResponse, MemoriesResponse, Memory, UserSettings, Languages } from "./types";
+import type {
+  ChatResponse,
+  MemoriesResponse,
+  Memory,
+  UserSettings,
+  Languages,
+  FaqResponse,
+  FeedbackResult,
+  FeedbackHistoryResponse,
+  SupportResult,
+} from "./types";
 
 class ApiClient {
   private baseUrl: string;
@@ -93,6 +103,45 @@ class ApiClient {
 
   async healthCheck(): Promise<{ status: string; llm_configured: boolean }> {
     return this.request("/api/health");
+  }
+
+  // ─── Support & Feedback ──────────────────────────────────────
+
+  async getFaq(): Promise<FaqResponse> {
+    return this.request<FaqResponse>("/api/faq");
+  }
+
+  async askSupport(question: string, userId: string): Promise<SupportResult> {
+    return this.request<SupportResult>("/api/support", {
+      method: "POST",
+      body: JSON.stringify({ question, user_id: userId, platform: "web" }),
+    });
+  }
+
+  async submitFeedback(
+    message: string,
+    userId: string,
+    category?: string
+  ): Promise<FeedbackResult> {
+    return this.request<FeedbackResult>("/api/feedback", {
+      method: "POST",
+      body: JSON.stringify({
+        message,
+        user_id: userId,
+        platform: "web",
+        category: category ?? null,
+      }),
+    });
+  }
+
+  async getFeedback(
+    userId: string,
+    status?: string,
+    limit: number = 50
+  ): Promise<FeedbackHistoryResponse> {
+    const params = new URLSearchParams({ user_id: userId, limit: String(limit) });
+    if (status) params.set("status", status);
+    return this.request<FeedbackHistoryResponse>(`/api/feedback?${params}`);
   }
 }
 

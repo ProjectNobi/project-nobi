@@ -48,6 +48,7 @@ from nobi.group import GroupHandler
 from nobi.billing.subscription import SubscriptionManager
 from nobi.personality import PersonalityTuner, detect_mood
 from nobi.personality.prompts import get_dynamic_prompt
+from nobi.support import FeedbackManager, SupportHandler
 import io
 
 try:
@@ -257,6 +258,10 @@ class CompanionBot:
         self.rate_limiter = RateLimiter()
         self.billing = SubscriptionManager(db_path="~/.nobi/billing.db")
         self.personality_tuner = PersonalityTuner(db_path=os.path.expanduser("~/.nobi/personality.db"))
+        self.feedback_manager = FeedbackManager(db_path="~/.nobi/feedback.db")
+        self.support_handler = SupportHandler(feedback_manager=self.feedback_manager)
+        # Conversation state for multi-step flows: {user_id: {state, data}}
+        self._conv_state: Dict[str, Dict] = {}
         self._translation_cache: dict[str, dict[str, str]] = {}  # {lang: {key: translated}}
         self.client = None
         self.model = CHUTES_MODEL
@@ -990,6 +995,15 @@ async def cmd_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle inline button callbacks."""
     query = update.callback_query
+    if not query:
+        return
+    data = query.data or ""
+
+    # Route support/faq/feedback callbacks
+    if data.startswith("faq:") or data.startswith("fb_cat:") or data == "fb_cancel":
+        await _handle_support_callback(update, data)
+        return
+
     await query.answer()
 
     if query.data == "start_chat":
@@ -1264,6 +1278,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # ─── Private Chat Handling (existing logic) ──────────────
+
+    # Check if user is in a support/feedback flow
+    consumed = await _handle_support_message(update, user_id)
+    if consumed:
+        return
 
     # Rate limit check
     if not companion.rate_limiter.check(user_id):
@@ -1552,6 +1571,217 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+# ─── Support & Feedback Commands ─────────────────────────────
+
+# Feedback category keyboard
+FEEDBACK_CATEGORIES = [
+    ("🐛 Bug Report", "fb_cat:bug_report"),
+    ("💡 Feature Request", "fb_cat:feature_request"),
+    ("💬 General Feedback", "fb_cat:general_feedback"),
+    ("❓ Question", "fb_cat:question"),
+    ("😤 Complaint", "fb_cat:complaint"),
+]
+
+FAQ_PAGE_SIZE = 5  # How many FAQ entries per page in inline buttons
+
+
+async def cmd_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    /feedback — Start a feedback submission flow.
+    Step 1: Choose category (inline buttons)
+    Step 2: Type your message
+    """
+    if not update.message:
+        return
+
+    user_id = companion._user_id(update)
+    companion._conv_state[user_id] = {"flow": "feedback", "step": "category"}
+
+    keyboard = [
+        [InlineKeyboardButton(label, callback_data=cdata)]
+        for label, cdata in FEEDBACK_CATEGORIES
+    ]
+    keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="fb_cancel")])
+
+    await update.message.reply_text(
+        "Hey! I'd love to hear what you think 💙\n\nWhat kind of feedback do you have?",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+
+async def cmd_support(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    /support — Start a support conversation.
+    Ask a question; Nori matches FAQ or creates a ticket.
+    """
+    if not update.message:
+        return
+
+    user_id = companion._user_id(update)
+    companion._conv_state[user_id] = {"flow": "support", "step": "question"}
+
+    await update.message.reply_text(
+        "I'm here to help! 😊\n\n"
+        "What would you like to know? Just type your question and I'll do my best to answer, "
+        "or if I can't, I'll make sure the team gets back to you.\n\n"
+        "You can also browse common topics with /faq"
+    )
+
+
+async def cmd_faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    /faq — Show FAQ topics as inline buttons.
+    """
+    if not update.message:
+        return
+
+    faq = companion.support_handler.get_faq()
+
+    # Show topics as inline buttons (paginated)
+    keyboard = []
+    for entry in faq[:FAQ_PAGE_SIZE * 2]:  # Show up to 10
+        keyboard.append([
+            InlineKeyboardButton(entry["topic"], callback_data=f"faq:{entry['id']}")
+        ])
+    keyboard.append([InlineKeyboardButton("💬 Ask something else", callback_data="faq:ask_custom")])
+
+    await update.message.reply_text(
+        "📚 Here are some common topics — tap one to get an instant answer!",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+
+async def _handle_support_callback(update: Update, data: str) -> None:
+    """Handle support/feedback-related callback queries."""
+    query = update.callback_query
+    if not query:
+        return
+    await query.answer()
+
+    user_id = companion._user_id(update)
+
+    # ── FAQ entry ──
+    if data.startswith("faq:"):
+        faq_id = data[4:]
+
+        if faq_id == "ask_custom":
+            companion._conv_state[user_id] = {"flow": "support", "step": "question"}
+            await query.edit_message_text(
+                "Sure! Just type your question and I'll do my best to help 😊"
+            )
+            return
+
+        faq = companion.support_handler.get_faq()
+        entry = next((e for e in faq if e["id"] == faq_id), None)
+        if entry:
+            text = f"**{entry['topic']}**\n\n{entry['answer']}"
+            # Remove markdown for Telegram
+            text = text.replace("**", "").replace("__", "").replace("```", "")
+            # Add back button
+            kb = [[InlineKeyboardButton("⬅️ Back to topics", callback_data="faq:back")]]
+            await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(kb))
+        return
+
+    if data == "faq:back":
+        faq = companion.support_handler.get_faq()
+        keyboard = []
+        for entry in faq[:FAQ_PAGE_SIZE * 2]:
+            keyboard.append([
+                InlineKeyboardButton(entry["topic"], callback_data=f"faq:{entry['id']}")
+            ])
+        keyboard.append([InlineKeyboardButton("💬 Ask something else", callback_data="faq:ask_custom")])
+        await query.edit_message_text(
+            "📚 Here are some common topics — tap one for an instant answer!",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+        return
+
+    # ── Feedback category selection ──
+    if data.startswith("fb_cat:"):
+        category = data[7:]
+        companion._conv_state[user_id] = {
+            "flow": "feedback",
+            "step": "message",
+            "category": category,
+        }
+        category_names = {
+            "bug_report": "Bug Report 🐛",
+            "feature_request": "Feature Request 💡",
+            "general_feedback": "General Feedback 💬",
+            "question": "Question ❓",
+            "complaint": "Complaint 😤",
+        }
+        label = category_names.get(category, "Feedback")
+        await query.edit_message_text(
+            f"Got it — {label}!\n\n"
+            "Now just type your message and I'll save it right away 📝\n\n"
+            "(Or send /cancel to bail out)"
+        )
+        return
+
+    if data == "fb_cancel":
+        companion._conv_state.pop(user_id, None)
+        await query.edit_message_text("No worries! Cancelled. 👍")
+        return
+
+
+async def _handle_support_message(update: Update, user_id: str) -> bool:
+    """
+    Handle message as part of support/feedback multi-step flow.
+    Returns True if the message was consumed, False otherwise.
+    """
+    state = companion._conv_state.get(user_id)
+    if not state:
+        return False
+
+    flow = state.get("flow")
+    step = state.get("step")
+    text = update.message.text if update.message else ""
+
+    if not text:
+        return False
+
+    # Cancel shortcut
+    if text.strip().lower() in ("/cancel", "cancel"):
+        companion._conv_state.pop(user_id, None)
+        await update.message.reply_text("Cancelled! Back to normal chat 😊")
+        return True
+
+    platform = "telegram"
+
+    # ── Support flow ──
+    if flow == "support" and step == "question":
+        companion._conv_state.pop(user_id, None)
+        await update.message.chat.send_action(ChatAction.TYPING)
+        result = companion.support_handler.ask(
+            question=text, user_id=user_id, platform=platform
+        )
+        answer = result.get("answer", "")
+        # Remove markdown
+        answer = answer.replace("**", "").replace("__", "").replace("`", "")
+        await update.message.reply_text(answer)
+        return True
+
+    # ── Feedback flow ──
+    if flow == "feedback" and step == "message":
+        category = state.get("category")
+        companion._conv_state.pop(user_id, None)
+        await update.message.chat.send_action(ChatAction.TYPING)
+        result = companion.support_handler.submit_feedback(
+            message=text,
+            user_id=user_id,
+            platform=platform,
+            category=category,
+        )
+        ack = result.get("acknowledgment", "Thanks for your feedback! 💙")
+        ticket_id = result.get("ticket_id", "")
+        ack = ack.replace("**", "").replace("__", "")
+        await update.message.reply_text(ack)
+        return True
+
+    return False
+
+
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     """Global error handler — log but don't crash."""
     logger.error(f"Update {update} caused error: {context.error}")
@@ -1589,6 +1819,9 @@ def main():
     app.add_handler(CommandHandler("plan", cmd_plan))
     app.add_handler(CommandHandler("nori", cmd_nori))
     app.add_handler(CommandHandler("voice", cmd_voice))
+    app.add_handler(CommandHandler("feedback", cmd_feedback))
+    app.add_handler(CommandHandler("support", cmd_support))
+    app.add_handler(CommandHandler("faq", cmd_faq))
 
     # Buttons
     app.add_handler(CallbackQueryHandler(handle_callback))

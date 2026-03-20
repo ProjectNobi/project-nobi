@@ -1,0 +1,530 @@
+"""
+Project Nobi — SupportHandler
+================================
+FAQ matching + smart routing for Nori support conversations.
+
+When someone asks a question:
+  1. Try to match a FAQ entry (fuzzy matching)
+  2. If matched → return instant answer
+  3. If not matched → save as feedback ticket, return acknowledgment
+"""
+
+import re
+import logging
+from typing import Any, Dict, List, Optional, Tuple
+
+from .feedback import FeedbackManager, FeedbackCategory
+
+logger = logging.getLogger(__name__)
+
+# ─── FAQ Database ────────────────────────────────────────────
+
+FAQ_ENTRIES: List[Dict[str, Any]] = [
+    {
+        "id": "what_is_nobi",
+        "topic": "What is Project Nobi?",
+        "keywords": ["what is nobi", "what is project nobi", "what is nori", "about nobi", "about nori", "explain nobi"],
+        "answer": (
+            "Project Nobi is a decentralized AI companion network built on Bittensor! 🤖\n\n"
+            "Nori (that's me!) is your personal AI companion who actually *remembers* you — "
+            "your conversations, preferences, relationships, and life events. Unlike other AIs, "
+            "your data stays encrypted on-device or on your own server. I'm powered by the "
+            "Bittensor network, meaning real miners compete to give you the best AI responses. "
+            "No Big Tech, no data harvesting — just a companion that genuinely knows you. 💙"
+        ),
+    },
+    {
+        "id": "how_memory_works",
+        "topic": "How does Nori's memory work?",
+        "keywords": ["memory", "remember", "how does memory", "memories", "forget", "learning", "remembers"],
+        "answer": (
+            "Nori's memory is like a semantic journal — I extract important facts from your "
+            "conversations and store them in a searchable graph. 🧠\n\n"
+            "When you chat with me, I automatically pick up on things like your name, your "
+            "relationships, your hobbies, and how you're feeling. Before each reply, I search "
+            "my memories for relevant context to make the conversation feel personal.\n\n"
+            "Your memories are stored **encrypted** at rest. You can view, edit, or delete "
+            "any memory at any time via /memories (Telegram) or the Memories page in the web app."
+        ),
+    },
+    {
+        "id": "privacy",
+        "topic": "Is my data private?",
+        "keywords": ["private", "privacy", "data", "secure", "security", "encrypted", "safe", "gdpr", "delete data"],
+        "answer": (
+            "Yes — privacy is our #1 priority. 🔒\n\n"
+            "• All memories are **AES-256 encrypted** at rest\n"
+            "• Your data never leaves your server without your permission\n"
+            "• We don't sell, share, or analyze your conversations\n"
+            "• You can export or delete ALL your data at any time\n"
+            "• Self-hosting option: run your own Nobi instance for maximum privacy\n\n"
+            "We follow a 'data stays with you' philosophy — the antithesis of Big Tech."
+        ),
+    },
+    {
+        "id": "how_to_mine",
+        "topic": "How do I mine on the Nobi subnet?",
+        "keywords": ["mine", "mining", "miner", "subnet", "bittensor", "how to mine", "start mining", "register miner"],
+        "answer": (
+            "Running a miner on the Nobi subnet earns you TAO rewards for serving AI "
+            "responses! ⛏️\n\n"
+            "**Quick start:**\n"
+            "1. Install Bittensor: `pip install bittensor`\n"
+            "2. Create a wallet: `btcli wallet new_coldkey`\n"
+            "3. Register on the subnet: `btcli subnet register --netuid <nobi_netuid>`\n"
+            "4. Clone the repo and install: `pip install -e .`\n"
+            "5. Start your miner: `python neurons/miner.py`\n\n"
+            "Check our ROADMAP.md and the README for detailed setup instructions. "
+            "Join our Telegram for miner support!"
+        ),
+    },
+    {
+        "id": "hardware_requirements",
+        "topic": "What hardware do I need to mine?",
+        "keywords": ["hardware", "gpu", "cpu", "ram", "specs", "requirements", "server", "compute", "min_compute"],
+        "answer": (
+            "Minimum hardware for mining on Nobi: 💻\n\n"
+            "• **CPU:** 8+ cores recommended\n"
+            "• **RAM:** 16 GB minimum, 32 GB recommended\n"
+            "• **GPU:** Optional for basic mining; GPU (A100/H100 class) needed for top-tier inference\n"
+            "• **Storage:** 50+ GB SSD\n"
+            "• **Network:** Stable internet, low latency preferred\n\n"
+            "Check `min_compute.yml` in the repo for the exact current requirements. "
+            "Validators score miners on response speed AND quality, so better hardware = more TAO."
+        ),
+    },
+    {
+        "id": "how_to_validate",
+        "topic": "How do I run a validator?",
+        "keywords": ["validator", "validate", "validation", "how to validate", "run validator", "stake"],
+        "answer": (
+            "Validators on Nobi score miners and distribute rewards! 🏆\n\n"
+            "**Requirements:**\n"
+            "• Hold a minimum stake of TAO (check current minimum on the subnet)\n"
+            "• Reliable server (24/7 uptime)\n"
+            "• Register as a validator: `btcli subnet register --netuid <nobi_netuid>`\n\n"
+            "**Start validating:**\n"
+            "```\npython neurons/validator.py --wallet.name <your_wallet>\n```\n\n"
+            "Validators send test prompts to miners, grade their responses for quality/speed, "
+            "and emit rewards proportional to performance. See the repo for full details."
+        ),
+    },
+    {
+        "id": "pricing",
+        "topic": "How much does Nori cost?",
+        "keywords": ["price", "pricing", "cost", "free", "subscription", "plan", "tier", "pay", "billing", "premium"],
+        "answer": (
+            "Nori has tiered plans to fit everyone! 💰\n\n"
+            "• **Free:** Core chat + memory, limited messages/day\n"
+            "• **Pro:** Unlimited messages, voice features, advanced memory graph\n"
+            "• **Enterprise:** Custom deployment, API access, white-label options\n\n"
+            "Check the web app at `/subscription` for current pricing. "
+            "We also plan TAO-based payment options for Bittensor community members — stay tuned!"
+        ),
+    },
+    {
+        "id": "voice_features",
+        "topic": "Does Nori support voice?",
+        "keywords": ["voice", "speech", "talk", "tts", "audio", "speak", "listen", "stt", "voice message"],
+        "answer": (
+            "Yes! Nori supports voice in the Telegram bot 🎙️\n\n"
+            "• Send voice messages and Nori will transcribe + respond\n"
+            "• Voice responses via text-to-speech (TTS) — Nori can talk back!\n"
+            "• Powered by Whisper (STT) and ElevenLabs/OpenAI TTS\n\n"
+            "In the Telegram bot, just send a voice note — Nori handles the rest automatically. "
+            "Voice features are available on Pro plan and above."
+        ),
+    },
+    {
+        "id": "language_support",
+        "topic": "What languages does Nori support?",
+        "keywords": ["language", "languages", "multilingual", "english", "spanish", "french", "translate", "i18n", "locale"],
+        "answer": (
+            "Nori speaks 20+ languages! 🌍\n\n"
+            "Nori auto-detects the language you're writing in and responds in the same language. "
+            "No setup needed — just chat in your preferred language.\n\n"
+            "Supported languages include: English, Spanish, French, German, Portuguese, Italian, "
+            "Dutch, Japanese, Korean, Chinese (Simplified & Traditional), Arabic, Hindi, Russian, "
+            "Turkish, Polish, Vietnamese, Thai, Indonesian, and more.\n\n"
+            "Memory extraction and personality also adapt per language."
+        ),
+    },
+    {
+        "id": "group_chat",
+        "topic": "Can I use Nori in group chats?",
+        "keywords": ["group", "group chat", "telegram group", "channel", "team", "shared", "multiple users"],
+        "answer": (
+            "Yes! Nori works great in Telegram group chats 👥\n\n"
+            "• Add Nori to any Telegram group\n"
+            "• Nori responds when @mentioned or when messages are directed to her\n"
+            "• Group memory is separate from personal memory\n"
+            "• Each user maintains their own private memory profile\n"
+            "• Nori moderates the vibe — she's a great group companion!\n\n"
+            "Group features are available on Pro plan. Add her with: @ProjectNobiBot"
+        ),
+    },
+    {
+        "id": "delete_memories",
+        "topic": "How do I delete my memories?",
+        "keywords": ["delete memory", "forget", "erase", "remove memory", "clear memories", "wipe", "forget me"],
+        "answer": (
+            "You have full control over your memories! 🗑️\n\n"
+            "**Telegram:**\n"
+            "• Delete a specific memory: use the Memories menu\n"
+            "• Delete ALL memories: send /forgetme\n\n"
+            "**Web App:**\n"
+            "• Go to the Memories page\n"
+            "• Click the trash icon on any memory to delete it\n"
+            "• Use 'Forget Everything' in Settings to wipe all data\n\n"
+            "Deletion is permanent and immediate. We do not retain copies."
+        ),
+    },
+    {
+        "id": "self_host",
+        "topic": "Can I self-host Nori?",
+        "keywords": ["self host", "self-host", "host myself", "own server", "local", "docker", "deploy", "installation"],
+        "answer": (
+            "Absolutely — self-hosting is encouraged! 🏠\n\n"
+            "Nobi is fully open-source. You can run the entire stack on your own server:\n"
+            "1. Clone the repo: `git clone https://github.com/ProjectNobi/project-nobi`\n"
+            "2. Install deps: `pip install -e .`\n"
+            "3. Set your API keys in `.env`\n"
+            "4. Run the bot: `python app/bot.py`\n"
+            "5. Run the API: `python api/server.py`\n\n"
+            "Full Docker support coming soon. Check the README for the latest setup guide."
+        ),
+    },
+    {
+        "id": "api_access",
+        "topic": "Is there an API?",
+        "keywords": ["api", "api key", "developer", "integration", "programmatic", "webhook", "rest api"],
+        "answer": (
+            "Yes! Nobi has a REST API for developers 🔧\n\n"
+            "• Base URL: `https://api.projectnobi.ai`\n"
+            "• Authentication: API keys (generate in Settings → API Keys)\n"
+            "• Endpoints: /api/chat, /api/memories, /api/settings, /api/feedback\n\n"
+            "API access is available on Pro and Enterprise plans. "
+            "See the API docs at https://docs.projectnobi.ai/api for full reference."
+        ),
+    },
+    {
+        "id": "telegram_bot",
+        "topic": "How do I start with the Telegram bot?",
+        "keywords": ["telegram", "bot", "start", "how to use", "getting started", "setup bot", "first time"],
+        "answer": (
+            "Getting started with Nori on Telegram is super easy! 📱\n\n"
+            "1. Open Telegram and search for **@ProjectNobiBot**\n"
+            "2. Hit /start\n"
+            "3. That's it — just start chatting!\n\n"
+            "Nori will introduce herself and start building your memory profile automatically. "
+            "No configuration needed. She remembers everything from your first message."
+        ),
+    },
+    {
+        "id": "bittensor_what",
+        "topic": "What is Bittensor and why does Nobi use it?",
+        "keywords": ["bittensor", "tao", "decentralized", "blockchain", "subnet", "why bittensor", "what is bittensor"],
+        "answer": (
+            "Bittensor is a decentralized AI network where miners compete to provide the best "
+            "AI services and earn TAO (the native token) as rewards. 🌐\n\n"
+            "Nobi runs as a **subnet** on Bittensor, meaning:\n"
+            "• Real people run miners providing AI compute\n"
+            "• No single company controls the AI\n"
+            "• Better miners earn more TAO\n"
+            "• You benefit from genuine competition driving quality up\n\n"
+            "It's the antithesis of Big Tech AI — open, incentivized, and permissionless."
+        ),
+    },
+    {
+        "id": "relationship_graph",
+        "topic": "What is the relationship graph?",
+        "keywords": ["relationship", "graph", "people", "contacts", "network", "who do i know", "connections"],
+        "answer": (
+            "Nori builds a relationship graph of the people in your life! 👥\n\n"
+            "When you mention someone — 'my friend Sarah', 'my boss Tom', 'my mom' — Nori "
+            "remembers them and the context you've shared. Over time, she builds a mental map "
+            "of your relationships.\n\n"
+            "This helps Nori give better advice, remember who you're talking about, and provide "
+            "context-aware support. You can view your relationship graph in the web app's "
+            "Memory section."
+        ),
+    },
+    {
+        "id": "proactive_messages",
+        "topic": "Why is Nori messaging me first?",
+        "keywords": ["proactive", "message me", "notification", "check in", "reaching out", "unprompted", "why did nori"],
+        "answer": (
+            "That's Nori's proactive mode — she actually checks in on you! 💙\n\n"
+            "Based on patterns in your conversations (like a difficult week, an upcoming event, "
+            "or something you mentioned wanting to follow up on), Nori will proactively reach out.\n\n"
+            "You can control this in /settings:\n"
+            "• Turn proactive messages on/off\n"
+            "• Set quiet hours\n"
+            "• Choose how often she checks in\n\n"
+            "She's not a bot spamming you — she's checking in like a real friend would."
+        ),
+    },
+    {
+        "id": "export_data",
+        "topic": "How do I export my data?",
+        "keywords": ["export", "download", "backup", "portability", "my data", "gdpr export", "save data"],
+        "answer": (
+            "You can export all your data at any time! 📦\n\n"
+            "**Telegram:** Use /export to get a JSON file of all your memories.\n\n"
+            "**Web App:**\n"
+            "• Go to Settings → Privacy\n"
+            "• Click 'Export My Data'\n"
+            "• Downloads a full JSON backup of your memories and settings\n\n"
+            "Your export includes all memories, relationship graph, and settings. "
+            "Format: JSON (easily readable by other tools)."
+        ),
+    },
+    {
+        "id": "open_source",
+        "topic": "Is Nobi open source?",
+        "keywords": ["open source", "github", "code", "license", "mit", "repository", "source code", "contribute"],
+        "answer": (
+            "Yes — Nobi is fully open source! 🔓\n\n"
+            "• GitHub: https://github.com/ProjectNobi/project-nobi\n"
+            "• License: MIT\n"
+            "• Contributions welcome — PRs, issues, and ideas!\n\n"
+            "We believe AI companions should be transparent and community-driven. "
+            "You can inspect every line of code, run it yourself, or contribute new features."
+        ),
+    },
+    {
+        "id": "subscription_upgrade",
+        "topic": "How do I upgrade my subscription?",
+        "keywords": ["upgrade", "subscribe", "subscription", "pro plan", "pay", "stripe", "billing page", "premium"],
+        "answer": (
+            "Upgrading to Pro is quick! ⭐\n\n"
+            "**Web App:**\n"
+            "• Go to the Subscription page\n"
+            "• Choose your plan\n"
+            "• Pay via Stripe (card or TAO coming soon)\n\n"
+            "**Telegram:**\n"
+            "• Use /subscription or /upgrade\n"
+            "• Follow the link to the billing portal\n\n"
+            "Pro unlocks: unlimited messages, voice features, advanced memory graph, "
+            "group chat support, and API access."
+        ),
+    },
+    {
+        "id": "multiple_devices",
+        "topic": "Can I use Nori on multiple devices?",
+        "keywords": ["multiple devices", "sync", "device", "mobile", "desktop", "web", "cross-platform", "phone"],
+        "answer": (
+            "Yes! Nori syncs across all your devices automatically. 📱💻\n\n"
+            "• **Telegram:** Works on any device with your Telegram account\n"
+            "• **Web App:** Access at https://app.projectnobi.ai from any browser\n"
+            "• **Mobile:** Telegram app works on iOS and Android\n\n"
+            "Your memory profile is tied to your user ID, so conversations from any platform "
+            "are all part of the same memory graph. Nori always remembers, regardless of "
+            "where you're chatting from."
+        ),
+    },
+    {
+        "id": "response_time",
+        "topic": "Why is Nori slow to respond sometimes?",
+        "keywords": ["slow", "response time", "latency", "delay", "taking long", "timeout", "fast"],
+        "answer": (
+            "Response speed depends on a few factors: ⚡\n\n"
+            "• **Subnet routing:** When routed through Bittensor miners, speed varies by miner performance\n"
+            "• **Memory search:** Complex memory retrieval takes a moment\n"
+            "• **Model size:** Larger models = better quality but slower response\n"
+            "• **Server load:** During peak times, inference can be slower\n\n"
+            "We're constantly optimizing. Pro users get priority routing to the fastest miners. "
+            "If you experience persistent slowness, please use /feedback to report it!"
+        ),
+    },
+    {
+        "id": "contact_human",
+        "topic": "How do I talk to a human support agent?",
+        "keywords": ["human", "real person", "agent", "support team", "contact support", "speak to someone", "email"],
+        "answer": (
+            "I can handle most questions, but sometimes you need a real human! 🧑‍💼\n\n"
+            "• **Telegram:** Use /feedback and choose 'complaint' — our team monitors all tickets\n"
+            "• **Email:** support@projectnobi.ai\n"
+            "• **Community:** Join our Telegram community group\n"
+            "• **GitHub Issues:** For technical bugs\n\n"
+            "We typically respond within 24-48 hours. For urgent issues, "
+            "mark your ticket as high priority in the feedback form."
+        ),
+    },
+]
+
+# ─── SupportHandler ─────────────────────────────────────────
+
+class SupportHandler:
+    """
+    Manages support conversations for Nori.
+
+    FAQ matching (fuzzy keyword-based) → instant answer
+    No FAQ match → save as feedback ticket, acknowledge warmly.
+    """
+
+    # Threshold: fraction of query words that must appear in keywords
+    MATCH_THRESHOLD = 0.3
+
+    def __init__(self, feedback_manager: Optional[FeedbackManager] = None):
+        self.feedback = feedback_manager or FeedbackManager()
+        self._faq = FAQ_ENTRIES
+
+    # ── Public API ────────────────────────────────────────────
+
+    def get_faq(self) -> List[Dict[str, Any]]:
+        """Return FAQ entries (id, topic, answer — no internal keywords)."""
+        return [
+            {"id": e["id"], "topic": e["topic"], "answer": e["answer"]}
+            for e in self._faq
+        ]
+
+    def ask(
+        self,
+        question: str,
+        user_id: str,
+        platform: str = "unknown",
+    ) -> Dict[str, Any]:
+        """
+        Process a support question.
+
+        Returns dict with:
+          - type: 'faq' | 'ticket'
+          - answer: str (for faq) or acknowledgment (for ticket)
+          - faq_id: str (for faq)
+          - ticket_id: str (for ticket)
+        """
+        if not question or not question.strip():
+            return {
+                "type": "error",
+                "answer": "Please ask me something — I'm here to help! 😊",
+            }
+
+        match = self._match_faq(question)
+        if match:
+            return {
+                "type": "faq",
+                "faq_id": match["id"],
+                "topic": match["topic"],
+                "answer": match["answer"],
+            }
+
+        # No FAQ match — create a support ticket
+        try:
+            feedback = self.feedback.submit_feedback(
+                message=question.strip(),
+                user_id=user_id,
+                platform=platform,
+                category=FeedbackCategory.QUESTION.value,
+            )
+            ticket_id = feedback["id"][:8].upper()
+            return {
+                "type": "ticket",
+                "ticket_id": feedback["id"],
+                "answer": self._ticket_acknowledgment(question, ticket_id),
+            }
+        except Exception as e:
+            logger.error("Failed to create support ticket: %s", e)
+            return {
+                "type": "error",
+                "answer": (
+                    "Hmm, I couldn't save your question right now — "
+                    "please try again in a moment! 🙏"
+                ),
+            }
+
+    def submit_feedback(
+        self,
+        message: str,
+        user_id: str,
+        platform: str = "unknown",
+        category: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Submit user feedback. Returns acknowledgment info.
+        """
+        feedback = self.feedback.submit_feedback(
+            message=message,
+            user_id=user_id,
+            platform=platform,
+            category=category,
+        )
+        ticket_id = feedback["id"][:8].upper()
+        return {
+            "feedback_id": feedback["id"],
+            "ticket_id": ticket_id,
+            "category": feedback["category"],
+            "acknowledgment": self._feedback_acknowledgment(feedback["category"], ticket_id),
+        }
+
+    # ── FAQ Matching ──────────────────────────────────────────
+
+    def _match_faq(self, query: str) -> Optional[Dict[str, Any]]:
+        """
+        Fuzzy keyword matching against FAQ entries.
+        Returns the best matching FAQ entry or None.
+        """
+        q_lower = query.lower()
+        q_words = set(re.findall(r'\w+', q_lower))
+
+        best_entry = None
+        best_score = 0.0
+
+        for entry in self._faq:
+            score = 0.0
+            # Direct keyword phrase matching (highest weight)
+            for phrase in entry["keywords"]:
+                if phrase in q_lower:
+                    phrase_words = len(phrase.split())
+                    score = max(score, phrase_words * 2.0)
+
+            # Word-level matching (lower weight)
+            if q_words:
+                entry_words = set()
+                for phrase in entry["keywords"]:
+                    entry_words.update(re.findall(r'\w+', phrase))
+                overlap = len(q_words & entry_words) / max(len(q_words), 1)
+                score = max(score, overlap)
+
+            if score > best_score:
+                best_score = score
+                best_entry = entry
+
+        if best_score >= self.MATCH_THRESHOLD:
+            return best_entry
+        return None
+
+    # ── Response generation ───────────────────────────────────
+
+    def _feedback_acknowledgment(self, category: str, ticket_id: str) -> str:
+        messages = {
+            FeedbackCategory.BUG_REPORT.value: (
+                f"Thanks for the bug report! 🐛 I've logged it as ticket **#{ticket_id}**. "
+                "Our team will investigate and get back to you. Your help makes Nori better!"
+            ),
+            FeedbackCategory.FEATURE_REQUEST.value: (
+                f"Ooh, love the idea! 💡 Saved as ticket **#{ticket_id}**. "
+                "I'll make sure the team sees this. Feature requests like yours shape where Nori goes next!"
+            ),
+            FeedbackCategory.QUESTION.value: (
+                f"Got your question — logged as ticket **#{ticket_id}**. "
+                "I'll get you an answer as soon as possible! 😊"
+            ),
+            FeedbackCategory.COMPLAINT.value: (
+                f"I'm sorry you had a bad experience. 😔 Your feedback is logged as ticket **#{ticket_id}**. "
+                "This matters to us and I'll make sure someone looks into it promptly."
+            ),
+            FeedbackCategory.GENERAL_FEEDBACK.value: (
+                f"Thanks for sharing! 💙 Logged as ticket **#{ticket_id}**. "
+                "Every bit of feedback helps us make Nori better for everyone."
+            ),
+        }
+        return messages.get(category, messages[FeedbackCategory.GENERAL_FEEDBACK.value])
+
+    def _ticket_acknowledgment(self, question: str, ticket_id: str) -> str:
+        return (
+            f"I don't have an instant answer for that one, but I've logged your question as "
+            f"ticket **#{ticket_id}**. 📋\n\n"
+            "Our team will get back to you within 24-48 hours. "
+            "Is there anything else I can help with in the meantime? 😊"
+        )
