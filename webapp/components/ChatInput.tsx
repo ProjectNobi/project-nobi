@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, type KeyboardEvent } from "react";
+import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -10,8 +10,11 @@ interface ChatInputProps {
 
 export default function ChatInput({ onSend, onSendImage, isLoading }: ChatInputProps) {
   const [input, setInput] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -35,6 +38,67 @@ export default function ChatInput({ onSend, onSendImage, isLoading }: ChatInputP
       handleSend();
     }
   };
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+
+        // Use browser's speech recognition to transcribe
+        if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+          // Already handled via recognition below
+        } else {
+          // Fallback: send audio blob as a message placeholder
+          onSend("🎤 [Voice message — transcription not available in this browser]");
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+
+      // Also start speech recognition for live transcription
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = "en-US";
+        recognition.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          if (transcript.trim()) {
+            onSend(transcript.trim());
+          }
+        };
+        recognition.onerror = () => {};
+        recognition.start();
+        (mediaRecorderRef.current as any)._recognition = recognition;
+      }
+    } catch (err) {
+      console.error("Microphone access denied:", err);
+      alert("Please allow microphone access to use voice input.");
+    }
+  }, [onSend]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      const recognition = (mediaRecorderRef.current as any)._recognition;
+      if (recognition) {
+        try { recognition.stop(); } catch {}
+      }
+      setIsRecording(false);
+    }
+  }, [isRecording]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -121,6 +185,30 @@ export default function ChatInput({ onSend, onSendImage, isLoading }: ChatInputP
               />
             </svg>
           )}
+        </button>
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={isLoading}
+          className={`flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-xl
+                     transition-all duration-200
+                     disabled:opacity-40 disabled:cursor-not-allowed
+                     active:scale-95 ${
+                       isRecording
+                         ? "bg-red-500 hover:bg-red-600 text-white animate-pulse shadow-lg shadow-red-500/25"
+                         : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                     }`}
+          aria-label={isRecording ? "Stop recording" : "Start voice input"}
+          title={isRecording ? "Stop recording" : "Voice input"}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {isRecording ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            )}
+          </svg>
         </button>
       </div>
     </div>
