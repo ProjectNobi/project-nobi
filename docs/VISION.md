@@ -104,8 +104,10 @@ USER talks to Dora (Telegram / Web / Mobile app)
 
 ### Additional Revenue Streams
 - **Developer API** ($0.005/message) — apps integrating companion features
-- **Enterprise** (custom pricing) — employee wellness, customer service
-- **Companion Marketplace** — specialized personalities (fitness coach, tutor, therapist)
+- **Enterprise** (custom pricing) — customer service, productivity tools (enterprise features planned)
+- **Companion Marketplace** — specialized companion personalities (fitness coach, language tutor, life coach)
+
+> ⚠️ **Disclaimer:** Nori is NOT a substitute for professional mental health, medical, legal, or financial advice. Always consult qualified professionals for important decisions.
 
 *See [BUSINESS_PLAN.md](BUSINESS_PLAN.md) for detailed 5-year financial projections.*
 
@@ -139,7 +141,7 @@ USER talks to Dora (Telegram / Web / Mobile app)
 7. **Federated privacy roadmap** — planned architecture where data never leaves your device; only model weights shared (McMahan et al., 2016). *Not yet implemented — planned for Phase 4–5.* When live, this will be a unique, auditable privacy guarantee that no centralized competitor can match.
 
 ### Honest Limitations (Current)
-- Memory is **encrypted with AES-128** on miner machines (Phase A+B live). Miners store encrypted blobs they cannot read. User-controlled encryption is live (Phase A+B). The long-term solution is a **federated learning architecture** (McMahan et al., 2016 — arXiv:1602.05629) where memories never leave your device at all; only model weight updates are shared. This is planned, not yet built — see the Roadmap below.
+- Memory is **encrypted with AES-128** in storage on miner machines (Phase A+B live). Encryption keys are managed server-side, providing storage-level protection. Client-side/on-device encryption is on the roadmap. The long-term solution is a **federated learning architecture** (McMahan et al., 2016 — arXiv:1602.05629) where memories never leave your device at all — only model weight updates are shared. **This is planned, not yet built** — see the Roadmap below.
 - The Telegram bot currently calls LLM directly, **not through the subnet**. Subnet routing is the mainnet target.
 - No tool execution yet (calendar, booking, etc.) — companion is conversation-only for now.
 

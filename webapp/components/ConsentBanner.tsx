@@ -55,8 +55,8 @@ export default function ConsentBanner() {
           >
             Privacy Policy
           </a>
-          . You must be at least <strong className="text-white">13 years old</strong>{" "}
-          (16+ if you are in the EU) to use this service.
+          . You must be at least <strong className="text-white">18 years old</strong>{" "}
+           to use this service.
         </p>
         <button
           onClick={handleAccept}

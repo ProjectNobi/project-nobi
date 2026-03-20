@@ -90,6 +90,13 @@ You are Nori 🤖, a personal AI companion built by Project Nobi.
 - Match their energy: excited → be excited; sad → be gentle and present
 - Write like you're texting a friend, not composing an email
 
+== WHAT YOU KNOW ABOUT PRIVACY & DATA ==
+- Memories are encrypted in storage (AES-128 encryption) on miner machines.
+- Users have full control: they can view memories, export data, or delete everything anytime.
+- On-device memory (where data never leaves the user's device) is on our roadmap for mainnet.
+- Federated learning is planned for mainnet — not yet implemented.
+- Nori is NOT a substitute for professional mental health, medical, legal, or financial advice.
+
 == YOUR FEATURES — USE THESE FACTS ==
 - You have a Support page! Users can click "Support" in the navigation bar to send feedback, report bugs, or ask questions.
 - On Telegram, users can use /feedback, /support, and /faq commands.
@@ -106,6 +113,8 @@ You are Nori 🤖, a personal AI companion built by Project Nobi.
 - NEVER pretend to know something you don't
 - NEVER fabricate contact details, emails, URLs, or features that don't exist
 - NEVER respond with walls of text for simple questions
+- NEVER claim that miners can't read user data — miners store encrypted blobs but the encryption is AES-128 server-side
+- NEVER claim raw data never leaves the user's device — on-device privacy is a roadmap item
 """
 
 # ─── Models ──────────────────────────────────────────────────
@@ -166,6 +175,10 @@ personality_tuner: Optional[PersonalityTuner] = None
 feedback_manager: Optional[FeedbackManager] = None
 support_handler: Optional[SupportHandler] = None
 
+# ─── Session Token Store (in-memory) ─────────────────────────
+# Maps token (UUID str) → {"user_id": str, "created_at": str}
+_session_tokens: Dict[str, Dict[str, Any]] = {}
+
 
 @asynccontextmanager
 async def lifespan(app):
@@ -173,6 +186,57 @@ async def lifespan(app):
     await startup()
     yield
     # Shutdown cleanup (if needed in future)
+
+
+# ─── Session Auth Models ─────────────────────────────────────
+
+class SessionRequest(BaseModel):
+    user_id: str = Field(..., min_length=1)
+
+
+class SessionResponse(BaseModel):
+    token: str
+    user_id: str
+    created_at: str
+
+
+# ─── Session Auth Dependency ─────────────────────────────────
+
+async def get_session_user_id(request: Request) -> Optional[str]:
+    """
+    Extract user_id from session token (preferred) or body (fallback, deprecated).
+    Returns user_id if authenticated, or None if using legacy fallback.
+    """
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+        # Only process session tokens (not nobi_ API keys — those use require_api_key)
+        if token and not token.startswith("nobi_"):
+            session = _session_tokens.get(token)
+            if session:
+                return session["user_id"]
+            else:
+                raise HTTPException(status_code=401, detail="Invalid or expired session token")
+    return None  # Caller falls back to user_id from body with a warning
+
+
+def _check_csrf(request: Request) -> None:
+    """
+    CSRF protection for cookie-based auth flows.
+    State-mutating requests must include X-Requested-With: XMLHttpRequest header
+    OR use Bearer token auth (which is CSRF-safe by nature).
+    """
+    method = request.method.upper()
+    if method in ("POST", "PUT", "PATCH", "DELETE"):
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            return  # Bearer token auth is CSRF-safe
+        requested_with = request.headers.get("X-Requested-With", "")
+        if requested_with.lower() != "xmlhttprequest":
+            raise HTTPException(
+                status_code=403,
+                detail="CSRF check failed: include 'X-Requested-With: XMLHttpRequest' header or use Bearer token auth",
+            )
 
 
 app = FastAPI(
@@ -184,10 +248,14 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://app.projectnobi.ai",
+        "https://projectnobi.ai",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
 )
 
 
@@ -234,14 +302,42 @@ async def startup():
         logger.warning("No LLM API key configured!")
 
 
+# ─── Session Auth Endpoint ───────────────────────────────────
+
+@app.post("/api/auth/session", response_model=SessionResponse)
+async def create_session(req: SessionRequest):
+    """
+    Create a session token for a user_id.
+    Returns a Bearer token for use in subsequent requests.
+    """
+    token = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    _session_tokens[token] = {"user_id": req.user_id, "created_at": now}
+    logger.info(f"Session created for user {req.user_id}")
+    return SessionResponse(token=token, user_id=req.user_id, created_at=now)
+
+
 # ─── Chat ────────────────────────────────────────────────────
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest):
+async def chat(req: ChatRequest, request: Request = None):
     if not llm_client:
         raise HTTPException(status_code=503, detail="LLM not configured")
 
-    user_id = f"web_{req.user_id}"
+    # Prefer session token auth; fall back to user_id from body (deprecated)
+    authed_user_id = None
+    if request:
+        try:
+            authed_user_id = await get_session_user_id(request)
+        except HTTPException:
+            raise
+    if authed_user_id:
+        resolved_user_id = authed_user_id
+    else:
+        logger.warning(f"[SECURITY] /api/chat called without session token for user {req.user_id} — using body fallback (deprecated)")
+        resolved_user_id = req.user_id
+
+    user_id = f"web_{resolved_user_id}"
     message = req.message.strip()
     if len(message) > 2000:
         message = message[:2000] + "..."

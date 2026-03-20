@@ -80,9 +80,9 @@ Realistic capture given our distribution channels, competitive positioning, and 
 | Improvement pace | Quarterly updates | Continuous (miners evolve daily) |
 | Privacy architecture | Trust the company | **Federated roadmap: data never leaves your device** *(Planned — Q4 2026+)* |
 
-**Federated privacy as enterprise differentiator:** The planned federated learning architecture (McMahan et al., 2016 — arXiv:1602.05629) is particularly compelling for enterprise customers in regulated industries (healthcare, finance, legal) where sending conversation data to third-party servers creates compliance risk. Once implemented, Nobi's on-device memory model means enterprise deployments can achieve meaningful data-residency guarantees that no centralized competitor can offer at all — because their architecture fundamentally requires data to reach their servers. This is expected to be a key differentiator for enterprise tier pricing and partnership conversations beginning in 2027.
+**Federated privacy as a future enterprise differentiator (planned):** The planned federated learning architecture (McMahan et al., 2016 — arXiv:1602.05629) may be compelling for enterprise customers in regulated industries once implemented. **This is not yet available.** Current enterprise deployments use AES-128 encrypted storage — the same as consumer tiers. Enterprise features for regulated industries (healthcare, finance, legal) are planned for 2027+ and will require independent compliance review before being marketed to those sectors.
 
-*Note: Federated features are not yet implemented. Enterprise conversations should not reference these capabilities as current. They are planned roadmap items.*
+> ⚠️ **Important:** Do not market Nobi as "enterprise healthcare/finance ready." Enterprise features for regulated industries are planned, not current.
 
 ---
 
@@ -107,11 +107,12 @@ Realistic capture given our distribution channels, competitive positioning, and 
 |---------|---------|--------|
 | Companion API | $0.005/message | App developers integrating companion features |
 | White-label SDK | $500/mo + usage | Companies deploying custom companions |
-| Enterprise | Custom | Large organizations (employee wellness, customer service) |
+| Enterprise | Custom | Large organizations (customer service, productivity tools — enterprise features planned) |
 
 #### Stream 3: Marketplace & Premium Features (10% of revenue)
 
-- Specialized companion personalities (fitness coach, language tutor, therapist)
+- Specialized companion personalities (fitness coach, language tutor, life coach)
+  > ⚠️ Nori is NOT a substitute for professional mental health, medical, legal, or financial advice.
 - Premium voices and avatars
 - Tool integrations (calendar, email, smart home)
 - Data export and portability tools

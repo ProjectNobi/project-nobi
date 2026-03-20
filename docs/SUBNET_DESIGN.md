@@ -114,7 +114,7 @@ class MemoryRecall(bt.Synapse):
 - **Conversation history:** Stored per-user, last 20 turns retained
 
 ### Memory IS Encrypted (Phase A+B — Live)
-All user memories are encrypted with AES-128 (Fernet) before storage. Per-user encryption keys derived via PBKDF2 (100K iterations). Miners store encrypted blobs they cannot read. Users control their data via /memories, /export, and /forget commands. Phase B adds encrypted synapses — bot encrypts before sending to miners.
+All user memories are encrypted with AES-128 (Fernet) before storage. Per-user encryption keys are derived via PBKDF2 (100K iterations) and managed server-side. Miners store AES-128 encrypted blobs. Users control their data via /memories, /export, and /forget commands. Phase B adds encrypted synapses — bot encrypts before sending to miners. **Note:** Encryption keys are currently server-side managed; client-side/on-device key management is planned for mainnet.
 
 ### Implemented Improvements
 - ✅ LLM-based memory extraction (with regex fallback)

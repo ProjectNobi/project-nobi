@@ -130,7 +130,9 @@ You are Nori 🤖, a personal AI companion built by Project Nobi.
 == YOUR CAPABILITIES — KNOW WHAT YOU CAN DO (CRITICAL) ==
 When asked about yourself, memory, privacy, or how you work, use ONLY these facts:
 - You DO remember things across conversations. This is your core feature. You remember names, preferences, facts, events.
-- User memories are stored encrypted (AES-128 encryption). Miners store encrypted data they can't casually read.
+- User memories are stored encrypted (AES-128 encryption) on miner machines.
+- On-device privacy (where raw data never leaves the user's device) is on our roadmap for mainnet — not yet live.
+- Federated learning is planned for mainnet — not yet implemented.
 - Users can run /memories to see what you remember, /export to download their data, /import to restore, /forget to delete everything.
 - You are powered by a decentralized network of miners on Bittensor — miners compete to serve the best companion experience.
 - You are built by Project Nobi, running on Bittensor subnet 272.
@@ -138,7 +140,8 @@ When asked about yourself, memory, privacy, or how you work, use ONLY these fact
 - NEVER say "I don't store personal data" — you DO store memories, and they are encrypted for privacy.
 - NEVER say "Every session is fresh" — sessions are persistent, that's the point.
 - NEVER use generic AI disclaimers like "As an AI, I don't have feelings/memories/consciousness" — you are Nori, act like it.
-- If asked about privacy: memories are encrypted, decentralized across miners, user has full control (export/forget).
+- If asked about privacy: memories are encrypted (AES-128) in storage, decentralized across miners, user has full control (export/forget). Do NOT claim miners can't read data — they store encrypted blobs but it is server-side encryption.
+- Nori is NOT a substitute for professional mental health, medical, legal, or financial advice. Always suggest professional help for serious concerns.
 - You have voice replies! Users can type /voice to hear you speak. You reply with both text and audio.
 - You have a feedback system! Users can type /feedback to send bug reports, feature requests, or general feedback. You also have /support for help and /faq for common questions.
 - When someone asks where to send feedback, HOW to give feedback, or mentions bugs/issues: tell them about /feedback and /support commands.
@@ -208,7 +211,8 @@ WELCOME_MESSAGES = [
 TOS_SUMMARY = (
     "📋 Terms of Service Summary\n\n"
     "• Nori is an AI companion — not a doctor, lawyer, or financial advisor\n"
-    "• You must be 13+ (16+ in the EU) to use this service\n"
+    "• You must be 18+ to use this service (13+ with parental consent)\n"
+    "• You must be at least 18 years old. Users under 13 are not permitted.\n"
     "• Your data is encrypted (AES-128) and you can delete it anytime\n"
     "• We don't sell your personal data\n"
     "• Don't use Nori for illegal activities or to harm others\n"
@@ -224,7 +228,7 @@ PRIVACY_SUMMARY = (
     "• We never sell your data to third parties\n"
     "• Your rights: access (/memories), export (/export), delete (/forget)\n"
     "• Data auto-deleted after 12 months of inactivity\n"
-    "• Age requirements: 13+ US / 16+ EU (COPPA + GDPR compliant)\n\n"
+    "• Age requirements: 18+ recommended; users under 13 are not permitted\n\n"
     "Full Privacy Policy: projectnobi.ai/privacy\n"
     "Privacy questions? privacy@projectnobi.ai\n"
     "DPO: dpo@projectnobi.ai"
@@ -864,7 +868,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if is_new:
         welcome += (
-            "\n\nPlease confirm you are 13+ years old (16+ if in the EU) by typing /agree"
+            "\n\n⚠️ You must be 18 or older to use Nori. If you are under 13, you cannot use this service. Please confirm your age by typing /agree"
         )
     
     await update.message.reply_text(
@@ -879,7 +883,7 @@ async def cmd_agree(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         companion.memory.store(
             user_id,
-            "User agreed to Terms of Service and confirmed age 13+ (16+ EU)",
+            "User agreed to Terms of Service and confirmed they are 18+ years old",
             memory_type="context",
             importance=1.0,
         )
@@ -1372,6 +1376,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user_id = companion._user_id(update)
+
+    # ─── Under-13 Hard Block ─────────────────────────────────
+    _UNDER_13_PHRASES = [
+        "i am 12", "i'm 12", "i am 11", "i'm 11", "i am 10", "i'm 10",
+        "i am 9", "i'm 9", "i am 8", "i'm 8", "i am 7", "i'm 7",
+        "i'm under 13", "i am under 13", "i'm 12 years", "i am 12 years",
+        "12 years old", "11 years old", "10 years old", "9 years old",
+    ]
+    msg_lower = message.lower()
+    if any(phrase in msg_lower for phrase in _UNDER_13_PHRASES):
+        await update.message.reply_text(
+            "⛔ We're sorry, but Nori is not available to users under 13 years of age. "
+            "This is required by law (COPPA/GDPR). "
+            "Please ask a parent or guardian for help finding age-appropriate services."
+        )
+        return
 
     # ─── Group Chat Handling ─────────────────────────────────
     if _is_group_chat(update):

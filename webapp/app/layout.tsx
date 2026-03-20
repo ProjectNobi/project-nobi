@@ -38,6 +38,13 @@ export default function RootLayout({
       <body className={inter.className}>
         {children}
         <ConsentBanner />
+        <footer className="w-full py-3 text-center text-xs text-gray-400 dark:text-gray-600 border-t border-gray-100 dark:border-gray-800 mt-auto">
+          <a href="/privacy" className="hover:underline mx-2">Privacy Policy</a>
+          ·
+          <a href="/terms" className="hover:underline mx-2">Terms of Service</a>
+          ·
+          <span className="mx-2">© 2026 Project Nobi</span>
+        </footer>
       </body>
     </html>
   );

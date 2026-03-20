@@ -61,8 +61,8 @@ export default function OnboardingWizard() {
           className="mt-1 w-4 h-4 accent-purple-600 flex-shrink-0"
         />
         <span className="text-sm text-gray-600 dark:text-gray-400">
-          I confirm I am at least <strong>13 years old</strong> (16+ if I am in
-          the EU). I agree to the{" "}
+          I confirm I am <strong>18 or older</strong>. (If you are under 13 years old,
+          you may not use this service.) I agree to the{" "}
           <a href="/terms" className="text-purple-600 dark:text-purple-400 underline" target="_blank" rel="noopener noreferrer">
             Terms of Service
           </a>{" "}

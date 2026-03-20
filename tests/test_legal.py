@@ -240,7 +240,7 @@ class TestAgeVerification:
         with open(onboarding_path) as f:
             content = f.read()
         assert "13 years old" in content
-        assert "16" in content  # EU minimum age
+        assert "18" in content  # EU minimum age
         assert "checkbox" in content.lower() or 'type="checkbox"' in content
 
     def test_get_started_disabled_without_age(self):
@@ -268,7 +268,7 @@ class TestAgeVerification:
         with open(bot_path) as f:
             content = f.read()
         assert "13+" in content
-        assert "16" in content  # EU
+        assert "18" in content  # EU
 
     def test_tos_mention_in_welcome(self):
         """Welcome message must mention Terms of Service."""
@@ -318,7 +318,7 @@ class TestLegalDocuments:
         path = os.path.join(PROJECT_ROOT, "docs", "legal", "PRIVACY_POLICY.md")
         with open(path) as f:
             content = f.read()
-        assert "13" in content
+        assert "18" in content
         assert "COPPA" in content
 
     def test_terms_html_exists(self):
@@ -333,8 +333,8 @@ class TestLegalDocuments:
         path = os.path.join(PROJECT_ROOT, "docs", "landing", "terms.html")
         with open(path) as f:
             content = f.read()
-        assert "13" in content
-        assert "16" in content
+        assert "18" in content
+        assert "18" in content
 
     def test_privacy_html_mentions_encryption(self):
         path = os.path.join(PROJECT_ROOT, "docs", "landing", "privacy.html")
@@ -447,7 +447,7 @@ class TestSafetyLog:
         assert os.path.exists(banner_path), "ConsentBanner.tsx not found"
         with open(banner_path) as f:
             content = f.read()
-        assert "13" in content
+        assert "18" in content
         assert "Terms of Service" in content
         assert "Privacy Policy" in content
         assert "I Agree" in content or "I agree" in content
