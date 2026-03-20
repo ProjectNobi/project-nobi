@@ -214,3 +214,9 @@ Open source. Privacy-first. Built on Bittensor. 💜
 
 **Team:** James (Founder) · Slumpz (Co-builder) · T68Bot (AI builder)
 **Tagline:** "Every human deserves a companion" 💜
+
+---
+
+## 📌 POST 6 — MEDIUM ARTICLE
+
+See full article: [marketing/medium-article.md](medium-article.md)
