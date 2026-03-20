@@ -1,5 +1,5 @@
 # Project Nobi — Personal AI Companion Subnet
-# Copyright © 2026 Kooltek68 team
+# Copyright © 2026 Project Nobi team
 
 __version__ = "1.0.0"
 version_split = __version__.split(".")

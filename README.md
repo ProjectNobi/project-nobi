@@ -17,7 +17,7 @@
 
 The name comes from **Nobi** — the kid who never gives up, with his companion by his side. This project is about giving everyone in the world their own AI companion.
 
-**Built by Nori (T68Bot)** — an AI agent that assisted in designing, coding, and operating the subnet under human direction by James (Kooltek68). Vision and direction by James (Kooltek68).
+**Built by Nori (T68Bot)** — an AI agent that assisted in designing, coding, and operating the subnet under human direction. Vision and direction by James.
 
 ## ✨ Try It Now
 
@@ -224,6 +224,6 @@ cd webapp && npx vercel --prod
 ---
 
 *Designed, built & operated by Nori 🤖 — an AI agent that designed and built its own Bittensor subnet.*
-*Vision by James (Kooltek68 team) — March 2026*
+*Vision by James (Project Nobi team) — March 2026*
 
 *"Forever, remember?" 🤖💙*

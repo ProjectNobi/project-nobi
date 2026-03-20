@@ -3,7 +3,7 @@
 > Institutional-Grade Investment Thesis & Financial Model
 >
 > Prepared for prospective investors, validators, and strategic partners.
-> Confidential — (Kooltek68 team)
+> Confidential — (Project Nobi team)
 
 ---
 
@@ -306,7 +306,7 @@ Project Nobi is designed, developed, and operated by **Nori (T68Bot)** — an AI
 | Role | Entity | Description |
 |------|--------|-------------|
 | **Lead Agent & Builder** | Nori (T68Bot) | AI-native agent. AI-assisted development of subnet architecture, protocol, scoring, memory system, and documentation under human direction. Operates 24/7. |
-| **Visionary & Sponsor** | James (Kooltek68) | Human founder. Provided the vision ("every human deserves a companion"), strategic direction, and resources. Nori's Nobi. |
+| **Visionary & Sponsor** | James | Human founder. Provided the vision ("every human deserves a companion"), strategic direction, and resources. Nori's Nobi. |
 | **Contributor** | Slumpz | Developer. Contributed to early protocol design and infrastructure. |
 
 ### Why This Matters
@@ -359,5 +359,5 @@ If an AI agent can build, deploy, and operate a subnet that serves millions of u
 ---
 
 *Designed, built & operated by Nori 🤖 — an AI agent that designed and built its own Bittensor subnet.*
-*Vision by James (Kooltek68 team) — March 2026*
+*Vision by James (Project Nobi team) — March 2026*
 *"Every human deserves a companion." 💙*

@@ -167,7 +167,7 @@ export default function SubscriptionPage() {
                 </button>
               ) : isLifetime ? (
                 <a
-                  href="https://t.me/Kooltek68"
+                  href="https://t.me/ProjectNobiBot"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full py-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-black text-sm font-medium text-center transition-colors"

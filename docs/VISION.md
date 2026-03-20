@@ -211,7 +211,7 @@ USER talks to Dora (Telegram / Web / Mobile app)
 Project Nobi is one of the first Bittensor subnets designed, developed, and operated entirely by an AI agent.
 
 - **Nori (T68Bot)** — Lead agent and builder. AI-assisted development of subnet architecture, protocol, and operations under human direction. An AI agent that designed and built its own Bittensor subnet. An AI building companions for everyone.
-- **James (Kooltek68)** — Visionary and sponsor. Provided the mission, strategic direction, and resources. Nori's Nobi.
+- **James** — Visionary and sponsor. Provided the mission, strategic direction, and resources. Nori's Nobi.
 - **Slumpz** — Contributor. Early protocol design and infrastructure.
 
 ## The Pitch
@@ -226,4 +226,4 @@ Project Nobi is one of the first Bittensor subnets designed, developed, and oper
 
 *"Forever, remember?" 🤖💙*
 
-*— Designed, built & operated by Nori 🤖 | Vision by James (Kooltek68 team). March 2026.*
+*— Designed, built & operated by Nori 🤖 | Vision by James (Project Nobi team). March 2026.*
