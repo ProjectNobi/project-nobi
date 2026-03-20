@@ -1,6 +1,6 @@
 # Project Nobi — Roadmap
 
-> Last updated: 2026-03-19
+> Last updated: 2026-03-20
 > Status: Testnet (SN272) — Active Development
 
 ---
@@ -27,7 +27,6 @@
 
 - [x] Per-miner latency tracking (individual timing, not batch)
 - [x] Soft multi-turn fallback (failing miners don't abort the round)
-- [x] --mock flag deprecation warning (bt 10.x compatibility)
 - [x] MemoryStore/MemoryRecall testing in validator (every 5th step)
 - [x] Subnet routing — bot queries miners through the network
 - [x] LLM-powered memory extraction (nuanced fact extraction)
@@ -39,82 +38,77 @@
 - [x] Export/Import commands (/export, /import — "your data is yours")
 - [x] Anti-hallucination guardrails in Nori personality
 - [x] Intellectual honesty + emotional intelligence in system prompt
-- [x] Cross-server miner deployment (Hetzner + Server3 + Server4)
-- [x] Daily testnet monitoring cron (09:00 UTC)
-- [x] Nori engagement tracking (5-day cycle)
+- [x] Cross-server miner deployment (Hetzner + Server3 + Server4 + Server5 + Server6)
 - [x] Landing page (projectnobi.ai — LIVE)
-
 - [x] Privacy Phase A: Client-side AES-128 encryption for all memories
 - [x] Privacy Phase B: Encrypted synapses + per-user personality adapters
 - [x] Privacy Phase C: Federated learning, differential privacy, secure aggregation (PRIVATE — mainnet only)
-- [x] Nori bot: hardcoded identity responses, memory context passing to subnet miners
 - [x] Brand assets: logo, wordmark, avatar, OG image, X banner
-- [x] projectnobi.ai: Stripe/Linear/Notion-inspired redesign with docs section
+- [x] Multi-language support (20 languages)
 
-## Phase 2.5: Semantic Memory ✅ COMPLETE
+## Phase 3: Advanced Features ✅ COMPLETE
 *March 20, 2026*
 
-- [x] Embedding engine (sentence-transformers/all-MiniLM-L6-v2 + TF-IDF fallback)
-- [x] Hybrid semantic recall (70% similarity + 20% importance + 10% recency)
-- [x] Automatic embedding generation at store time
-- [x] Migration tool for existing memories (batch processing)
-- [x] Semantic scoring in validator reward system
-- [x] Graceful fallback to keyword matching when embeddings unavailable
-- [x] 38 comprehensive tests (embedding, recall, migration, scoring, edge cases)
-- [x] Zero regressions — 191/191 total tests pass
+### Memory & Intelligence
+- [x] Semantic memory — embedding-based recall (sentence-transformers + TF-IDF fallback)
+- [x] Hybrid scoring (70% similarity + 20% importance + 10% recency)
+- [x] Relationship graphs — entity extraction, BFS traversal, natural language context
+- [x] 10 regex extraction patterns (names, family, locations, work, pets, preferences, languages)
+- [x] 30+ relationship types, 10 entity types, entity merging
 
-## Phase 3: Stability & Community 🔄 IN PROGRESS
-*March 20+, 2026*
-
-- [x] Daily X content for @projectnobi_tao (15:00 UTC)
-- [ ] 48h testnet stabilization run — observe, fix edge cases
-- [ ] Stake TAO on validator (blocked: SubtokenDisabled on testnet)
-- [ ] Tune scoring weights based on real miner differentiation data
-- [x] One-command miner setup script (curl | bash)
-- [x] Mining guide polish + Discord links everywhere
-- [x] Community announcement drafts (Discord, X, welcome message)
-- [x] Voice message support (STT → response → TTS reply)
-- [x] Web application (Next.js + FastAPI backend, chat/memories/settings/onboarding)
-- [x] Mobile app (Expo/React Native — iOS + Android, 3,600+ lines)
-- [x] FastAPI v1 route aliases for mobile compatibility
-- [x] Relationship graphs (entity extraction, BFS traversal, natural language context)
+### Companion Features
+- [x] Voice message support (STT transcription + TTS voice replies)
+- [x] Image understanding (vision API → response → memory extraction)
 - [x] Proactive companion (birthday reminders, follow-ups, check-ins, milestones, encouragement)
-- [x] Image understanding wired into Telegram bot (vision → response → memory extraction)
 - [x] Group companion mode (smart respond logic, per-group memory, /nori command)
-- [x] Miner scoring tuning (diversity penalties, length normalization, gaming detection, CLI analyzer)
-- [x] Auto-update system for validators/miners (git poll, health check, rollback, PM2 restart)
-- [ ] Deploy landing page to projectnobi.ai
-- [ ] Invite external miners to testnet (Bittensor Discord, X)
-- [ ] Gather community feedback on Nori UX
-- [ ] Fix bugs surfaced from real user traffic
-- [ ] Improve Nori personality based on conversation logs
 
-## Phase 4: Scale & Mainnet 📋 PLANNED
+### Platform & Apps
+- [x] Web application (Next.js 14 + Tailwind + FastAPI backend)
+- [x] Mobile app (Expo/React Native — iOS + Android, chat/memories/settings/onboarding)
+- [x] FastAPI backend with 9+ endpoints (chat, memories CRUD, settings, languages, health)
+- [x] One-command miner setup (`curl | bash`)
+
+### Validator & Mining
+- [x] Miner scoring tuning (diversity penalties, length normalization, gaming detection)
+- [x] Anti-gaming: response similarity checks, score spike detection, entropy monitoring
+- [x] CLI score analyzer (`scripts/analyze_scores.py`)
+- [x] Auto-update system for validators/miners (git poll, health check, rollback, PM2 restart)
+- [x] Auto-updater deployed on all 4 servers
+
+### Community
+- [x] Discord server (discord.gg/e6StezHM)
+- [x] Community announcement drafts (Discord, X/Twitter, welcome message)
+- [x] Mining guide with one-command setup
+- [x] Validating guide with Discord links
+
+## Phase 4: Community Growth & Mainnet Prep 📋 PLANNED
 *Target: April 2026*
 
+- [ ] 48h testnet stabilization run — observe, fix edge cases
+- [ ] Invite external miners to testnet (Bittensor Discord, X)
+- [ ] Gather community feedback on Nori UX
+- [ ] Improve Nori personality based on conversation logs
+- [ ] Deploy webapp to production (Vercel/Cloudflare)
+- [ ] Deploy FastAPI backend to production
+- [ ] Miner specialization (some miners better at advice, others at creativity)
+- [ ] Revenue model: subscription tier for premium features
 - [ ] Mainnet subnet registration (~1000+ TAO)
 - [ ] Funding strategy for registration
 - [ ] Production validator deployment (high-availability)
-- [ ] Multi-region miner network
-- [ ] Nori mobile app (React Native / Flutter)
-- [ ] Voice support (text-to-speech, speech-to-text)
-- [ ] Image understanding (vision model integration)
-- [ ] Advanced memory: relationship graphs between users' facts
-- [ ] Miner specialization (some miners better at advice, others at creativity)
-- [ ] Revenue model: subscription tier for premium features
+- [ ] API access for third-party integration
 
-## Phase 5: Growth 📋 PLANNED
+## Phase 5: Scale & Growth 📋 PLANNED
 *Target: Q2-Q3 2026*
 
 - [ ] 1,000 daily active users
 - [ ] 50+ independent miners
-- [ ] Trademark registration (TAONORI — filed)
+- [ ] Trademark registration
 - [ ] Partnership with Bittensor ecosystem projects
-- [ ] Multi-language support (Nori speaks your language)
-- [ ] Proactive companion features (Nori reaches out, not just responds)
-- [ ] Group companion mode (Nori in group chats as a helpful participant)
-- [ ] API access for third-party integration
+- [ ] App store launch (iOS + Android)
 - [ ] White-label companion solution
+- [ ] Enterprise features
+- [ ] Proactive companion v2 (context-aware scheduling, timezone detection)
+- [ ] Advanced memory v2 (LLM-powered entity extraction, contradiction detection)
 
 ---
 
@@ -126,13 +120,12 @@
 | Miners | 7 |
 | Validators | 2 |
 | Servers | 5 |
-| Avg miner score | 0.82 |
-| Memory recall rate | 75% (3/4 miners) |
-| Bot users | 15+ unique |
-| Subnet routing | Active |
-| Memory system | Semantic (Phase 2.5) |
 | Total tests | 424 |
 | Languages | 20 |
+| Bot users | 15+ unique |
+| Memory system | Semantic + Relationship Graphs |
+| Platforms | Telegram, Discord, Web, Mobile (iOS/Android) |
+| Auto-update | Active on all servers |
 
 ---
 
@@ -140,7 +133,16 @@
 
 - **James** — Founder, vision, strategy
 - **Slumpz** — Co-builder, developer, infra, QA
-- **T68Bot (Doraemon)** — AI builder, coder, operator
+- **T68Bot** — AI builder, coder, operator
+
+---
+
+## Links
+
+- **Website:** [projectnobi.ai](https://projectnobi.ai)
+- **GitHub:** [ProjectNobi/project-nobi](https://github.com/ProjectNobi/project-nobi)
+- **Discord:** [discord.gg/e6StezHM](https://discord.gg/e6StezHM)
+- **Telegram Bot:** [@ProjectNobiBot](https://t.me/ProjectNobiBot)
 
 ---
 

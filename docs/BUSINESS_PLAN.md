@@ -250,20 +250,27 @@ Validators earn dividends proportional to stake. With Nobi's user-revenue backin
 - [x] Reference Telegram bot (@ProjectNobiBot)
 - [x] Full documentation suite
 
-### Q2 2026 — Community Testnet
-- [ ] Bittensor Discord testnet channel launch
+### Q2 2026 — Community Testnet & Mainnet Prep
+- [x] Discord community launched (discord.gg/e6StezHM)
+- [x] Semantic memory search (sentence-transformers embeddings)
+- [x] Voice message support (STT + TTS)
+- [x] Multi-language (20 languages — auto-detected)
+- [x] Image understanding (vision models)
+- [x] Relationship graphs (entity extraction, BFS traversal)
+- [x] Proactive companion (birthday, follow-up, check-in, milestone)
+- [x] Group companion mode
+- [x] Web application (Next.js + FastAPI)
+- [x] Mobile app (Expo/React Native — iOS + Android)
+- [x] Auto-update system for miners/validators
+- [x] Anti-gaming (diversity penalties, length normalization)
 - [ ] 10+ external miners onboarded
 - [ ] 3+ external validators
 - [ ] Community feedback iteration (2 cycles)
-- [ ] Semantic memory search (embeddings)
-- [ ] Voice message support
-- [ ] Multi-language (5 languages)
+- [ ] Mainnet subnet registration
 
 ### Q3 2026 — Mainnet Launch
-- [ ] Mainnet subnet registration
-- [ ] Mobile app (iOS + Android, React Native)
-- [ ] Web app (app.projectnobi.ai)
-- [ ] 50+ miners, 10+ validators
+- [ ] Mainnet live with 50+ miners, 10+ validators
+- [ ] App store launch (iOS + Android)
 - [ ] 10,000 users
 - [ ] First subscription revenue
 

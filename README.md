@@ -29,11 +29,17 @@ Just press Start and talk. No setup, no commands. It remembers you.
 
 | Feature | ChatGPT | Siri | Project Nobi |
 |---------|---------|------|-------------|
-| Remembers you | ❌ Resets each session | Barely | ✅ Persistent memory |
-| Data ownership | Company owns it | Company owns it | User controls it¹ |
+| Remembers you | ❌ Resets each session | Barely | ✅ Semantic memory + relationship graphs |
+| Understands connections | ❌ | ❌ | ✅ Knows your sister lives in London |
+| Reaches out first | ❌ | ❌ | ✅ Birthday reminders, check-ins, follow-ups |
+| Voice messages | ❌ Text only | ✅ | ✅ STT + TTS |
+| Image understanding | ✅ (paid) | ❌ | ✅ Vision + memory extraction |
+| Group chats | ❌ | ❌ | ✅ Smart participation |
+| Data ownership | Company owns it | Company owns it | ✅ User controls it¹ |
 | Gets better over time | Quarterly updates | Rarely | ✅ Miners compete daily |
 | Affordable | $20/mo+ | Free (limited) | $4.99/mo target |
-| Single point of failure | Yes | Yes | ✅ No single entity controls it |
+| Languages | 30+ | 20+ | ✅ 20 (auto-detected) |
+| Single point of failure | Yes | Yes | ✅ Decentralized |
 
 ¹ *Memory is currently stored in plaintext on individual miner machines, with user-controlled deletion (`/forget`). Client-side encryption is a near-term roadmap item. Long-term, a **federated learning architecture** (McMahan et al., 2016 — arXiv:1602.05629) is planned where memories never leave your device at all — only model weight updates are shared. This is roadmap, not yet implemented. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) and [WHITEPAPER.md](docs/WHITEPAPER.md) Section 2.4 for details.*
 

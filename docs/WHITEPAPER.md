@@ -360,10 +360,11 @@ Replika (Kuyda, 2017) pioneered consumer AI companions, demonstrating market via
 | Phase | Timeline | Milestones |
 |-------|----------|------------|
 | Foundation | Q1 2026 ✅ | Protocol, miner, validator, memory, scoring, testnet, bot |
-| Community Testnet | Q2 2026 | External miners/validators, feedback, semantic memory |
-| Mainnet Launch | Q3 2026 | Subnet routing, web/mobile apps, first revenue |
-| Growth | Q4 2026 | SDK, tools, enterprise, 50K+ users |
-| Scale | 2027+ | 1M+ users, voice, multimodal, marketplace |
+| Intelligence & Memory | Q1 2026 ✅ | Semantic memory, relationship graphs, 20 languages, privacy (A+B+C) |
+| Advanced Features | Q1 2026 ✅ | Voice, vision, proactive companion, group mode, web/mobile apps, auto-update |
+| Community & Mainnet | Q2 2026 | External miners, community growth, mainnet registration, revenue model |
+| Growth | Q3-Q4 2026 | App store launch, 50K+ users, enterprise, partnerships |
+| Scale | 2027+ | 1M+ users, advanced personalization, marketplace |
 
 ---
 
