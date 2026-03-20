@@ -259,6 +259,91 @@ app.add_middleware(
 )
 
 
+# ─── Rate Limiting ────────────────────────────────────────────
+
+import time
+from collections import defaultdict
+
+class IPRateLimiter:
+    """IP-based rate limiter for API protection."""
+    
+    def __init__(self):
+        self._requests: dict[str, list[float]] = defaultdict(list)
+        self._blocked: dict[str, float] = {}  # IP → blocked until timestamp
+        
+        # Limits per endpoint category
+        self.LIMITS = {
+            "chat": {"max_requests": 30, "window_seconds": 60},     # 30 msgs/min
+            "memory": {"max_requests": 60, "window_seconds": 60},    # 60 reads/min
+            "general": {"max_requests": 120, "window_seconds": 60},  # 120 req/min
+            "auth": {"max_requests": 10, "window_seconds": 60},      # 10 auth/min
+        }
+        self.BLOCK_DURATION = 300  # 5 min block for repeat offenders
+        self._violations: dict[str, int] = defaultdict(int)
+    
+    def _clean_old(self, key: str, window: int):
+        now = time.time()
+        self._requests[key] = [t for t in self._requests[key] if now - t < window]
+    
+    def check(self, ip: str, category: str = "general") -> tuple[bool, str]:
+        now = time.time()
+        
+        # Check if IP is blocked
+        if ip in self._blocked and now < self._blocked[ip]:
+            remaining = int(self._blocked[ip] - now)
+            return False, f"Too many requests. Try again in {remaining}s."
+        elif ip in self._blocked:
+            del self._blocked[ip]
+        
+        limits = self.LIMITS.get(category, self.LIMITS["general"])
+        key = f"{ip}:{category}"
+        self._clean_old(key, limits["window_seconds"])
+        
+        if len(self._requests[key]) >= limits["max_requests"]:
+            self._violations[ip] += 1
+            if self._violations[ip] >= 3:
+                self._blocked[ip] = now + self.BLOCK_DURATION
+                logger.warning(f"[RateLimit] IP {ip} BLOCKED for {self.BLOCK_DURATION}s (violations: {self._violations[ip]})")
+            return False, f"Rate limit exceeded ({limits['max_requests']}/{limits['window_seconds']}s). Please slow down."
+        
+        self._requests[key].append(now)
+        return True, ""
+
+rate_limiter = IPRateLimiter()
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    """Global rate limiting middleware."""
+    # Skip health check and static paths
+    path = request.url.path
+    if path in ("/api/health", "/api/tiers", "/api/languages", "/api/faq", "/docs", "/openapi.json"):
+        return await call_next(request)
+    
+    ip = request.client.host if request.client else "unknown"
+    
+    # Categorize the request
+    if "/api/chat" in path:
+        category = "chat"
+    elif "/api/memories" in path or "/api/settings" in path:
+        category = "memory"
+    elif "/api/auth" in path:
+        category = "auth"
+    else:
+        category = "general"
+    
+    allowed, reason = rate_limiter.check(ip, category)
+    if not allowed:
+        from starlette.responses import JSONResponse
+        return JSONResponse(
+            status_code=429,
+            content={"detail": reason, "error": "rate_limit_exceeded"},
+            headers={"Retry-After": "60"}
+        )
+    
+    return await call_next(request)
+
+
 async def startup():
     global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler, api_key_mgr, personality_tuner, feedback_manager, support_handler
 
