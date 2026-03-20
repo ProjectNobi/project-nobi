@@ -44,6 +44,7 @@ from nobi.i18n.prompts import build_multilingual_system_prompt
 from nobi.i18n.languages import SUPPORTED_LANGUAGES, get_language_name
 from nobi.proactive import ProactiveEngine
 from nobi.proactive.scheduler import ProactiveScheduler
+from nobi.group import GroupHandler
 import io
 
 try:
@@ -278,6 +279,10 @@ class CompanionBot:
             if SUBNET_ROUTING and bt is None:
                 logger.warning("SUBNET_ROUTING=true but bittensor not installed")
             logger.info("Subnet routing disabled — using direct API only")
+
+        # Group chat handler
+        self.group_handler = GroupHandler(self.memory, companion=self)
+        self.bot_username = ""  # Set after bot starts
 
         # Proactive companion system
         self.proactive_engine = ProactiveEngine(self.memory, self.memory.graph)
@@ -935,10 +940,115 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text("I'm glad 😊 Your memories are safe with me. 💙")
 
 
+async def cmd_nori(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    /nori command — explicit invocation in groups or DMs.
+    Usage: /nori <message>
+    """
+    if not update.message:
+        return
+
+    # Get the text after /nori
+    message = " ".join(context.args) if context.args else ""
+    if not message:
+        await update.message.reply_text(
+            "Just say /nori followed by your message! Like:\n"
+            "/nori what's the weather like today?"
+        )
+        return
+
+    user_id = companion._user_id(update)
+    chat_type = update.effective_chat.type
+
+    # Rate limit
+    if not companion.rate_limiter.check(user_id):
+        await update.message.reply_text("Easy there! 😄 Give me a sec to catch up.")
+        return
+
+    await update.message.chat.send_action(ChatAction.TYPING)
+
+    if chat_type in ("group", "supergroup"):
+        # Group mode: use group handler
+        group_id = str(update.effective_chat.id)
+        user_name = update.effective_user.first_name or "User"
+
+        companion.group_handler.save_group_context(
+            group_id, message, user_name, user_id
+        )
+
+        chat_context = companion.group_handler.get_group_context(group_id, limit=10)
+        response = await companion.group_handler.generate_group_response(
+            user_id, message, chat_context, group_id, user_name=user_name
+        )
+    else:
+        # DM mode: use normal generate
+        response = await companion.generate(user_id, message)
+
+    response = _clean_response(response)
+    await _send_response(update, response)
+
+    logger.info(
+        f"[/nori] User {update.effective_user.id} ({chat_type}): "
+        f"'{message[:50]}' → '{response[:50]}'"
+    )
+
+
+def _is_group_chat(update: Update) -> bool:
+    """Check if the message is from a group chat."""
+    return update.effective_chat.type in ("group", "supergroup")
+
+
+def _is_bot_mentioned(update: Update, message_text: str) -> bool:
+    """Check if the bot is @mentioned in the message."""
+    if not companion.bot_username:
+        return False
+    return f"@{companion.bot_username.lower()}" in message_text.lower()
+
+
+def _is_reply_to_bot(update: Update) -> bool:
+    """Check if the message is a reply to one of the bot's messages."""
+    if not update.message or not update.message.reply_to_message:
+        return False
+    reply_user = update.message.reply_to_message.from_user
+    if reply_user and reply_user.is_bot:
+        # Check if it's OUR bot
+        if companion.bot_username:
+            return reply_user.username and reply_user.username.lower() == companion.bot_username.lower()
+        return True  # If we don't know our username yet, assume it's us
+    return False
+
+
+def _clean_response(response: str) -> str:
+    """Strip markdown and clean up response for Telegram."""
+    response = response.replace("**", "").replace("__", "").replace("```", "").replace("`", "")
+    response = response.replace("- ", "• ")
+    if len(response) > 4000:
+        response = response[:4000] + "..."
+    return response
+
+
+async def _send_response(update: Update, response: str):
+    """Send a response with fallback for formatting errors."""
+    try:
+        await update.message.reply_text(response)
+    except Exception as e:
+        logger.error(f"Send error: {e}")
+        try:
+            clean = response.replace("*", "").replace("_", "").replace("`", "").replace("[", "").replace("]", "")
+            await update.message.reply_text(clean)
+        except Exception:
+            error_msgs = [
+                "Oops, something went sideways! Try again? 😊",
+                "My brain glitched for a second 🤖 One more time?",
+                "That didn't quite work — mind saying that again?",
+            ]
+            await update.message.reply_text(random.choice(error_msgs))
+
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    The main handler — just respond to whatever the user says.
-    No commands, no complexity. Pure conversation.
+    The main handler — responds to text messages.
+    Detects group vs private chat and routes accordingly.
     """
     if not update.message or not update.message.text:
         return
@@ -948,6 +1058,59 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user_id = companion._user_id(update)
+
+    # ─── Group Chat Handling ─────────────────────────────────
+    if _is_group_chat(update):
+        group_id = str(update.effective_chat.id)
+        user_name = update.effective_user.first_name or "User"
+
+        # Always save to group context (track conversation flow)
+        companion.group_handler.save_group_context(
+            group_id, message, user_name, user_id
+        )
+
+        # Decide whether to respond
+        is_mentioned = _is_bot_mentioned(update, message)
+        is_reply = _is_reply_to_bot(update)
+
+        should_respond = await companion.group_handler.should_respond(
+            message=message,
+            is_mentioned=is_mentioned,
+            is_reply_to_bot=is_reply,
+            chat_id=group_id,
+        )
+
+        if not should_respond:
+            return  # Stay silent
+
+        # Rate limit
+        if not companion.rate_limiter.check(user_id):
+            await update.message.reply_text("Easy there! 😄 Give me a sec.")
+            return
+
+        await update.message.chat.send_action(ChatAction.TYPING)
+
+        # Generate group response
+        chat_context = companion.group_handler.get_group_context(group_id, limit=10)
+        response = await companion.group_handler.generate_group_response(
+            user_id, message, chat_context, group_id, user_name=user_name
+        )
+
+        response = _clean_response(response)
+        await _send_response(update, response)
+
+        # Save Nori's response to group context too
+        companion.group_handler.save_group_context(
+            group_id, response, "Nori", "bot"
+        )
+
+        logger.info(
+            f"[Group {group_id}] {user_name}: "
+            f"'{message[:50]}' → '{response[:50]}'"
+        )
+        return
+
+    # ─── Private Chat Handling (existing logic) ──────────────
 
     # Rate limit check
     if not companion.rate_limiter.check(user_id):
@@ -965,31 +1128,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Generate response
     response = await companion.generate(user_id, message)
 
-    # Strip any markdown that leaked through from LLM
-    response = response.replace("**", "").replace("__", "").replace("```", "").replace("`", "")
-    # Clean up bullet lists into natural text
-    response = response.replace("- ", "• ")
-
-    # Telegram message limit is 4096 chars
-    if len(response) > 4000:
-        response = response[:4000] + "..."
-
-    # Send response (plain text — no markdown parsing to avoid format errors)
-    try:
-        await update.message.reply_text(response)
-    except Exception as e:
-        logger.error(f"Send error: {e}")
-        try:
-            # Strip everything that could cause Telegram parse issues
-            clean = response.replace("*", "").replace("_", "").replace("`", "").replace("[", "").replace("]", "")
-            await update.message.reply_text(clean)
-        except Exception:
-            error_msgs = [
-                "Oops, something went sideways! Try again? 😊",
-                "My brain glitched for a second 🤖 One more time?",
-                "That didn't quite work — mind saying that again?",
-            ]
-            await update.message.reply_text(random.choice(error_msgs))
+    response = _clean_response(response)
+    await _send_response(update, response)
 
     logger.info(
         f"User {update.effective_user.id}: "
@@ -1265,6 +1405,7 @@ def main():
     app.add_handler(CommandHandler("import", cmd_import))
     app.add_handler(CommandHandler("language", cmd_language))
     app.add_handler(CommandHandler("proactive", cmd_proactive))
+    app.add_handler(CommandHandler("nori", cmd_nori))
 
     # Buttons
     app.add_handler(CallbackQueryHandler(handle_callback))
@@ -1296,7 +1437,15 @@ def main():
             logger.error(f"[Proactive] Send to {user_id} failed: {e}")
 
     async def post_init(application):
-        """Start proactive scheduler after bot is initialized."""
+        """Start proactive scheduler and detect bot username after init."""
+        # Detect bot username for @mention matching in groups
+        try:
+            me = await application.bot.get_me()
+            companion.bot_username = me.username or ""
+            logger.info(f"Bot username: @{companion.bot_username}")
+        except Exception as e:
+            logger.warning(f"Failed to get bot username: {e}")
+
         companion.proactive_scheduler = ProactiveScheduler(
             companion.proactive_engine, _proactive_send
         )

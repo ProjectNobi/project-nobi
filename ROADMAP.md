@@ -80,6 +80,7 @@
 - [x] Relationship graphs (entity extraction, BFS traversal, natural language context)
 - [x] Proactive companion (birthday reminders, follow-ups, check-ins, milestones, encouragement)
 - [x] Image understanding wired into Telegram bot (vision → response → memory extraction)
+- [x] Group companion mode (smart respond logic, per-group memory, /nori command)
 - [ ] Deploy landing page to projectnobi.ai
 - [ ] Invite external miners to testnet (Bittensor Discord, X)
 - [ ] Gather community feedback on Nori UX
