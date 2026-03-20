@@ -77,6 +77,13 @@ class ApiClient {
     });
   }
 
+  async importMemories(userId: string, data: Record<string, unknown>): Promise<{ success: boolean; imported: number }> {
+    return this.request("/api/memories/import", {
+      method: "POST",
+      body: JSON.stringify({ user_id: userId, data }),
+    });
+  }
+
   async forgetAll(userId: string): Promise<void> {
     await this.request(`/api/memories/all?user_id=${userId}`, {
       method: "DELETE",

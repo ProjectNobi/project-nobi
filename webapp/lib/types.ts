@@ -20,6 +20,8 @@ export interface UserSettings {
   voice_enabled: boolean;
   theme: "light" | "dark" | "system";
   display_name: string;
+  proactive_enabled: boolean;
+  companion_name: string;
 }
 
 export interface ChatResponse {

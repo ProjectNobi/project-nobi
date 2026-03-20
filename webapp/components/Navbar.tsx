@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/memories", label: "Memories", icon: "🧠" },
   { href: "/settings", label: "Settings", icon: "⚙️" },
   { href: "/support", label: "Support", icon: "🆘" },
+  { href: "/help", label: "Help", icon: "❓" },
 ];
 
 export default function Navbar() {

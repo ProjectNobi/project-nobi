@@ -16,6 +16,8 @@ export const DEFAULT_SETTINGS = {
   voice_enabled: false,
   theme: "system" as const,
   display_name: "",
+  proactive_enabled: false,
+  companion_name: "",
 };
 
 export const MEMORY_TYPE_LABELS: Record<string, string> = {

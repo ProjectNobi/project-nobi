@@ -128,6 +128,8 @@ class SettingsRequest(BaseModel):
     voice_enabled: Optional[bool] = None
     theme: Optional[str] = None
     display_name: Optional[str] = None
+    proactive_enabled: Optional[bool] = None
+    companion_name: Optional[str] = None
 
 
 # ─── App ─────────────────────────────────────────────────────
@@ -399,6 +401,21 @@ async def export_memories(request: Request):
     except Exception as e:
         logger.error(f"Export error: {e}")
         raise HTTPException(status_code=500, detail="Failed to export memories")
+
+
+@app.post("/api/memories/import")
+async def import_memories(request: Request):
+    body = await request.json()
+    uid = f"web_{body.get('user_id', '')}"
+    data = body.get("data", {})
+    imported = 0
+    for mem in data.get("memories", []):
+        try:
+            memory.store(uid, mem.get("content", ""), memory_type=mem.get("type", "fact"), importance=mem.get("importance", 0.5))
+            imported += 1
+        except Exception:
+            pass
+    return {"success": True, "imported": imported}
 
 
 @app.delete("/api/memories/all")

@@ -110,6 +110,58 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          {/* Proactive Check-ins */}
+          <div className="card p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  🔔 Proactive Check-ins
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Nori will reach out with birthday reminders, follow-ups, and check-ins
+                </p>
+              </div>
+              <button
+                onClick={() =>
+                  updateSettings({ proactive_enabled: !settings.proactive_enabled })
+                }
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settings.proactive_enabled
+                    ? "bg-nori-600"
+                    : "bg-gray-300 dark:bg-gray-600"
+                }`}
+                role="switch"
+                aria-checked={settings.proactive_enabled}
+                aria-label="Toggle proactive check-ins"
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    settings.proactive_enabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Companion Name */}
+          <div className="card p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+              🤖 Companion Name
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Give your companion a custom name
+            </p>
+            <input
+              type="text"
+              value={settings.companion_name}
+              onChange={(e) =>
+                updateSettings({ companion_name: e.target.value })
+              }
+              placeholder="Nori"
+              className="input-field"
+            />
+          </div>
+
           {/* Display Name */}
           <div className="card p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
