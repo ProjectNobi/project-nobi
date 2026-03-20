@@ -1099,8 +1099,14 @@ def _clean_response(response: str) -> str:
     return response
 
 
+# Track users who want voice replies
+_voice_enabled_users: set = set()
+
 async def _send_response(update: Update, response: str):
-    """Send a response with fallback for formatting errors."""
+    """Send a response with optional voice reply."""
+    user_id = str(update.effective_user.id)
+    
+    # Send text first
     try:
         await update.message.reply_text(response)
     except Exception as e:
@@ -1115,6 +1121,40 @@ async def _send_response(update: Update, response: str):
                 "That didn't quite work — mind saying that again?",
             ]
             await update.message.reply_text(random.choice(error_msgs))
+            return
+    
+    # Send voice reply if user has it enabled
+    if user_id in _voice_enabled_users and len(response) < 1000:
+        try:
+            from nobi.voice.tts import generate_speech
+            user_lang = "en"
+            try:
+                user_lang = companion.lang_detector.get_user_language(f"tg_{user_id}") or "en"
+            except Exception:
+                pass
+            audio = await generate_speech(response, language=user_lang)
+            if audio and len(audio) > 0:
+                import io
+                await update.message.reply_voice(voice=io.BytesIO(audio))
+        except Exception as e:
+            logger.debug(f"Voice reply skipped: {e}")
+
+
+async def cmd_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Toggle voice replies on/off."""
+    user_id = str(update.effective_user.id)
+    if user_id in _voice_enabled_users:
+        _voice_enabled_users.discard(user_id)
+        await update.message.reply_text("🔇 Voice replies OFF. I'll reply with text only.\n\nUse /voice to turn it back on.")
+    else:
+        _voice_enabled_users.add(user_id)
+        # Install gTTS if needed
+        try:
+            from gtts import gTTS
+        except ImportError:
+            import subprocess
+            subprocess.run(["pip", "install", "--break-system-packages", "-q", "gTTS"], capture_output=True)
+        await update.message.reply_text("🔊 Voice replies ON! I'll send you a voice message with every reply.\n\nUse /voice again to turn it off.")
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1507,6 +1547,7 @@ def main():
     app.add_handler(CommandHandler("subscribe", cmd_subscribe))
     app.add_handler(CommandHandler("plan", cmd_plan))
     app.add_handler(CommandHandler("nori", cmd_nori))
+    app.add_handler(CommandHandler("voice", cmd_voice))
 
     # Buttons
     app.add_handler(CallbackQueryHandler(handle_callback))
