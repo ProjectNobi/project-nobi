@@ -120,19 +120,7 @@ class SettingsRequest(BaseModel):
 
 # ─── App ─────────────────────────────────────────────────────
 
-app = FastAPI(
-    title="Project Nobi API",
-    description="Backend API for the Nobi AI companion web application",
-    version="1.0.0",
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+from contextlib import asynccontextmanager
 
 # ─── Global State ────────────────────────────────────────────
 
@@ -148,7 +136,30 @@ api_key_mgr: Optional[ApiKeyManager] = None
 personality_tuner: Optional[PersonalityTuner] = None
 
 
-@app.on_event("startup")
+@asynccontextmanager
+async def lifespan(app):
+    """Initialize resources on startup, clean up on shutdown."""
+    await startup()
+    yield
+    # Shutdown cleanup (if needed in future)
+
+
+app = FastAPI(
+    title="Project Nobi API",
+    description="Backend API for the Nobi AI companion web application",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 async def startup():
     global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler, api_key_mgr, personality_tuner
 

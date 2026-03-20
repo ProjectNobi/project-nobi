@@ -45,7 +45,7 @@ class ScoringTuner:
 
     def _init_db(self):
         """Initialize the scoring history database."""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS scores (
@@ -84,7 +84,7 @@ class ScoringTuner:
         round_id: str = None,
     ):
         """Record a score for a miner in a given round."""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             conn.execute(
                 """INSERT INTO scores (uid, round_type, quality, memory, reliability, final, timestamp, round_id)
@@ -97,7 +97,7 @@ class ScoringTuner:
 
     def record_scores_batch(self, records: List[Dict]):
         """Record multiple scores in a single transaction."""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             conn.executemany(
                 """INSERT INTO scores (uid, round_type, quality, memory, reliability, final, timestamp, round_id)
@@ -128,7 +128,7 @@ class ScoringTuner:
             dict with keys: count, mean, std, min, max, median, p25, p75
             for each score component (quality, memory, reliability, final).
         """
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             rows = conn.execute(
                 """SELECT quality, memory, reliability, final FROM scores
@@ -172,7 +172,7 @@ class ScoringTuner:
             - dominant_component: str or None — which component dominates variance
             - recommendation: str — human-readable suggestion
         """
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             # Get per-miner average final scores
             rows = conn.execute(
@@ -249,7 +249,7 @@ class ScoringTuner:
         Returns:
             dict with suggested weights per round_type and reasoning.
         """
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             rows = conn.execute(
                 """SELECT uid, round_type, AVG(quality), AVG(memory), AVG(reliability)
@@ -323,7 +323,7 @@ class ScoringTuner:
             list of dicts with uid, avg_final, avg_quality, avg_memory,
             avg_reliability, round_count.
         """
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             rows = conn.execute(
                 """SELECT uid, AVG(final) as avg_final, AVG(quality) as avg_q,
@@ -365,7 +365,7 @@ class ScoringTuner:
             list of dicts with type, uid(s), details, severity.
         """
         alerts = []
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             # 1. Score spikes per miner
             miners = conn.execute(
@@ -450,7 +450,7 @@ class ScoringTuner:
 
     def get_miner_history(self, uid: int, limit: int = 50) -> list:
         """Get score history for a specific miner."""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             rows = conn.execute(
                 """SELECT round_type, quality, memory, reliability, final, timestamp
@@ -475,7 +475,7 @@ class ScoringTuner:
 
     def get_round_scores(self, round_id: str) -> list:
         """Get all scores from a specific round."""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             rows = conn.execute(
                 """SELECT uid, round_type, quality, memory, reliability, final
@@ -495,7 +495,7 @@ class ScoringTuner:
     def cleanup_old_data(self, days: int = 30):
         """Remove score data older than N days."""
         cutoff = time.time() - (days * 86400)
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         try:
             conn.execute("DELETE FROM scores WHERE timestamp < ?", (cutoff,))
             conn.commit()

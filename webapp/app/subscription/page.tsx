@@ -32,15 +32,15 @@ interface UsageData {
 
 const TIER_ORDER = ["free", "plus", "pro"];
 
-const FEATURES = [
-  { key: "messages_per_day", label: "Messages / day", format: (v: number) => v === -1 ? "Unlimited" : `${v}` },
-  { key: "memory_slots", label: "Memory slots", format: (v: number) => v === -1 ? "Unlimited" : `${v}` },
-  { key: "voice_per_day", label: "Voice messages / day", format: (v: number) => v === -1 ? "Unlimited" : `${v}` },
-  { key: "image_per_day", label: "Image analysis / day", format: (v: number) => v === -1 ? "Unlimited" : `${v}` },
-  { key: "proactive_messages", label: "Proactive messages", format: (v: boolean) => v ? "✅" : "❌" },
-  { key: "priority_response", label: "Priority response", format: (v: boolean) => v ? "✅" : "❌" },
-  { key: "export_memories", label: "Export memories", format: (v: boolean) => v ? "✅" : "❌" },
-  { key: "group_mode", label: "Group mode", format: (v: boolean) => v ? "✅" : "❌" },
+const FEATURES: { key: string; label: string; format: (v: number | boolean) => string }[] = [
+  { key: "messages_per_day", label: "Messages / day", format: (v) => v === -1 ? "Unlimited" : `${v}` },
+  { key: "memory_slots", label: "Memory slots", format: (v) => v === -1 ? "Unlimited" : `${v}` },
+  { key: "voice_per_day", label: "Voice messages / day", format: (v) => v === -1 ? "Unlimited" : `${v}` },
+  { key: "image_per_day", label: "Image analysis / day", format: (v) => v === -1 ? "Unlimited" : `${v}` },
+  { key: "proactive_messages", label: "Proactive messages", format: (v) => v ? "✅" : "❌" },
+  { key: "priority_response", label: "Priority response", format: (v) => v ? "✅" : "❌" },
+  { key: "export_memories", label: "Export memories", format: (v) => v ? "✅" : "❌" },
+  { key: "group_mode", label: "Group mode", format: (v) => v ? "✅" : "❌" },
 ];
 
 export default function SubscriptionPage() {

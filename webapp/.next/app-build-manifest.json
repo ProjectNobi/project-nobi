@@ -24,14 +24,6 @@
       "static/chunks/263-983f54658acf81ca.js",
       "static/chunks/app/chat/page-ccf33c2923eb7adb.js"
     ],
-    "/memories/page": [
-      "static/chunks/webpack-42d04204edd1732a.js",
-      "static/chunks/fd9d1056-faca5e55fb7642b2.js",
-      "static/chunks/117-5949527e77b12dba.js",
-      "static/chunks/main-app-ef92bbc1a98eeba9.js",
-      "static/chunks/448-e08c7bd62b2dc12c.js",
-      "static/chunks/app/memories/page-dccdc50637373396.js"
-    ],
     "/onboarding/page": [
       "static/chunks/webpack-42d04204edd1732a.js",
       "static/chunks/fd9d1056-faca5e55fb7642b2.js",
@@ -46,6 +38,21 @@
       "static/chunks/main-app-ef92bbc1a98eeba9.js",
       "static/chunks/448-e08c7bd62b2dc12c.js",
       "static/chunks/app/page-06dbb5985dc19029.js"
+    ],
+    "/subscription/page": [
+      "static/chunks/webpack-42d04204edd1732a.js",
+      "static/chunks/fd9d1056-faca5e55fb7642b2.js",
+      "static/chunks/117-5949527e77b12dba.js",
+      "static/chunks/main-app-ef92bbc1a98eeba9.js",
+      "static/chunks/app/subscription/page-acdf6fbed43eabda.js"
+    ],
+    "/memories/page": [
+      "static/chunks/webpack-42d04204edd1732a.js",
+      "static/chunks/fd9d1056-faca5e55fb7642b2.js",
+      "static/chunks/117-5949527e77b12dba.js",
+      "static/chunks/main-app-ef92bbc1a98eeba9.js",
+      "static/chunks/448-e08c7bd62b2dc12c.js",
+      "static/chunks/app/memories/page-dccdc50637373396.js"
     ],
     "/settings/page": [
       "static/chunks/webpack-42d04204edd1732a.js",

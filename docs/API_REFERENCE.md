@@ -4,7 +4,7 @@
 
 The Nobi Public API lets third-party developers integrate with Nori, the AI companion, including chat, memory management, relationship graphs, and voice features.
 
-**Base URL:** `https://api.nobi.ai` (or your self-hosted instance)
+**Base URL:** `https://api.projectnobi.ai` (or your self-hosted instance)
 
 **API Version:** v1
 
@@ -93,7 +93,7 @@ Chat with Nori. Uses the authenticated user's memory context for personalized re
 
 **curl:**
 ```bash
-curl -X POST https://api.nobi.ai/v1/api/chat \
+curl -X POST https://api.projectnobi.ai/v1/api/chat \
   -H "Authorization: Bearer nobi_your_key" \
   -H "Content-Type: application/json" \
   -d '{"message": "Hello Nori!"}'
@@ -104,7 +104,7 @@ curl -X POST https://api.nobi.ai/v1/api/chat \
 import requests
 
 resp = requests.post(
-    "https://api.nobi.ai/v1/api/chat",
+    "https://api.projectnobi.ai/v1/api/chat",
     headers={"Authorization": "Bearer nobi_your_key"},
     json={"message": "Hello Nori!"}
 )
@@ -113,7 +113,7 @@ print(resp.json()["response"])
 
 **JavaScript:**
 ```javascript
-const resp = await fetch("https://api.nobi.ai/v1/api/chat", {
+const resp = await fetch("https://api.projectnobi.ai/v1/api/chat", {
   method: "POST",
   headers: {
     "Authorization": "Bearer nobi_your_key",
@@ -159,7 +159,7 @@ List memories for the authenticated user.
 
 **curl:**
 ```bash
-curl "https://api.nobi.ai/v1/api/memories?limit=10" \
+curl "https://api.projectnobi.ai/v1/api/memories?limit=10" \
   -H "Authorization: Bearer nobi_your_key"
 ```
 
@@ -249,7 +249,7 @@ Get natural language graph context relevant to a query.
 
 **curl:**
 ```bash
-curl "https://api.nobi.ai/v1/api/graph/context?query=Alice" \
+curl "https://api.projectnobi.ai/v1/api/graph/context?query=Alice" \
   -H "Authorization: Bearer nobi_your_key"
 ```
 
@@ -404,7 +404,7 @@ Get usage statistics for the authenticating API key.
 import requests
 
 API_KEY = "nobi_your_key_here"
-BASE = "https://api.nobi.ai"
+BASE = "https://api.projectnobi.ai"
 HEADERS = {"Authorization": f"Bearer {API_KEY}"}
 
 # Chat
@@ -432,7 +432,7 @@ print(f"Requests today: {usage['usage']['requests_today']}")
 
 ```javascript
 const API_KEY = "nobi_your_key_here";
-const BASE = "https://api.nobi.ai";
+const BASE = "https://api.projectnobi.ai";
 const headers = {
   "Authorization": `Bearer ${API_KEY}`,
   "Content-Type": "application/json",
@@ -459,22 +459,22 @@ console.log(`Found ${memories.count} memories`);
 export NOBI_KEY="nobi_your_key_here"
 
 # Chat
-curl -X POST https://api.nobi.ai/v1/api/chat \
+curl -X POST https://api.projectnobi.ai/v1/api/chat \
   -H "Authorization: Bearer $NOBI_KEY" \
   -H "Content-Type: application/json" \
   -d '{"message": "Hello!"}'
 
 # List memories
-curl https://api.nobi.ai/v1/api/memories \
+curl https://api.projectnobi.ai/v1/api/memories \
   -H "Authorization: Bearer $NOBI_KEY"
 
 # Create a new API key
-curl -X POST https://api.nobi.ai/v1/api/keys \
+curl -X POST https://api.projectnobi.ai/v1/api/keys \
   -H "Authorization: Bearer $NOBI_KEY" \
   -H "Content-Type: application/json" \
   -d '{"name": "test-key"}'
 
 # Check usage
-curl https://api.nobi.ai/v1/api/keys/usage \
+curl https://api.projectnobi.ai/v1/api/keys/usage \
   -H "Authorization: Bearer $NOBI_KEY"
 ```

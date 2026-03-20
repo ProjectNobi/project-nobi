@@ -73,8 +73,10 @@ class UserAdapterManager:
     @property
     def _conn(self) -> sqlite3.Connection:
         if not hasattr(self._local, "conn") or self._local.conn is None:
-            self._local.conn = sqlite3.connect(self.db_path)
+            self._local.conn = sqlite3.connect(self.db_path, timeout=30)
             self._local.conn.row_factory = sqlite3.Row
+            self._local.conn.execute("PRAGMA journal_mode=WAL")
+            self._local.conn.execute("PRAGMA busy_timeout=10000")
         return self._local.conn
 
     def _ensure_schema(self):

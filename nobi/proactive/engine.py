@@ -158,7 +158,7 @@ class ProactiveEngine:
     def _conn(self) -> sqlite3.Connection:
         """Thread-local SQLite connection (reuses memory manager's DB)."""
         if not hasattr(self._local, "conn") or self._local.conn is None:
-            self._local.conn = sqlite3.connect(self.memory.db_path)
+            self._local.conn = sqlite3.connect(self.memory.db_path, timeout=30)
             self._local.conn.row_factory = sqlite3.Row
             self._local.conn.execute("PRAGMA journal_mode=WAL")
         return self._local.conn

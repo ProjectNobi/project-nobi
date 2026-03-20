@@ -65,7 +65,9 @@ class PersonalityTuner:
 
     def __init__(self, db_path: str = ":memory:"):
         self.db_path = db_path
-        self._conn = sqlite3.connect(db_path)
+        self._conn = sqlite3.connect(db_path, timeout=30)
+        self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn.execute("PRAGMA busy_timeout=10000")
         self._conn.row_factory = sqlite3.Row
         self._init_db()
 
