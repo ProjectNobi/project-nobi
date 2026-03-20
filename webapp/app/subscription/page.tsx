@@ -148,7 +148,7 @@ export default function SubscriptionPage() {
 
               <ul className="space-y-1.5 mb-5 text-sm">
                 {FEATURES.map((f) => {
-                  const val = (tier as Record<string, number | boolean>)[f.key];
+                  const val = (tier as unknown as Record<string, number | boolean>)[f.key];
                   const display = formatValue(val);
                   const isEnabled = display !== "—";
                   return (
