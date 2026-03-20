@@ -21,13 +21,13 @@ TIERS = {
     "free": {
         "name": "Free",
         "price": 0,
-        "price_label": "Free (Testnet)",
-        "messages_per_day": -1,  # Unlimited during testnet
-        "memory_slots": -1,     # Unlimited during testnet
-        "voice_per_day": -1,    # Unlimited during testnet
-        "image_per_day": -1,    # Unlimited during testnet
-        "proactive_messages": True,   # All features free during testnet
-        "priority_response": True,
+        "price_label": "Free",
+        "messages_per_day": 500,
+        "memory_slots": 500,
+        "voice_per_day": 50,
+        "image_per_day": 30,
+        "proactive_messages": True,
+        "priority_response": False,
         "export_memories": True,
         "group_mode": True,
     },

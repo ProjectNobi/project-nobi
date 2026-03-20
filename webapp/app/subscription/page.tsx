@@ -170,10 +170,6 @@ export default function SubscriptionPage() {
         Unlock more of your AI companion
       </p>
 
-      <div style={{ background: "linear-gradient(135deg, #6c63ff22, #a855f722)", border: "1px solid #6c63ff44", padding: "1rem 1.5rem", borderRadius: 12, marginBottom: "2rem", textAlign: "center" }}>
-        🎉 <strong>Testnet Phase — Everything is FREE!</strong><br/>
-        <span style={{ color: "#888", fontSize: "0.9rem" }}>All features unlocked. Unlimited messages, voice, images, and more. Enjoy!</span>
-      </div>
 
       {successParam && (
         <div style={{ background: "#d4edda", color: "#155724", padding: "1rem", borderRadius: 8, marginBottom: "1rem", textAlign: "center" }}>
