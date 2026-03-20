@@ -42,6 +42,8 @@ from nobi.protocol import CompanionRequest
 from nobi.i18n import detect_language, LanguageDetector
 from nobi.i18n.prompts import build_multilingual_system_prompt
 from nobi.i18n.languages import SUPPORTED_LANGUAGES, get_language_name
+from nobi.proactive import ProactiveEngine
+from nobi.proactive.scheduler import ProactiveScheduler
 import io
 
 try:
@@ -276,6 +278,10 @@ class CompanionBot:
             if SUBNET_ROUTING and bt is None:
                 logger.warning("SUBNET_ROUTING=true but bittensor not installed")
             logger.info("Subnet routing disabled — using direct API only")
+
+        # Proactive companion system
+        self.proactive_engine = ProactiveEngine(self.memory, self.memory.graph)
+        self.proactive_scheduler: Optional[ProactiveScheduler] = None
 
         # Set up LLM client (Chutes → OpenRouter fallback)
         if CHUTES_KEY and OpenAI:
@@ -830,6 +836,42 @@ async def cmd_import(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Something went wrong with the import. Try again in a moment!")
 
 
+async def cmd_proactive(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Toggle proactive messages: /proactive on|off"""
+    user_id = companion._user_id(update)
+    args = context.args
+
+    if not args:
+        # Show current status
+        enabled = companion.proactive_engine.is_opted_in(user_id)
+        status = "ON ✅" if enabled else "OFF ❌"
+        await update.message.reply_text(
+            f"🔔 Proactive messages: {status}\n\n"
+            "When ON, I'll occasionally reach out — birthday wishes, "
+            "check-ins, follow-ups on things you mentioned.\n\n"
+            "Usage: /proactive on  or  /proactive off"
+        )
+        return
+
+    choice = args[0].lower().strip()
+    if choice in ("on", "yes", "true", "1", "enable"):
+        companion.proactive_engine.set_opted_in(user_id, True)
+        await update.message.reply_text(
+            "🔔 Proactive messages: ON ✅\n"
+            "I'll check in on you from time to time! 😊"
+        )
+    elif choice in ("off", "no", "false", "0", "disable"):
+        companion.proactive_engine.set_opted_in(user_id, False)
+        await update.message.reply_text(
+            "🔕 Proactive messages: OFF ❌\n"
+            "No worries — I'll only respond when you message me."
+        )
+    else:
+        await update.message.reply_text(
+            "Usage: /proactive on  or  /proactive off"
+        )
+
+
 async def cmd_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Set preferred language manually: /language fr"""
     user_id = companion._user_id(update)
@@ -1112,6 +1154,7 @@ def main():
     app.add_handler(CommandHandler("export", cmd_export))
     app.add_handler(CommandHandler("import", cmd_import))
     app.add_handler(CommandHandler("language", cmd_language))
+    app.add_handler(CommandHandler("proactive", cmd_proactive))
 
     # Buttons
     app.add_handler(CallbackQueryHandler(handle_callback))
@@ -1124,6 +1167,37 @@ def main():
 
     # Global error handler
     app.add_error_handler(error_handler)
+
+    # ── Proactive scheduler lifecycle ──
+    PROACTIVE_INTERVAL = int(os.environ.get("PROACTIVE_INTERVAL", "3600"))
+
+    async def _proactive_send(user_id: str, message: str):
+        """Send a proactive message via Telegram."""
+        # user_id format: "tg_<telegram_id>"
+        if not user_id.startswith("tg_"):
+            return
+        try:
+            tg_id = int(user_id[3:])
+            await app.bot.send_message(chat_id=tg_id, text=message)
+        except Exception as e:
+            logger.error(f"[Proactive] Send to {user_id} failed: {e}")
+
+    async def post_init(application):
+        """Start proactive scheduler after bot is initialized."""
+        companion.proactive_scheduler = ProactiveScheduler(
+            companion.proactive_engine, _proactive_send
+        )
+        await companion.proactive_scheduler.start(interval_seconds=PROACTIVE_INTERVAL)
+        logger.info(f"[Proactive] Scheduler started (interval={PROACTIVE_INTERVAL}s)")
+
+    async def post_shutdown(application):
+        """Stop proactive scheduler on shutdown."""
+        if companion.proactive_scheduler:
+            await companion.proactive_scheduler.stop()
+            logger.info("[Proactive] Scheduler stopped")
+
+    app.post_init = post_init
+    app.post_shutdown = post_shutdown
 
     logger.info("✅ Bot ready! Listening for messages...")
     app.run_polling(
