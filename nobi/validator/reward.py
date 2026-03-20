@@ -26,6 +26,29 @@ try:
 except ImportError:
     _SEMANTIC_AVAILABLE = False
 
+try:
+    from nobi.validator.tuning import (
+        ScoringTuner,
+        compute_diversity_penalties,
+        normalize_length_score,
+        score_confidence_calibration,
+        compute_entropy,
+    )
+    _TUNING_AVAILABLE = True
+except ImportError:
+    _TUNING_AVAILABLE = False
+
+# Global tuner instance (lazy init)
+_tuner_instance = None
+
+
+def _get_tuner() -> "ScoringTuner":
+    """Get or create the global ScoringTuner instance."""
+    global _tuner_instance
+    if _tuner_instance is None and _TUNING_AVAILABLE:
+        _tuner_instance = ScoringTuner()
+    return _tuner_instance
+
 
 JUDGE_PROMPT = """You are an AI response quality judge. Rate the following AI companion response on a scale of 0.0 to 1.0.
 
@@ -78,6 +101,11 @@ def reward(
                  0.25 * memory_integration_score +
                  0.15 * memory_recall_score +
                  0.10 * reliability_score)
+
+        # Apply length normalization if tuning available
+        if _TUNING_AVAILABLE:
+            final = normalize_length_score(response, final)
+
         bt.logging.debug(
             f"Score: quality={quality_score:.2f} integration={memory_integration_score:.2f} "
             f"recall={memory_recall_score:.2f} reliability={reliability_score:.2f} → final={final:.2f}"
@@ -86,6 +114,11 @@ def reward(
 
     # Single-turn: 90% quality/personality + 10% reliability
     final = 0.90 * quality_score + 0.10 * reliability_score
+
+    # Apply length normalization if tuning available
+    if _TUNING_AVAILABLE:
+        final = normalize_length_score(response, final)
+
     return final
 
 
@@ -387,7 +420,8 @@ def get_rewards(
     if latencies is None:
         latencies = [0.0] * len(responses)
 
-    return np.array([
+    # Compute base rewards
+    rewards = np.array([
         reward(
             query, response, api_key,
             test_type=test_type,
@@ -396,3 +430,18 @@ def get_rewards(
         )
         for response, lat in zip(responses, latencies)
     ])
+
+    # Apply diversity penalties (anti-gaming: penalize identical responses)
+    if _TUNING_AVAILABLE and len(responses) > 1:
+        diversity_penalties = compute_diversity_penalties(responses)
+        rewards = rewards * np.array(diversity_penalties)
+
+        # Log entropy for monitoring
+        entropy = compute_entropy(responses)
+        if entropy < 0.3:
+            bt.logging.warning(
+                f"[Anti-Gaming] Low response entropy ({entropy:.2f}) — "
+                "miners may be copying each other"
+            )
+
+    return rewards

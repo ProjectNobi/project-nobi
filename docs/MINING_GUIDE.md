@@ -258,6 +258,41 @@ Tips: use a server geographically close to validators, use connection pooling, p
 | High restarts in PM2 | Check `pm2 logs nobi-miner --err` for the root cause |
 | Score is 0 | Verify axon is reachable from outside: `curl http://YOUR_IP:8091` |
 
+## Auto-Updates (Optional)
+
+Stay up to date automatically — the auto-updater polls for new commits, pulls changes, runs health checks, and restarts your PM2 processes:
+
+```bash
+bash scripts/install_auto_updater.sh
+```
+
+**What it does:**
+- Checks for new commits every 5 minutes (configurable)
+- Pulls updates and runs a health check before restarting
+- Automatically rolls back if the health check fails
+- Logs everything to `~/.nobi/update_log.json`
+
+**Configuration (environment variables):**
+| Variable | Default | Description |
+|---|---|---|
+| `AUTO_UPDATE_INTERVAL` | `300` | Check interval in seconds |
+| `AUTO_UPDATE_PM2_NAMES` | auto-detect | Comma-separated PM2 process names |
+| `AUTO_UPDATE_ENABLED` | `true` | Set to `false` to disable |
+| `AUTO_UPDATE_BRANCH` | `main` | Git branch to track |
+
+**Manual one-time check:**
+```bash
+python3 scripts/auto_updater.py --once
+```
+
+**Manage:**
+```bash
+pm2 logs nobi-auto-updater    # View logs
+pm2 stop nobi-auto-updater    # Pause
+pm2 restart nobi-auto-updater # Resume
+pm2 delete nobi-auto-updater  # Remove
+```
+
 ## Questions?
 
 - **GitHub:** [project-nobi](https://github.com/ProjectNobi/project-nobi)
