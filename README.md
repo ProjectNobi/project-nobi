@@ -22,7 +22,7 @@ The name comes from **Nobi** — the kid who never gives up, with his companion 
 ## ✨ Try It Now
 
 - **Telegram:** Talk to [@ProjectNobiBot](https://t.me/ProjectNobiBot) — just press Start
-- **Web App:** [Launch Nori](http://84.247.150.144:3000) — full chat + memory interface
+- **Web App:** [Launch Nori](https://app.projectnobi.ai) — full chat + memory interface
 - **Discord:** [Join our server](https://discord.gg/e6StezHM)
 
 No setup, no commands. It remembers you.
@@ -172,7 +172,7 @@ Full guide with staking, PM2, monitoring: **[VALIDATING_GUIDE.md](docs/VALIDATIN
 | **Active Neurons** | 14 (11 miners, 3 validators) |
 | **Servers** | 6 |
 | **Tests** | 931 |
-| **Web App** | [Launch](http://84.247.150.144:3000) |
+| **Web App** | [Launch](https://app.projectnobi.ai) |
 
 Check live metagraph:
 ```bash
