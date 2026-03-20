@@ -45,6 +45,7 @@ from nobi.i18n.languages import SUPPORTED_LANGUAGES, get_language_name
 from nobi.proactive import ProactiveEngine
 from nobi.proactive.scheduler import ProactiveScheduler
 from nobi.group import GroupHandler
+from nobi.billing.subscription import SubscriptionManager
 import io
 
 try:
@@ -252,6 +253,7 @@ class CompanionBot:
         self.adapter_manager = UserAdapterManager(db_path="~/.nobi/bot_memories.db")
         self.lang_detector = LanguageDetector()
         self.rate_limiter = RateLimiter()
+        self.billing = SubscriptionManager(db_path="~/.nobi/billing.db")
         self._translation_cache: dict[str, dict[str, str]] = {}  # {lang: {key: translated}}
         self.client = None
         self.model = CHUTES_MODEL
@@ -841,6 +843,61 @@ async def cmd_import(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Something went wrong with the import. Try again in a moment!")
 
 
+async def cmd_subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show subscription info and upgrade options."""
+    user_id = companion._user_id(update)
+    sub = companion.billing.get_subscription(user_id)
+    tier = sub["tier"]
+
+    if tier in ("plus", "pro"):
+        await update.message.reply_text(
+            f"You're already on the {tier.title()} plan! 🎉\n\n"
+            "Manage your subscription at nobi.ai/subscription"
+        )
+        return
+
+    keyboard = [
+        [InlineKeyboardButton("⭐ Plus — $4.99/mo", url="https://nobi.ai/subscription")],
+        [InlineKeyboardButton("🚀 Pro — $9.99/mo", url="https://nobi.ai/subscription")],
+    ]
+    await update.message.reply_text(
+        "✨ Upgrade your Nori experience!\n\n"
+        "⭐ Plus ($4.99/mo)\n"
+        "  500 messages/day, 1000 memories, voice & image boost, group mode\n\n"
+        "🚀 Pro ($9.99/mo)\n"
+        "  Unlimited everything, priority responses, all features\n\n"
+        "Visit nobi.ai/subscription to upgrade!",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+
+async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show current plan and usage stats."""
+    user_id = companion._user_id(update)
+    usage = companion.billing.get_usage(user_id)
+
+    tier = usage["tier"].title()
+    badge = {"free": "🆓", "plus": "⭐", "pro": "🚀"}.get(usage["tier"], "")
+
+    def _fmt_limit(current, limit):
+        if limit == -1:
+            return f"{current} / ∞"
+        return f"{current} / {limit}"
+
+    lines = [
+        f"{badge} Your Plan: {tier}\n",
+        f"📊 Today's Usage:",
+        f"  💬 Messages: {_fmt_limit(usage['messages_today'], usage['messages_limit'])}",
+        f"  🎤 Voice: {_fmt_limit(usage['voice_today'], usage['voice_limit'])}",
+        f"  📷 Images: {_fmt_limit(usage['image_today'], usage['image_limit'])}",
+    ]
+
+    if usage["tier"] == "free":
+        lines.append("\n💡 Want more? Use /subscribe to upgrade!")
+
+    await update.message.reply_text("\n".join(lines))
+
+
 async def cmd_proactive(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Toggle proactive messages: /proactive on|off"""
     user_id = companion._user_id(update)
@@ -1122,6 +1179,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(random.choice(rate_msgs))
         return
 
+    # Billing limit check
+    allowed, reason = companion.billing.check_limits(user_id, "message")
+    if not allowed:
+        await update.message.reply_text(f"{reason}\n\nUse /subscribe to see upgrade options!")
+        return
+
+    # Record usage
+    companion.billing.record_usage(user_id, "message")
+
     # Show typing indicator
     await update.message.chat.send_action(ChatAction.TYPING)
 
@@ -1153,6 +1219,15 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not companion.rate_limiter.check(user_id):
         await update.message.reply_text("Easy there! 😄 Give me a sec to catch up.")
         return
+
+    # Billing limit check (voice)
+    allowed, reason = companion.billing.check_limits(user_id, "voice")
+    if not allowed:
+        await update.message.reply_text(f"{reason}\n\nUse /subscribe to see upgrade options!")
+        return
+
+    # Record usage
+    companion.billing.record_usage(user_id, "voice")
 
     await update.message.chat.send_action(ChatAction.TYPING)
 
@@ -1277,6 +1352,15 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not companion.rate_limiter.check(user_id):
         await update.message.reply_text("Easy there! 😄 Give me a sec to catch up.")
         return
+
+    # Billing limit check (image)
+    allowed, reason = companion.billing.check_limits(user_id, "image")
+    if not allowed:
+        await update.message.reply_text(f"{reason}\n\nUse /subscribe to see upgrade options!")
+        return
+
+    # Record usage
+    companion.billing.record_usage(user_id, "image")
 
     await update.message.chat.send_action(ChatAction.TYPING)
 
@@ -1405,6 +1489,8 @@ def main():
     app.add_handler(CommandHandler("import", cmd_import))
     app.add_handler(CommandHandler("language", cmd_language))
     app.add_handler(CommandHandler("proactive", cmd_proactive))
+    app.add_handler(CommandHandler("subscribe", cmd_subscribe))
+    app.add_handler(CommandHandler("plan", cmd_plan))
     app.add_handler(CommandHandler("nori", cmd_nori))
 
     # Buttons

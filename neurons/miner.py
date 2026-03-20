@@ -17,6 +17,7 @@ from nobi.memory.encryption import ensure_master_secret
 from nobi.memory.adapters import UserAdapterManager
 from nobi.i18n import detect_language, LanguageDetector, get_language_prompt
 from nobi.i18n.prompts import build_multilingual_system_prompt
+from nobi.mining.specialization import SPECIALIZATIONS
 
 try:
     from openai import OpenAI
@@ -79,6 +80,15 @@ class Miner(BaseMinerNeuron):
         self.adapter_manager = UserAdapterManager(db_path="~/.nobi/memories.db")
         self.lang_detector = LanguageDetector()
         bt.logging.info(f"Memory manager initialized: {self.memory.stats()}")
+
+        # Miner specialization declaration
+        self.specialization = getattr(self.config.neuron, "specialization", "general")
+        if self.specialization not in SPECIALIZATIONS:
+            bt.logging.warning(
+                f"Unknown specialization '{self.specialization}', defaulting to 'general'"
+            )
+            self.specialization = "general"
+        bt.logging.info(f"Miner specialization: {self.specialization}")
 
         # Set up LLM client (Chutes low-cost first, OpenRouter as fallback)
         chutes_key = os.environ.get("CHUTES_API_KEY", "")
@@ -236,6 +246,11 @@ class Miner(BaseMinerNeuron):
             memory_context=memory_context if memory_context else ""
         )
 
+        # Add specialization-specific instructions
+        spec_prompt = self._SPECIALIZATION_PROMPTS.get(self.specialization, "")
+        if spec_prompt:
+            system_prompt += spec_prompt
+
         # Add language instruction if non-English
         system_prompt = build_multilingual_system_prompt(system_prompt, detected_lang)
 
@@ -314,9 +329,36 @@ class Miner(BaseMinerNeuron):
             "Please try again in a moment."
         )
 
+    # Specialization-specific system prompt additions
+    _SPECIALIZATION_PROMPTS = {
+        "advice": (
+            "\n\nSPECIALIZATION: You excel at life coaching, decision-making, and emotional support. "
+            "Prioritize empathy, practical advice, and thoughtful guidance."
+        ),
+        "creative": (
+            "\n\nSPECIALIZATION: You excel at storytelling, brainstorming, and artistic ideas. "
+            "Be imaginative, vivid, and inspire creativity."
+        ),
+        "technical": (
+            "\n\nSPECIALIZATION: You excel at code help, math, science, and technical explanations. "
+            "Be precise, structured, and thorough with technical details."
+        ),
+        "social": (
+            "\n\nSPECIALIZATION: You excel at casual conversation, humor, and social chat. "
+            "Be fun, engaging, and match conversational energy."
+        ),
+        "knowledge": (
+            "\n\nSPECIALIZATION: You excel at facts, research, learning, and explanations. "
+            "Be accurate, comprehensive, and educational."
+        ),
+    }
+
     async def forward(self, synapse: CompanionRequest) -> CompanionRequest:
         """Process an incoming CompanionRequest and generate a response."""
-        bt.logging.info(f"Received query from user '{synapse.user_id}': {synapse.message[:100]}")
+        bt.logging.info(
+            f"Received query from user '{synapse.user_id}' "
+            f"(query_type={synapse.query_type}): {synapse.message[:100]}"
+        )
 
         # Extract bot-provided memory context if available (sent via preferences field)
         bot_memory_context = ""
@@ -336,12 +378,14 @@ class Miner(BaseMinerNeuron):
 
         synapse.response = response
         synapse.confidence = 0.8 if self.client else 0.2
+        synapse.miner_specialization = self.specialization
         synapse.memory_context = [
             {"type": m.get("type", ""), "content": m.get("content", "")}
             for m in memory_entries
         ] if memory_entries else None
 
         bt.logging.info(f"Generated response ({len(response)} chars), "
+                       f"specialization={self.specialization}, "
                        f"memories used: {len(memory_entries) if memory_entries else 0}")
         return synapse
 

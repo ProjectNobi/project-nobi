@@ -12,6 +12,8 @@
 # - Per-miner latency: each miner gets individual timing, not batch average
 # - Soft multi-turn fallback: failing miners get score 0, rest continue
 
+import json
+import os
 import time
 import random
 import asyncio
@@ -26,10 +28,72 @@ from nobi.validator.query_generator import (
 )
 from nobi.utils.uids import get_random_uids
 from nobi.memory.sync import sync_memories_to_miners
+from nobi.mining.specialization import (
+    MinerRouter,
+    classify_query,
+    select_best_miner,
+    SPECIALIZATIONS,
+)
 
 # Track forward step count for periodic memory testing
 _step_counter = 0
 _turn_counter = 0  # Track conversation turns for periodic decay
+
+# ─── Miner Router (persistent across forward calls) ─────────────────────────
+_miner_router: MinerRouter | None = None
+_ROUTER_STATE_PATH = os.path.expanduser("~/.nobi/miner_router_state.json")
+
+
+def _get_router() -> MinerRouter:
+    """Get or initialize the global MinerRouter, loading persisted state."""
+    global _miner_router
+    if _miner_router is None:
+        _miner_router = MinerRouter()
+        _load_router_state(_miner_router)
+    return _miner_router
+
+
+def _load_router_state(router: MinerRouter) -> None:
+    """Load router state from disk."""
+    try:
+        if os.path.exists(_ROUTER_STATE_PATH):
+            with open(_ROUTER_STATE_PATH, "r") as f:
+                state = json.load(f)
+            for uid_str, profile_data in state.get("miners", {}).items():
+                uid = int(uid_str)
+                profile = router.register_miner(
+                    uid=uid,
+                    hotkey=profile_data.get("hotkey", ""),
+                    specialization=profile_data.get("specialization", "general"),
+                )
+                profile.total_queries = profile_data.get("total_queries", 0)
+                profile.total_score = profile_data.get("total_score", 0.0)
+                for cat, scores in profile_data.get("scores_by_category", {}).items():
+                    profile.scores_by_category[cat] = scores
+            bt.logging.info(
+                f"[Router] Loaded state: {len(router.miners)} miners from {_ROUTER_STATE_PATH}"
+            )
+    except Exception as e:
+        bt.logging.warning(f"[Router] Failed to load state (non-fatal): {e}")
+
+
+def _save_router_state(router: MinerRouter) -> None:
+    """Persist router state to disk (JSON)."""
+    try:
+        os.makedirs(os.path.dirname(_ROUTER_STATE_PATH), exist_ok=True)
+        state = {"miners": {}}
+        for uid, profile in router.miners.items():
+            state["miners"][str(uid)] = {
+                "hotkey": profile.hotkey,
+                "specialization": profile.specialization,
+                "total_queries": profile.total_queries,
+                "total_score": profile.total_score,
+                "scores_by_category": dict(profile.scores_by_category),
+            }
+        with open(_ROUTER_STATE_PATH, "w") as f:
+            json.dump(state, f, indent=2)
+    except Exception as e:
+        bt.logging.warning(f"[Router] Failed to save state: {e}")
 
 
 async def forward(self):
@@ -62,6 +126,13 @@ async def forward(self):
         bt.logging.warning("No miners available to query.")
         time.sleep(10)
         return
+
+    # Ensure all queried miners are registered in the router
+    router = _get_router()
+    for uid in miner_uids:
+        if uid not in router.miners:
+            hotkey = self.metagraph.hotkeys[uid] if uid < len(self.metagraph.hotkeys) else ""
+            router.register_miner(uid=uid, hotkey=hotkey)
 
     # Every 5th step, test memory synapses
     if _step_counter % 5 == 0:
@@ -108,10 +179,19 @@ async def _forward_single_turn(self, miner_uids):
     # Include a fake user_id so miners can't distinguish test from real user
     fake_user_id = f"user_{random.randint(100000, 999999)}"
 
-    bt.logging.info(f"[Single-turn] Querying {len(miner_uids)} miners: '{query[:80]}'")
+    # Classify the query type for specialization routing
+    router = _get_router()
+    query_type = classify_query(query)
+
+    bt.logging.info(
+        f"[Single-turn] Querying {len(miner_uids)} miners, "
+        f"query_type={query_type}: '{query[:80]}'"
+    )
 
     # Task 1: Per-miner latency — query all miners in parallel, track individual timing
-    synapse = CompanionRequest(message=query, user_id=fake_user_id)
+    synapse = CompanionRequest(
+        message=query, user_id=fake_user_id, query_type=query_type
+    )
     tasks = [
         _query_single_miner(
             self.dendrite,
@@ -138,6 +218,15 @@ async def _forward_single_turn(self, miner_uids):
         test_type="single", latencies=latencies,
     )
     bt.logging.info(f"Scored responses: {rewards}")
+
+    # Update router with per-miner scores by query category
+    for uid, score in zip(miner_uids, rewards):
+        router.record_score(int(uid), query_type, float(score))
+
+    # Persist router state every 10 steps
+    if _step_counter % 10 == 0:
+        _save_router_state(router)
+
     self.update_scores(rewards, miner_uids)
 
 
@@ -201,12 +290,18 @@ async def _forward_multi_turn(self, miner_uids):
         return
 
     # Step 2: Send test query to surviving miners with per-miner latency
+    # Classify the test query for specialization routing
+    router = _get_router()
+    query_type = classify_query(scenario["test_query"])
+
     bt.logging.info(f"[Multi-turn] Test query to {len(active_uids)} active miners "
-                   f"({len(failed_uids)} failed): '{scenario['test_query']}'")
+                   f"({len(failed_uids)} failed), query_type={query_type}: "
+                   f"'{scenario['test_query']}'")
 
     synapse = CompanionRequest(
         message=scenario["test_query"],
         user_id=test_user_id,
+        query_type=query_type,
     )
     tasks = [
         _query_single_miner(
@@ -249,7 +344,16 @@ async def _forward_multi_turn(self, miner_uids):
     )
 
     bt.logging.info(f"[Multi-turn] Scored: {rewards} (keywords: {scenario['memory_keywords']}, "
-                   f"failed_uids: {failed_uids})")
+                   f"failed_uids: {failed_uids}, query_type: {query_type})")
+
+    # Update router with per-miner scores by query category
+    for uid, score in zip(miner_uids, rewards):
+        router.record_score(int(uid), query_type, float(score))
+
+    # Persist router state every 10 steps
+    if _step_counter % 10 == 0:
+        _save_router_state(router)
+
     self.update_scores(rewards, miner_uids)
 
     # Phase 2: Sync test user's memories to all miners for consistency

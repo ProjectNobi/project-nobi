@@ -28,6 +28,8 @@ from nobi.memory.adapters import UserAdapterManager
 from nobi.i18n import detect_language, LanguageDetector
 from nobi.i18n.prompts import build_multilingual_system_prompt
 from nobi.i18n.languages import SUPPORTED_LANGUAGES, get_language_name
+from nobi.billing.subscription import SubscriptionManager, TIERS
+from nobi.billing.stripe_handler import StripeHandler
 
 try:
     from openai import OpenAI
@@ -40,7 +42,10 @@ CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
 DB_PATH = os.environ.get("NOBI_DB_PATH", "~/.nobi/webapp_memories.db")
+BILLING_DB_PATH = os.environ.get("NOBI_BILLING_DB_PATH", "~/.nobi/billing.db")
 API_PORT = int(os.environ.get("NOBI_API_PORT", "8042"))
+STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 
 logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
@@ -133,16 +138,23 @@ lang_detector: Optional[LanguageDetector] = None
 llm_client: Optional[Any] = None
 llm_model: str = CHUTES_MODEL
 user_settings: Dict[str, Dict[str, Any]] = {}  # In-memory settings cache
+billing: Optional[SubscriptionManager] = None
+stripe_handler: Optional[StripeHandler] = None
 
 
 @app.on_event("startup")
 async def startup():
-    global memory, adapter_manager, lang_detector, llm_client, llm_model
+    global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler
 
     ensure_master_secret()
     memory = MemoryManager(db_path=DB_PATH)
     adapter_manager = UserAdapterManager(db_path=DB_PATH)
     lang_detector = LanguageDetector()
+
+    # Initialize billing
+    billing = SubscriptionManager(db_path=BILLING_DB_PATH)
+    stripe_handler = StripeHandler(api_key=STRIPE_API_KEY, webhook_secret=STRIPE_WEBHOOK_SECRET)
+    logger.info(f"Billing initialized (stripe={'enabled' if stripe_handler.stripe_configured else 'disabled'})")
 
     if CHUTES_KEY and OpenAI:
         llm_client = OpenAI(
@@ -356,6 +368,152 @@ async def get_languages():
     return {"languages": SUPPORTED_LANGUAGES}
 
 
+# ─── Billing & Subscription ───────────────────────────────────
+
+class SubscribeRequest(BaseModel):
+    user_id: str
+    tier: str = "plus"
+    success_url: str = "https://nobi.ai/subscription?success=true"
+    cancel_url: str = "https://nobi.ai/subscription?cancelled=true"
+
+
+class CancelRequest(BaseModel):
+    user_id: str
+
+
+@app.post("/api/subscribe")
+async def subscribe(req: SubscribeRequest):
+    """Create a Stripe checkout session for subscription."""
+    if not billing or not stripe_handler:
+        raise HTTPException(status_code=503, detail="Billing not initialized")
+
+    if req.tier not in ("plus", "pro"):
+        raise HTTPException(status_code=400, detail="Invalid tier. Choose 'plus' or 'pro'.")
+
+    if not stripe_handler.stripe_configured:
+        raise HTTPException(
+            status_code=503,
+            detail="Stripe is not configured. Subscriptions are not available yet.",
+        )
+
+    user_id = f"web_{req.user_id}"
+    billing.create_customer(user_id)
+
+    checkout_url = stripe_handler.create_checkout_session(
+        user_id=user_id,
+        tier=req.tier,
+        success_url=req.success_url,
+        cancel_url=req.cancel_url,
+    )
+
+    if not checkout_url:
+        raise HTTPException(status_code=502, detail="Failed to create checkout session")
+
+    return {"checkout_url": checkout_url}
+
+
+@app.post("/api/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhook events."""
+    if not billing or not stripe_handler:
+        raise HTTPException(status_code=503, detail="Billing not initialized")
+
+    if not stripe_handler.stripe_configured:
+        raise HTTPException(status_code=503, detail="Stripe not configured")
+
+    payload = await request.body()
+    signature = request.headers.get("stripe-signature", "")
+
+    result = stripe_handler.handle_webhook(payload, signature)
+
+    if "error" in result:
+        logger.warning(f"Webhook error: {result['error']}")
+        raise HTTPException(status_code=400, detail=result["error"])
+
+    if not result.get("processed"):
+        return {"status": "ignored", "event_type": result.get("event_type")}
+
+    action = result.get("action")
+
+    if action == "activate":
+        user_id = result["user_id"]
+        tier = result["tier"]
+        payment_id = result.get("payment_id", "")
+        billing.upgrade(user_id, tier, payment_id)
+        logger.info(f"Webhook: activated {tier} for {user_id}")
+
+    elif action == "update":
+        customer_id = result.get("customer_id")
+        customer = billing.get_customer_by_customer_id(customer_id) if customer_id else None
+        if customer:
+            billing.upgrade(customer["user_id"], result["tier"])
+            logger.info(f"Webhook: updated tier for {customer['user_id']}")
+
+    elif action == "cancel":
+        customer_id = result.get("customer_id")
+        customer = billing.get_customer_by_customer_id(customer_id) if customer_id else None
+        if customer:
+            billing.downgrade(customer["user_id"])
+            logger.info(f"Webhook: cancelled for {customer['user_id']}")
+
+    elif action == "payment_failed":
+        customer_id = result.get("customer_id")
+        customer = billing.get_customer_by_customer_id(customer_id) if customer_id else None
+        if customer:
+            logger.warning(f"Webhook: payment failed for {customer['user_id']}")
+
+    return {"status": "ok", "action": action}
+
+
+@app.get("/api/subscription")
+async def get_subscription(user_id: str):
+    """Get user's subscription status."""
+    if not billing:
+        raise HTTPException(status_code=503, detail="Billing not initialized")
+
+    uid = f"web_{user_id}"
+    sub = billing.get_subscription(uid)
+    tier_config = TIERS.get(sub["tier"], TIERS["free"])
+
+    return {
+        "subscription": sub,
+        "tier_config": tier_config,
+        "is_premium": billing.is_premium(uid),
+    }
+
+
+@app.post("/api/subscription/cancel")
+async def cancel_subscription(req: CancelRequest):
+    """Cancel user's subscription."""
+    if not billing:
+        raise HTTPException(status_code=503, detail="Billing not initialized")
+
+    uid = f"web_{req.user_id}"
+    success = billing.cancel(uid)
+
+    if not success:
+        raise HTTPException(status_code=400, detail="No active paid subscription to cancel")
+
+    return {"success": True, "message": "Subscription cancelled. You'll keep access until the end of your billing period."}
+
+
+@app.get("/api/usage")
+async def get_usage(user_id: str):
+    """Get user's usage stats."""
+    if not billing:
+        raise HTTPException(status_code=503, detail="Billing not initialized")
+
+    uid = f"web_{user_id}"
+    usage = billing.get_usage(uid)
+    return {"usage": usage}
+
+
+@app.get("/api/tiers")
+async def get_tiers():
+    """Get all available subscription tiers."""
+    return {"tiers": TIERS}
+
+
 # ─── Health ──────────────────────────────────────────────────
 
 @app.get("/api/health")
@@ -364,6 +522,8 @@ async def health():
         "status": "ok",
         "llm_configured": llm_client is not None,
         "model": llm_model if llm_client else None,
+        "billing_enabled": billing is not None,
+        "stripe_configured": stripe_handler.stripe_configured if stripe_handler else False,
     }
 
 

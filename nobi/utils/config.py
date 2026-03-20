@@ -88,6 +88,12 @@ def add_miner_args(cls, parser):
         "--neuron.model", type=str,
         help="Model to use via OpenRouter.", default="anthropic/claude-3.5-haiku",
     )
+    parser.add_argument(
+        "--neuron.specialization", type=str,
+        help="Miner specialization: advice, creative, technical, social, knowledge, general.",
+        default="general",
+        choices=["advice", "creative", "technical", "social", "knowledge", "general"],
+    )
 
 
 def add_validator_args(cls, parser):
