@@ -955,6 +955,131 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle voice messages — transcribe to text, generate response, reply with voice.
+
+    Flow: voice audio → STT (Whisper) → generate text response → TTS → send voice note
+    Falls back to text-only response if TTS/STT fails.
+    """
+    if not update.message or not (update.message.voice or update.message.audio):
+        return
+
+    user_id = companion._user_id(update)
+
+    # Rate limit check
+    if not companion.rate_limiter.check(user_id):
+        await update.message.reply_text("Easy there! 😄 Give me a sec to catch up.")
+        return
+
+    await update.message.chat.send_action(ChatAction.TYPING)
+
+    # Download voice/audio file
+    try:
+        voice = update.message.voice or update.message.audio
+        file = await context.bot.get_file(voice.file_id)
+        audio_bytes = await file.download_as_bytearray()
+        audio_bytes = bytes(audio_bytes)
+
+        # Determine format from mime type
+        mime = voice.mime_type or "audio/ogg"
+        fmt_map = {
+            "audio/ogg": "ogg",
+            "audio/mpeg": "mp3",
+            "audio/mp4": "m4a",
+            "audio/wav": "wav",
+            "audio/x-wav": "wav",
+            "audio/webm": "webm",
+            "audio/flac": "flac",
+        }
+        audio_format = fmt_map.get(mime, "ogg")
+
+        logger.info(
+            f"Voice from {update.effective_user.id}: "
+            f"{len(audio_bytes)} bytes, {audio_format}, duration={voice.duration}s"
+        )
+    except Exception as e:
+        logger.error(f"Voice download error: {e}")
+        await update.message.reply_text(
+            "I couldn't process that voice message 😅 Try sending text instead?"
+        )
+        return
+
+    # Transcribe
+    try:
+        from nobi.voice.stt import transcribe_audio
+        # Detect user language preference
+        user_lang = companion.lang_detector.get_user_language(user_id) or "en"
+        transcript = await transcribe_audio(audio_bytes, audio_format, user_lang)
+    except ImportError:
+        transcript = None
+        logger.warning("STT module not available")
+    except Exception as e:
+        transcript = None
+        logger.error(f"Transcription error: {e}")
+
+    if not transcript or not transcript.strip():
+        await update.message.reply_text(
+            "I couldn't quite catch that 🎤 Could you try again or type it out?"
+        )
+        return
+
+    logger.info(f"Transcribed: '{transcript[:100]}'")
+
+    # Show what we heard (brief confirmation)
+    await update.message.reply_text(f"🎤 I heard: \"{transcript[:200]}\"")
+    await update.message.chat.send_action(ChatAction.TYPING)
+
+    # Generate text response
+    response = await companion.generate(user_id, transcript)
+    response_clean = response.replace("**", "").replace("__", "").replace("```", "").replace("`", "").replace("- ", "• ")
+
+    if len(response_clean) > 4000:
+        response_clean = response_clean[:4000] + "..."
+
+    # Try to generate voice response
+    voice_reply = None
+    try:
+        from nobi.voice.tts import generate_speech
+        # Only TTS for reasonably sized responses (< 1000 chars)
+        if len(response_clean) < 1000:
+            user_lang = companion.lang_detector.get_user_language(user_id) or "en"
+            voice_reply = await generate_speech(response_clean, language=user_lang)
+    except ImportError:
+        logger.debug("TTS module not available")
+    except Exception as e:
+        logger.warning(f"TTS error: {e}")
+
+    # Send response
+    try:
+        if voice_reply and len(voice_reply) > 0:
+            # Send voice note + text as caption/follow-up
+            await update.message.reply_voice(
+                voice=voice_reply,
+                caption=response_clean[:1024] if len(response_clean) <= 1024 else None,
+            )
+            # If caption too long, send text separately
+            if len(response_clean) > 1024:
+                await update.message.reply_text(response_clean)
+        else:
+            # Text-only fallback
+            await update.message.reply_text(response_clean)
+    except Exception as e:
+        logger.error(f"Voice reply error: {e}")
+        try:
+            await update.message.reply_text(response_clean)
+        except Exception:
+            await update.message.reply_text(
+                "Oops, something went sideways! Try again? 😊"
+            )
+
+    logger.info(
+        f"Voice user {update.effective_user.id}: "
+        f"'{transcript[:50]}' → '{response_clean[:50]}' "
+        f"(voice_reply={'yes' if voice_reply else 'no'})"
+    )
+
+
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     """Global error handler — log but don't crash."""
     logger.error(f"Update {update} caused error: {context.error}")
@@ -993,6 +1118,9 @@ def main():
 
     # The magic: just respond to any text message
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    # Voice messages: transcribe → respond → reply with voice
+    app.add_handler(MessageHandler(filters.VOICE | filters.AUDIO, handle_voice))
 
     # Global error handler
     app.add_error_handler(error_handler)

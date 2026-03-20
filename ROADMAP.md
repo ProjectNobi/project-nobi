@@ -70,6 +70,10 @@
 - [ ] 48h testnet stabilization run — observe, fix edge cases
 - [ ] Stake TAO on validator (blocked: SubtokenDisabled on testnet)
 - [ ] Tune scoring weights based on real miner differentiation data
+- [x] One-command miner setup script (curl | bash)
+- [x] Mining guide polish + Discord links everywhere
+- [x] Community announcement drafts (Discord, X, welcome message)
+- [x] Voice message support (STT → response → TTS reply)
 - [ ] Deploy landing page to projectnobi.ai
 - [ ] Invite external miners to testnet (Bittensor Discord, X)
 - [ ] Gather community feedback on Nori UX
