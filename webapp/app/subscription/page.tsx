@@ -31,172 +31,83 @@ interface UsageData {
 }
 
 const TIER_ORDER = ["free", "plus", "pro"];
+const TIER_EMOJI: Record<string, string> = { free: "🆓", plus: "⭐", pro: "🚀" };
 
-const FEATURES: { key: string; label: string; format: (v: number | boolean) => string }[] = [
-  { key: "messages_per_day", label: "Messages / day", format: (v) => v === -1 ? "Unlimited" : `${v}` },
-  { key: "memory_slots", label: "Memory slots", format: (v) => v === -1 ? "Unlimited" : `${v}` },
-  { key: "voice_per_day", label: "Voice messages / day", format: (v) => v === -1 ? "Unlimited" : `${v}` },
-  { key: "image_per_day", label: "Image analysis / day", format: (v) => v === -1 ? "Unlimited" : `${v}` },
-  { key: "proactive_messages", label: "Proactive messages", format: (v) => v ? "✅" : "❌" },
-  { key: "priority_response", label: "Priority response", format: (v) => v ? "✅" : "❌" },
-  { key: "export_memories", label: "Export memories", format: (v) => v ? "✅" : "❌" },
-  { key: "group_mode", label: "Group mode", format: (v) => v ? "✅" : "❌" },
+const FEATURES = [
+  { key: "messages_per_day", label: "Messages / day" },
+  { key: "memory_slots", label: "Memory slots" },
+  { key: "voice_per_day", label: "Voice / day" },
+  { key: "image_per_day", label: "Images / day" },
+  { key: "proactive_messages", label: "Proactive messages" },
+  { key: "priority_response", label: "Priority response" },
+  { key: "export_memories", label: "Export memories" },
+  { key: "group_mode", label: "Group mode" },
 ];
+
+function formatValue(v: number | boolean): string {
+  if (typeof v === "boolean") return v ? "✅" : "—";
+  return v === -1 ? "Unlimited" : `${v}`;
+}
+
+function formatLimit(current: number, limit: number): string {
+  return limit === -1 ? `${current} / ∞` : `${current} / ${limit}`;
+}
 
 export default function SubscriptionPage() {
   const [tiers, setTiers] = useState<Record<string, TierConfig>>({});
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [currentTier, setCurrentTier] = useState("free");
   const [loading, setLoading] = useState(true);
-  const [subscribing, setSubscribing] = useState<string | null>(null);
 
-  // Get user ID from localStorage or URL params
   const getUserId = () => {
     if (typeof window === "undefined") return "anon";
-    const params = new URLSearchParams(window.location.search);
-    return params.get("user_id") || localStorage.getItem("nobi_user_id") || "anon";
+    return localStorage.getItem("nobi_user_id") || "anon";
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const userId = getUserId();
-
-        const [tiersRes, usageRes, subRes] = await Promise.all([
+        const [tiersRes, usageRes] = await Promise.all([
           fetch(`${API_BASE}/api/tiers`),
           fetch(`${API_BASE}/api/usage?user_id=${userId}`),
-          fetch(`${API_BASE}/api/subscription?user_id=${userId}`),
         ]);
-
-        if (tiersRes.ok) {
-          const data = await tiersRes.json();
-          setTiers(data.tiers);
-        }
-
-        if (usageRes.ok) {
-          const data = await usageRes.json();
-          setUsage(data.usage);
-        }
-
-        if (subRes.ok) {
-          const data = await subRes.json();
-          setCurrentTier(data.subscription?.tier || "free");
-        }
-      } catch (err) {
-        console.error("Failed to fetch subscription data:", err);
-      } finally {
-        setLoading(false);
-      }
+        if (tiersRes.ok) setTiers((await tiersRes.json()).tiers);
+        if (usageRes.ok) setUsage((await usageRes.json()).usage);
+      } catch {} finally { setLoading(false); }
     };
-
     fetchData();
   }, []);
 
-  const handleSubscribe = async (tier: string) => {
-    setSubscribing(tier);
-    try {
-      const userId = getUserId();
-      const res = await fetch(`${API_BASE}/api/subscribe`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          tier,
-          success_url: `${window.location.origin}/subscription?success=true`,
-          cancel_url: `${window.location.origin}/subscription?cancelled=true`,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.checkout_url) {
-          window.location.href = data.checkout_url;
-          return;
-        }
-      }
-
-      const error = await res.json().catch(() => ({ detail: "Unknown error" }));
-      alert(error.detail || "Failed to start checkout. Stripe may not be configured yet.");
-    } catch (err) {
-      alert("Failed to connect to the server. Please try again later.");
-    } finally {
-      setSubscribing(null);
-    }
-  };
-
-  const handleCancel = async () => {
-    if (!confirm("Are you sure you want to cancel your subscription?")) return;
-
-    try {
-      const userId = getUserId();
-      const res = await fetch(`${API_BASE}/api/subscription/cancel`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
-      });
-
-      if (res.ok) {
-        alert("Subscription cancelled. You'll keep access until the end of your billing period.");
-        window.location.reload();
-      } else {
-        const error = await res.json().catch(() => ({ detail: "Failed to cancel" }));
-        alert(error.detail);
-      }
-    } catch {
-      alert("Failed to connect. Please try again.");
-    }
-  };
-
-  const formatLimit = (current: number, limit: number) => {
-    if (limit === -1) return `${current} / ∞`;
-    return `${current} / ${limit}`;
-  };
-
-  const successParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("success") : null;
-  const cancelledParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("cancelled") : null;
-
   if (loading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
-        <p>Loading...</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-2 border-nori-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "2rem 1rem" }}>
-      <h1 style={{ textAlign: "center", marginBottom: "0.5rem" }}>✨ Nori Subscription</h1>
-      <p style={{ textAlign: "center", color: "#aaa", marginBottom: "1rem" }}>
-        Unlock more of your AI companion
-      </p>
-
-
-      {successParam && (
-        <div style={{ background: "rgba(74,222,128,0.1)", color: "#4ade80", padding: "1rem", borderRadius: 8, marginBottom: "1rem", textAlign: "center" }}>
-          🎉 Subscription activated! Welcome to the family!
-        </div>
-      )}
-
-      {cancelledParam && (
-        <div style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24", padding: "1rem", borderRadius: 8, marginBottom: "1rem", textAlign: "center" }}>
-          Checkout cancelled. No worries — you can subscribe anytime!
-        </div>
-      )}
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold text-center mb-1">✨ Nori Subscription</h1>
+      <p className="text-center text-gray-400 mb-8">Choose the plan that fits you</p>
 
       {/* Usage Stats */}
       {usage && (
-        <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "1.5rem", marginBottom: "2rem" }}>
-          <h3 style={{ marginTop: 0 }}>📊 Today&apos;s Usage — {usage.tier.charAt(0).toUpperCase() + usage.tier.slice(1)} Plan</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
-            <div>💬 Messages: <strong>{formatLimit(usage.messages_today, usage.messages_limit)}</strong></div>
-            <div>🎤 Voice: <strong>{formatLimit(usage.voice_today, usage.voice_limit)}</strong></div>
-            <div>📷 Images: <strong>{formatLimit(usage.image_today, usage.image_limit)}</strong></div>
+        <div className="rounded-xl border border-gray-700 bg-gray-800/50 p-5 mb-8">
+          <h3 className="text-sm font-semibold text-gray-300 mb-3">
+            📊 Today&apos;s Usage — {usage.tier.charAt(0).toUpperCase() + usage.tier.slice(1)} Plan
+          </h3>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="text-gray-300">💬 Messages: <span className="font-bold text-white">{formatLimit(usage.messages_today, usage.messages_limit)}</span></div>
+            <div className="text-gray-300">🎤 Voice: <span className="font-bold text-white">{formatLimit(usage.voice_today, usage.voice_limit)}</span></div>
+            <div className="text-gray-300">📷 Images: <span className="font-bold text-white">{formatLimit(usage.image_today, usage.image_limit)}</span></div>
           </div>
         </div>
       )}
 
       {/* Pricing Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {TIER_ORDER.map((tierKey) => {
           const tier = tiers[tierKey];
           if (!tier) return null;
@@ -206,76 +117,67 @@ export default function SubscriptionPage() {
           return (
             <div
               key={tierKey}
-              style={{
-                border: isPopular ? "2px solid #6c63ff" : "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 12,
-                padding: "1.5rem",
-                position: "relative",
-                background: isCurrent ? "#f0f0ff" : "#fff",
-              }}
+              className={`relative rounded-xl p-6 transition-all ${
+                isPopular
+                  ? "border-2 border-nori-500 bg-nori-500/10 shadow-lg shadow-nori-500/10"
+                  : isCurrent
+                  ? "border border-nori-400/30 bg-nori-500/5"
+                  : "border border-gray-700 bg-gray-800/50"
+              }`}
             >
               {isPopular && (
-                <div style={{
-                  position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
-                  background: "#6c63ff", color: "#fff", padding: "2px 16px", borderRadius: 12, fontSize: 12
-                }}>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-nori-500 text-white text-xs px-4 py-1 rounded-full font-medium">
                   Most Popular
                 </div>
               )}
 
-              <h2 style={{ marginTop: isPopular ? "0.5rem" : 0 }}>
-                {tierKey === "free" ? "🆓" : tierKey === "plus" ? "⭐" : "🚀"} {tier.name}
-              </h2>
-              <p style={{ fontSize: "1.5rem", fontWeight: "bold", margin: "0.5rem 0" }}>
-                {tier.price_label}
-              </p>
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold text-white">
+                  {TIER_EMOJI[tierKey]} {tier.name}
+                </h2>
+                <p className="text-2xl font-bold text-white mt-1">{tier.price_label}</p>
+              </div>
 
-              <ul style={{ listStyle: "none", padding: 0, margin: "1rem 0" }}>
-                {FEATURES.map((f) => (
-                  <li key={f.key} style={{ padding: "4px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                    {f.label}: <strong>{f.format((tier as any)[f.key])}</strong>
-                  </li>
-                ))}
+              <ul className="space-y-2 mb-6">
+                {FEATURES.map((f) => {
+                  const val = (tier as any)[f.key];
+                  const display = formatValue(val);
+                  const isEnabled = display !== "—";
+                  return (
+                    <li key={f.key} className="flex justify-between text-sm py-1 border-b border-gray-700/50">
+                      <span className={isEnabled ? "text-gray-300" : "text-gray-500"}>{f.label}</span>
+                      <span className={`font-medium ${isEnabled ? "text-white" : "text-gray-500"}`}>{display}</span>
+                    </li>
+                  );
+                })}
               </ul>
 
               {isCurrent ? (
-                <div>
-                  <button disabled style={{
-                    width: "100%", padding: "10px", borderRadius: 8,
-                    background: "rgba(255,255,255,0.15)", border: "none", cursor: "default", color: "#ccc"
-                  }}>
-                    Current Plan ✓
-                  </button>
-                  {tierKey !== "free" && (
-                    <button
-                      onClick={handleCancel}
-                      style={{
-                        width: "100%", padding: "8px", borderRadius: 8, marginTop: "0.5rem",
-                        background: "transparent", border: "1px solid #f87171", color: "#f87171", cursor: "pointer"
-                      }}
-                    >
-                      Cancel Subscription
-                    </button>
-                  )}
-                </div>
+                <button
+                  disabled
+                  className="w-full py-2.5 rounded-lg bg-gray-700 text-gray-300 text-sm font-medium cursor-default"
+                >
+                  Current Plan ✓
+                </button>
               ) : tierKey !== "free" ? (
                 <button
-                  onClick={() => handleSubscribe(tierKey)}
-                  disabled={subscribing === tierKey}
-                  style={{
-                    width: "100%", padding: "10px", borderRadius: 8,
-                    background: isPopular ? "#6c63ff" : "#333",
-                    color: "#fff", border: "none", cursor: "pointer",
-                    opacity: subscribing === tierKey ? 0.6 : 1,
-                  }}
+                  className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isPopular
+                      ? "bg-nori-500 hover:bg-nori-600 text-white"
+                      : "bg-gray-700 hover:bg-gray-600 text-white"
+                  }`}
                 >
-                  {subscribing === tierKey ? "Redirecting..." : `Subscribe to ${tier.name}`}
+                  Subscribe to {tier.name}
                 </button>
               ) : null}
             </div>
           );
         })}
       </div>
+
+      <p className="text-center text-gray-500 text-xs mt-8">
+        Payments powered by Stripe. Cancel anytime. Questions? Use /support on Telegram or visit our Support page.
+      </p>
     </div>
   );
 }
