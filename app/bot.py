@@ -189,6 +189,8 @@ WELCOME_MESSAGES = [
         "brainstorm, vent, or just hang out. I remember our conversations, "
         "so the more we chat, the better I know you.\n\n"
         "No commands to learn — just text me like you'd text a friend.\n\n"
+        "By chatting with me, you agree to our Terms of Service and Privacy Policy: "
+        "projectnobi.ai/terms\n\n"
         "So... what's your name? 😊"
     ),
     (
@@ -197,9 +199,36 @@ WELCOME_MESSAGES = [
         "I'm your personal AI companion. I'm here to chat, help you think things through, "
         "or just keep you company. And I'll remember what you tell me.\n\n"
         "Just type anything — talk to me like a friend.\n\n"
+        "By chatting with me, you agree to our Terms of Service and Privacy Policy: "
+        "projectnobi.ai/terms\n\n"
         "What should I call you? 😊"
     ),
 ]
+
+TOS_SUMMARY = (
+    "📋 Terms of Service Summary\n\n"
+    "• Nori is an AI companion — not a doctor, lawyer, or financial advisor\n"
+    "• You must be 13+ (16+ in the EU) to use this service\n"
+    "• Your data is encrypted (AES-128) and you can delete it anytime\n"
+    "• We don't sell your personal data\n"
+    "• Don't use Nori for illegal activities or to harm others\n"
+    "• Governing law: England and Wales\n\n"
+    "Full Terms of Service: projectnobi.ai/terms\n"
+    "Questions? legal@projectnobi.ai"
+)
+
+PRIVACY_SUMMARY = (
+    "🔒 Privacy Policy Summary\n\n"
+    "• We collect: messages, memory data, usage stats, device info\n"
+    "• All data is encrypted with AES-128 before storage\n"
+    "• We never sell your data to third parties\n"
+    "• Your rights: access (/memories), export (/export), delete (/forget)\n"
+    "• Data auto-deleted after 12 months of inactivity\n"
+    "• Age requirements: 13+ US / 16+ EU (COPPA + GDPR compliant)\n\n"
+    "Full Privacy Policy: projectnobi.ai/privacy\n"
+    "Privacy questions? privacy@projectnobi.ai\n"
+    "DPO: dpo@projectnobi.ai"
+)
 
 HELP_MESSAGE = (
     "🤖 Nori — Your Companion\n\n"
@@ -822,13 +851,54 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         pass
     
+    # Check if this is a genuinely new user (no age agreement stored)
+    try:
+        age_agreed = companion.memory.recall(user_id, query="age agreement", limit=1)
+        is_new = len(age_agreed) == 0
+    except Exception:
+        is_new = True
+
     # New user
     welcome = random.choice(WELCOME_MESSAGES)
     keyboard = [[InlineKeyboardButton("💬 Let's chat!", callback_data="start_chat")]]
+    
+    if is_new:
+        welcome += (
+            "\n\nPlease confirm you are 13+ years old (16+ if in the EU) by typing /agree"
+        )
+    
     await update.message.reply_text(
         welcome,
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
+
+
+async def cmd_agree(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Age/ToS agreement confirmation."""
+    user_id = companion._user_id(update)
+    try:
+        companion.memory.store(
+            user_id,
+            "User agreed to Terms of Service and confirmed age 13+ (16+ EU)",
+            memory_type="context",
+            importance=1.0,
+        )
+    except Exception as e:
+        logger.warning(f"Could not store age agreement: {e}")
+    await update.message.reply_text(
+        "Thanks for confirming! You're all set. 🎉\n\n"
+        "So... what's your name? I'd love to get to know you! 😊"
+    )
+
+
+async def cmd_terms(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show Terms of Service summary."""
+    await update.message.reply_text(TOS_SUMMARY)
+
+
+async def cmd_privacy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show Privacy Policy summary."""
+    await update.message.reply_text(PRIVACY_SUMMARY)
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1899,6 +1969,9 @@ def main():
     app.add_handler(CommandHandler("feedback", cmd_feedback))
     app.add_handler(CommandHandler("support", cmd_support))
     app.add_handler(CommandHandler("faq", cmd_faq))
+    app.add_handler(CommandHandler("terms", cmd_terms))
+    app.add_handler(CommandHandler("privacy", cmd_privacy))
+    app.add_handler(CommandHandler("agree", cmd_agree))
 
     # Buttons
     app.add_handler(CallbackQueryHandler(handle_callback))

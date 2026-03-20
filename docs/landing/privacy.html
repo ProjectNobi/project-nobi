@@ -13,15 +13,22 @@
         }
         h1 { color: #fff; font-size: 2rem; margin-bottom: 0.5rem; }
         h2 { color: #6c5ce7; font-size: 1.4rem; margin-top: 2rem; margin-bottom: 0.75rem; }
+        h3 { color: #a29bfe; font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
         p, li { margin-bottom: 0.75rem; font-size: 1rem; }
         ul { padding-left: 1.5rem; }
         a { color: #6c5ce7; text-decoration: none; }
         a:hover { text-decoration: underline; }
         .date { color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
         .highlight { background: rgba(108,92,231,0.1); border-left: 3px solid #6c5ce7; padding: 1rem; border-radius: 4px; margin: 1rem 0; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+        th { background: rgba(108,92,231,0.2); color: #a29bfe; padding: 0.6rem 0.8rem; text-align: left; border: 1px solid rgba(108,92,231,0.3); }
+        td { padding: 0.6rem 0.8rem; border: 1px solid rgba(255,255,255,0.08); vertical-align: top; }
+        tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #6c5ce7; margin-bottom: 2rem; font-size: 0.95rem; }
     </style>
 </head>
 <body>
+    <a href="/" class="back-link">← Back to projectnobi.ai</a>
     <h1>Privacy Policy</h1>
     <p class="date">Last updated: March 20, 2026</p>
 
@@ -29,83 +36,176 @@
         <strong>The short version:</strong> Your data is encrypted, you own it, and you can delete it anytime. We don't sell your data. Ever.
     </div>
 
-    <h2>1. Who We Are</h2>
-    <p>Project Nobi ("we", "us", "our") operates the Nori AI Companion mobile application. This policy explains how we collect, use, and protect your information.</p>
+    <p>This Privacy Policy explains how Project Nobi ("we", "us", "our") collects, uses, stores, and protects your personal data. This policy complies with <strong>GDPR Articles 13 &amp; 14</strong>, <strong>UK GDPR</strong>, <strong>CCPA</strong>, and <strong>COPPA</strong>.</p>
 
-    <h2>2. What We Collect</h2>
+    <h2>1. Data Controller</h2>
+    <p>Project Nobi is the data controller for personal data processed through the Nori service.</p>
     <ul>
-        <li><strong>Account info:</strong> Email address and display name when you sign up.</li>
-        <li><strong>Conversations:</strong> Messages you send to Nori, including text, voice transcriptions, and image descriptions.</li>
-        <li><strong>Memory data:</strong> Facts and relationships Nori extracts from your conversations to provide a personalized experience.</li>
-        <li><strong>Usage data:</strong> Anonymous analytics like feature usage, session length, and crash reports.</li>
-        <li><strong>Device info:</strong> Device type, OS version, and app version for compatibility and debugging.</li>
+        <li><strong>Privacy email:</strong> <a href="mailto:privacy@projectnobi.ai">privacy@projectnobi.ai</a></li>
+        <li><strong>DPO email:</strong> <a href="mailto:dpo@projectnobi.ai">dpo@projectnobi.ai</a></li>
+        <li><strong>Location:</strong> United Kingdom</li>
+        <li><strong>Supervisory authority (UK):</strong> Information Commissioner's Office — <a href="https://ico.org.uk" target="_blank">ico.org.uk</a></li>
     </ul>
 
-    <h2>3. How We Use Your Data</h2>
+    <h2>2. What Data We Collect</h2>
+
+    <h3>2.1 Data You Provide Directly</h3>
+    <table>
+        <tr><th>Category</th><th>Examples</th><th>Purpose</th></tr>
+        <tr><td>Account information</td><td>Display name, email address</td><td>Account creation and communication</td></tr>
+        <tr><td>Conversation content</td><td>Messages, voice transcriptions, image descriptions</td><td>Providing the companion service</td></tr>
+        <tr><td>Memory data</td><td>Facts and preferences Nori learns from chats</td><td>Personalisation and continuity</td></tr>
+        <tr><td>Feedback and support</td><td>Bug reports, feature requests, tickets</td><td>Service improvement</td></tr>
+        <tr><td>Payment information</td><td>Billing address, last 4 digits (Stripe handles full card data)</td><td>Payment processing</td></tr>
+    </table>
+
+    <h3>2.2 Data Collected Automatically</h3>
+    <table>
+        <tr><th>Category</th><th>Examples</th><th>Purpose</th></tr>
+        <tr><td>Usage statistics</td><td>Features used, session length, message frequency</td><td>Service improvement</td></tr>
+        <tr><td>Device information</td><td>Device type, OS, app version</td><td>Compatibility and debugging</td></tr>
+        <tr><td>Technical data</td><td>IP address (hashed), error logs</td><td>Security and performance</td></tr>
+        <tr><td>Cookies and local storage</td><td>Session tokens, preferences, consent flags</td><td>Authentication and UX</td></tr>
+    </table>
+
+    <h3>2.3 What We Do NOT Collect</h3>
     <ul>
-        <li>To provide and improve the Nori companion experience.</li>
-        <li>To remember your conversations and personal context (the core feature).</li>
-        <li>To send you proactive reminders and follow-ups you've opted into.</li>
-        <li>To fix bugs and improve app performance.</li>
-        <li>To process subscription payments.</li>
+        <li>Full payment card numbers (handled exclusively by Stripe)</li>
+        <li>Audio recordings (voice messages are transcribed; audio is not permanently stored)</li>
+        <li>Original images (analysed for context; not permanently stored)</li>
+        <li>GPS or location data</li>
+        <li>Contacts or address book data</li>
     </ul>
 
-    <h2>4. Encryption & Security</h2>
+    <h2>3. Legal Basis for Processing (GDPR)</h2>
+    <table>
+        <tr><th>Processing Activity</th><th>Legal Basis</th></tr>
+        <tr><td>Providing the companion service</td><td>Contract (Art. 6(1)(b))</td></tr>
+        <tr><td>Memory storage and personalisation</td><td>Contract (Art. 6(1)(b))</td></tr>
+        <tr><td>Payment processing</td><td>Contract (Art. 6(1)(b))</td></tr>
+        <tr><td>Safety filtering and abuse prevention</td><td>Legitimate interests (Art. 6(1)(f))</td></tr>
+        <tr><td>Service analytics and improvement</td><td>Legitimate interests (Art. 6(1)(f))</td></tr>
+        <tr><td>Marketing communications</td><td>Consent (Art. 6(1)(a)) — opt-in only</td></tr>
+        <tr><td>Legal compliance</td><td>Legal obligation (Art. 6(1)(c))</td></tr>
+    </table>
+
+    <h2>4. How We Use Your Data</h2>
+    <ul>
+        <li><strong>Provide the service</strong> — process messages and generate AI responses</li>
+        <li><strong>Enable memory</strong> — store context to make Nori feel like a real companion</li>
+        <li><strong>Personalise your experience</strong> — adapt Nori's tone and topics to you</li>
+        <li><strong>Process payments</strong> — manage subscriptions and billing</li>
+        <li><strong>Improve service quality</strong> — analyse anonymised usage patterns</li>
+        <li><strong>Ensure safety</strong> — detect and prevent abuse and harmful content</li>
+        <li><strong>Legal compliance</strong> — fulfil obligations under applicable law</li>
+    </ul>
+    <p><strong>We do NOT:</strong> sell your data, use your conversations to train AI without opt-in consent, or share data with advertising networks.</p>
+
+    <h2>5. Data Storage and Security</h2>
     <div class="highlight">
-        <p>All conversation data is encrypted using <strong>AES-128 encryption</strong> before storage. Your encryption key is derived from your account and never stored in plaintext on our servers.</p>
+        <p>All conversation data and memory data is encrypted using <strong>AES-128 encryption</strong> before storage. Encryption keys are derived from your account credentials and never stored in plaintext. Data in transit is protected by <strong>TLS 1.3</strong>.</p>
     </div>
-    <ul>
-        <li>Data in transit is protected with TLS 1.3.</li>
-        <li>Data at rest is encrypted with AES-128.</li>
-        <li>We use secure key derivation (PBKDF2) for encryption keys.</li>
-        <li>Voice messages are transcribed and the audio is not permanently stored.</li>
-        <li>Images are analyzed for context and the original image is not permanently stored on our servers.</li>
-    </ul>
 
-    <h2>5. Bittensor Network</h2>
-    <p>Nori uses the Bittensor decentralized AI network to process your messages. When you send a message:</p>
+    <h3>5.1 Decentralised Storage (Bittensor Network)</h3>
+    <p>Nori operates on the Bittensor decentralised AI network. Messages may be processed by network participants ("miners") to generate AI responses. Data transmitted to miners is:</p>
     <ul>
-        <li>Your message is sent to miners on the Bittensor network for AI processing.</li>
-        <li>Messages sent to miners do not include your personal identity.</li>
-        <li>Miners see only the conversation context needed to generate a response.</li>
-        <li>No personally identifiable information is shared with the network.</li>
+        <li>Encrypted (AES-128)</li>
+        <li>Stripped of personal identity (no name, email, or account details)</li>
+        <li>Transmitted using pseudonymous identifiers only</li>
     </ul>
 
     <h2>6. Data Sharing</h2>
-    <p>We do <strong>not</strong> sell your personal data. We share data only in these cases:</p>
-    <ul>
-        <li><strong>Service providers:</strong> Payment processors (Stripe), cloud infrastructure (encrypted).</li>
-        <li><strong>Legal requirements:</strong> If required by law, court order, or to protect safety.</li>
-        <li><strong>With your consent:</strong> If you explicitly ask us to share something.</li>
-    </ul>
+    <table>
+        <tr><th>Recipient</th><th>Purpose</th><th>Safeguards</th></tr>
+        <tr><td>Stripe</td><td>Payment processing</td><td>PCI-DSS compliant; data processing agreement</td></tr>
+        <tr><td>Bittensor miners</td><td>AI response generation</td><td>Encrypted data only; no PII transmitted</td></tr>
+        <tr><td>Cloud infrastructure</td><td>Hosting and storage</td><td>Data processing agreements; encrypted data</td></tr>
+        <tr><td>Legal authorities</td><td>Legal compliance</td><td>Only when required by law or court order</td></tr>
+    </table>
+    <p><strong>We do NOT share data with</strong> advertising networks, data brokers, social media platforms, or any third party for marketing purposes.</p>
 
     <h2>7. Your Rights</h2>
+
+    <h3>7.1 GDPR Rights (EU/UK residents)</h3>
     <ul>
-        <li><strong>Access:</strong> Request a copy of all data we hold about you.</li>
-        <li><strong>Delete:</strong> Delete your account and all associated data at any time from Settings.</li>
-        <li><strong>Export:</strong> Export your conversation history and memory data.</li>
-        <li><strong>Correct:</strong> Edit or remove specific memories Nori has stored.</li>
-        <li><strong>Opt out:</strong> Disable proactive messages, analytics, or specific features.</li>
+        <li><strong>Access (Art. 15)</strong> — Request a copy of all personal data we hold</li>
+        <li><strong>Rectification (Art. 16)</strong> — Request correction of inaccurate data</li>
+        <li><strong>Erasure / "Right to be Forgotten" (Art. 17)</strong> — Request deletion of your data</li>
+        <li><strong>Restriction of Processing (Art. 18)</strong> — Request limits on data use</li>
+        <li><strong>Data Portability (Art. 20)</strong> — Request your data in machine-readable format</li>
+        <li><strong>Object (Art. 21)</strong> — Object to processing based on legitimate interests</li>
+    </ul>
+
+    <h3>7.2 CCPA Rights (California residents)</h3>
+    <ul>
+        <li>Know what personal information is collected and how it is used</li>
+        <li>Delete personal information (subject to certain exceptions)</li>
+        <li>Opt out of "sale" of personal information (we do not sell personal information)</li>
+        <li>Non-discrimination for exercising your rights</li>
+    </ul>
+
+    <h3>7.3 How to Exercise Your Rights</h3>
+    <ul>
+        <li><strong>In-app:</strong> Use <code>/memories</code>, <code>/forget</code>, <code>/export</code> on Telegram, or Settings in the web app</li>
+        <li><strong>By email:</strong> <a href="mailto:privacy@projectnobi.ai">privacy@projectnobi.ai</a> with subject "Privacy Rights Request"</li>
+        <li><strong>Response time:</strong> Within 30 days (extendable to 90 days for complex requests)</li>
     </ul>
 
     <h2>8. Data Retention</h2>
-    <ul>
-        <li>Active accounts: Data retained as long as your account is active.</li>
-        <li>Deleted accounts: All data permanently deleted within 30 days.</li>
-        <li>Anonymous analytics: Retained for up to 12 months.</li>
-    </ul>
+    <table>
+        <tr><th>Data Category</th><th>Retention Period</th></tr>
+        <tr><td>Active account data</td><td>While your account is active</td></tr>
+        <tr><td>Inactive account data</td><td>Auto-deleted after 12 months of inactivity</td></tr>
+        <tr><td>Deleted account data</td><td>Permanently deleted within 30 days</td></tr>
+        <tr><td>Payment records</td><td>7 years (legal/accounting compliance)</td></tr>
+        <tr><td>Safety and abuse logs</td><td>12 months</td></tr>
+        <tr><td>Anonymous analytics</td><td>12 months then permanently deleted</td></tr>
+        <tr><td>Support tickets</td><td>24 months then anonymised</td></tr>
+    </table>
 
     <h2>9. Children's Privacy</h2>
-    <p>Nori is not intended for children under 13. We do not knowingly collect data from children under 13. If you believe a child has provided us data, contact us and we will delete it.</p>
-
-    <h2>10. Changes to This Policy</h2>
-    <p>We may update this policy from time to time. We'll notify you of significant changes through the app or email. Continued use after changes constitutes acceptance.</p>
-
-    <h2>11. Contact Us</h2>
-    <p>Questions about this policy? Reach us at:</p>
     <ul>
-        <li>Email: <a href="mailto:privacy@projectnobi.ai">privacy@projectnobi.ai</a></li>
-        <li>Web: <a href="https://projectnobi.ai">projectnobi.ai</a></li>
+        <li><strong>United States (COPPA):</strong> Nori is not directed to children under 13. We do not knowingly collect data from children under 13.</li>
+        <li><strong>EU/EEA (GDPR Art. 8):</strong> Users must be at least 16 years old.</li>
+        <li><strong>Parental concerns:</strong> If you believe your child has an account, contact <a href="mailto:privacy@projectnobi.ai">privacy@projectnobi.ai</a> and we will delete the account within 5 business days.</li>
     </ul>
+
+    <h2>10. Cookie Policy</h2>
+    <table>
+        <tr><th>Type</th><th>Purpose</th><th>Duration</th></tr>
+        <tr><td>Essential cookies</td><td>Authentication, session management</td><td>Session or up to 30 days</td></tr>
+        <tr><td>Preference storage (localStorage)</td><td>Theme, language, consent flags</td><td>Persistent until cleared</td></tr>
+        <tr><td>Analytics cookies</td><td>Anonymous usage analytics</td><td>Up to 12 months</td></tr>
+    </table>
+    <p>We do <strong>not</strong> use advertising or tracking cookies. We respect the "Do Not Track" (DNT) browser signal.</p>
+
+    <h2>11. International Data Transfers</h2>
+    <p>Project Nobi is based in the United Kingdom. For EEA users, transfers to the UK are covered by the UK Adequacy Decision. Data transferred to Bittensor miners globally is always encrypted (AES-128) with no personally identifiable information included.</p>
+
+    <h2>12. Data Breach Procedures</h2>
+    <p>In the event of a personal data breach:</p>
+    <ul>
+        <li><strong>Regulatory notification:</strong> We will notify the ICO within <strong>72 hours</strong> of becoming aware (GDPR Art. 33)</li>
+        <li><strong>User notification:</strong> If there is a high risk to your rights, we will notify you directly without undue delay</li>
+        <li><strong>Remediation:</strong> We will take all reasonable steps to mitigate damage</li>
+    </ul>
+    <p>To report a security vulnerability: <a href="mailto:security@projectnobi.ai">security@projectnobi.ai</a></p>
+
+    <h2>13. Data Protection Officer</h2>
+    <p>We have appointed a Data Protection Officer to oversee GDPR compliance.</p>
+    <p><strong>DPO Contact:</strong> <a href="mailto:dpo@projectnobi.ai">dpo@projectnobi.ai</a></p>
+
+    <h2>14. Changes to This Policy</h2>
+    <p>We may update this policy periodically. Material changes will be communicated with at least 14 days' notice via email or in-app notification. The latest version is always at <a href="https://projectnobi.ai/privacy">projectnobi.ai/privacy</a>.</p>
+
+    <h2>15. Contact Us</h2>
+    <ul>
+        <li><strong>Privacy:</strong> <a href="mailto:privacy@projectnobi.ai">privacy@projectnobi.ai</a></li>
+        <li><strong>DPO:</strong> <a href="mailto:dpo@projectnobi.ai">dpo@projectnobi.ai</a></li>
+        <li><strong>Security:</strong> <a href="mailto:security@projectnobi.ai">security@projectnobi.ai</a></li>
+        <li><strong>Website:</strong> <a href="https://projectnobi.ai">projectnobi.ai</a></li>
+        <li><strong>UK Supervisory Authority:</strong> ICO — <a href="https://ico.org.uk" target="_blank">ico.org.uk</a> — 0303 123 1113</li>
+    </ul>
+    <p style="color:#666; font-size:0.85rem; margin-top:3rem;">GDPR Articles 13 &amp; 14 compliant · UK GDPR · CCPA · COPPA — Last updated March 20, 2026</p>
 </body>
 </html>

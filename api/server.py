@@ -119,6 +119,12 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     memories_used: List[str] = Field(default_factory=list)
+    disclaimer: str = Field(
+        default=(
+            "Nori is an AI companion. Nothing said here constitutes medical, legal, "
+            "or financial advice. Always consult qualified professionals for important decisions."
+        )
+    )
 
 
 class MemoryOut(BaseModel):
@@ -868,6 +874,87 @@ async def health():
         "model": llm_model if llm_client else None,
         "billing_enabled": billing is not None,
         "stripe_configured": stripe_handler.stripe_configured if stripe_handler else False,
+        "legal_notice": (
+            "Nori is an AI companion, not a professional service provider. "
+            "Nothing Nori says constitutes medical, legal, or financial advice. "
+            "Terms of Service: https://projectnobi.ai/terms | "
+            "Privacy Policy: https://projectnobi.ai/privacy"
+        ),
+    }
+
+
+@app.get("/api/terms")
+async def get_terms():
+    """Return ToS summary for display in apps."""
+    return {
+        "title": "Terms of Service",
+        "version": "2026-03-20",
+        "url": "https://projectnobi.ai/terms",
+        "summary": (
+            "By using Nori, you agree to our Terms of Service. "
+            "You must be 13+ (16+ in the EU). Nori is an AI companion — not a doctor, "
+            "lawyer, or financial advisor. Your data is encrypted and you can delete it "
+            "at any time. We do not sell your data. Governing law: England and Wales."
+        ),
+        "key_points": [
+            "Minimum age: 13 (US) / 16 (EU)",
+            "Nori is an AI companion — not professional advice",
+            "Your data is encrypted with AES-128",
+            "You own your data and can delete it anytime",
+            "No selling of personal data to third parties",
+            "Governing law: England and Wales",
+            "7-day refund window for paid subscriptions",
+        ],
+        "contact": "legal@projectnobi.ai",
+    }
+
+
+@app.get("/api/privacy")
+async def get_privacy():
+    """Return Privacy Policy summary for display in apps."""
+    return {
+        "title": "Privacy Policy",
+        "version": "2026-03-20",
+        "url": "https://projectnobi.ai/privacy",
+        "gdpr_compliant": True,
+        "ccpa_compliant": True,
+        "summary": (
+            "Project Nobi collects conversation data, memory data, and usage statistics "
+            "to provide the Nori companion service. All data is encrypted with AES-128. "
+            "We do not sell your data. You can access, export, or delete your data at any time."
+        ),
+        "key_points": [
+            "Data encrypted with AES-128 before storage",
+            "No selling of personal data to third parties",
+            "GDPR Articles 13/14 compliant",
+            "CCPA compliant",
+            "COPPA compliant (13+/16+ age limits enforced)",
+            "Right to access, delete, export, and rectify your data",
+            "Data auto-deleted after 12 months of inactivity",
+            "72-hour breach notification to regulators",
+            "DPO appointed: dpo@projectnobi.ai",
+        ],
+        "data_collected": [
+            "Conversation messages",
+            "Memory data extracted from conversations",
+            "Usage statistics (anonymised)",
+            "Device information",
+        ],
+        "user_rights": [
+            "Access your data",
+            "Delete your data",
+            "Export your data",
+            "Rectify inaccurate data",
+            "Object to processing",
+            "Data portability",
+        ],
+        "retention": {
+            "active_data": "While account is active",
+            "inactive_data": "Auto-deleted after 12 months of inactivity",
+            "deleted_account": "Permanently deleted within 30 days",
+        },
+        "dpo_contact": "dpo@projectnobi.ai",
+        "contact": "privacy@projectnobi.ai",
     }
 
 

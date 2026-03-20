@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSettings } from "@/hooks/useSettings";
 
+const AGE_CONSENT_KEY = "nobi_age_confirmed";
+
 const LANGUAGES = [
   { code: "en", name: "English", native: "English" },
   { code: "zh", name: "Chinese", native: "中文" },
@@ -23,11 +25,18 @@ export default function OnboardingWizard() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [language, setLanguage] = useState("en");
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const { updateSettings, setOnboarded } = useSettings();
   const router = useRouter();
 
   const handleFinish = () => {
     updateSettings({ display_name: name, language });
+    // Save age confirmation to localStorage
+    try {
+      localStorage.setItem(AGE_CONSENT_KEY, "true");
+    } catch {
+      // ignore
+    }
     setOnboarded();
     router.push("/chat");
   };
@@ -43,7 +52,33 @@ export default function OnboardingWizard() {
         Your personal AI companion that remembers you, understands you, and
         grows with you.
       </p>
-      <button onClick={() => setStep(1)} className="btn-primary text-lg px-8 py-4">
+      {/* Age confirmation */}
+      <label className="flex items-start gap-3 max-w-sm mx-auto text-left cursor-pointer">
+        <input
+          type="checkbox"
+          checked={ageConfirmed}
+          onChange={(e) => setAgeConfirmed(e.target.checked)}
+          className="mt-1 w-4 h-4 accent-purple-600 flex-shrink-0"
+        />
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          I confirm I am at least <strong>13 years old</strong> (16+ if I am in
+          the EU). I agree to the{" "}
+          <a href="/terms" className="text-purple-600 dark:text-purple-400 underline" target="_blank" rel="noopener noreferrer">
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" className="text-purple-600 dark:text-purple-400 underline" target="_blank" rel="noopener noreferrer">
+            Privacy Policy
+          </a>
+          .
+        </span>
+      </label>
+      <button
+        onClick={() => ageConfirmed && setStep(1)}
+        disabled={!ageConfirmed}
+        className={`btn-primary text-lg px-8 py-4 ${!ageConfirmed ? "opacity-50 cursor-not-allowed" : ""}`}
+        title={!ageConfirmed ? "Please confirm your age to continue" : undefined}
+      >
         Get Started ✨
       </button>
     </div>,
