@@ -1102,7 +1102,22 @@ def _clean_response(response: str) -> str:
 
 
 # Track users who want voice replies
-_voice_enabled_users: set = set()
+# Persist voice preferences across restarts
+_VOICE_FILE = "/root/.nobi/voice_users.txt"
+def _load_voice_users() -> set:
+    try:
+        with open(_VOICE_FILE) as f:
+            return set(line.strip() for line in f if line.strip())
+    except FileNotFoundError:
+        return set()
+
+def _save_voice_users(users: set):
+    import os
+    os.makedirs(os.path.dirname(_VOICE_FILE), exist_ok=True)
+    with open(_VOICE_FILE, "w") as f:
+        f.write("\n".join(users))
+
+_voice_enabled_users: set = _load_voice_users()
 
 async def _send_response(update: Update, response: str):
     """Send a response with optional voice reply."""
@@ -1147,9 +1162,11 @@ async def cmd_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     if user_id in _voice_enabled_users:
         _voice_enabled_users.discard(user_id)
+        _save_voice_users(_voice_enabled_users)
         await update.message.reply_text("🔇 Voice replies OFF. I'll reply with text only.\n\nUse /voice to turn it back on.")
     else:
         _voice_enabled_users.add(user_id)
+        _save_voice_users(_voice_enabled_users)
         # Install gTTS if needed
         try:
             from gtts import gTTS
