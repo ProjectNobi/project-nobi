@@ -15,6 +15,14 @@
       "static/css/981b65cca7c2428e.css",
       "static/chunks/app/layout-4f6f05b57b773d37.js"
     ],
+    "/memories/page": [
+      "static/chunks/webpack-42d04204edd1732a.js",
+      "static/chunks/fd9d1056-faca5e55fb7642b2.js",
+      "static/chunks/117-5949527e77b12dba.js",
+      "static/chunks/main-app-ef92bbc1a98eeba9.js",
+      "static/chunks/448-e08c7bd62b2dc12c.js",
+      "static/chunks/app/memories/page-dccdc50637373396.js"
+    ],
     "/chat/page": [
       "static/chunks/webpack-42d04204edd1732a.js",
       "static/chunks/fd9d1056-faca5e55fb7642b2.js",
@@ -31,6 +39,14 @@
       "static/chunks/main-app-ef92bbc1a98eeba9.js",
       "static/chunks/app/onboarding/page-ed72d5db2445c995.js"
     ],
+    "/settings/page": [
+      "static/chunks/webpack-42d04204edd1732a.js",
+      "static/chunks/fd9d1056-faca5e55fb7642b2.js",
+      "static/chunks/117-5949527e77b12dba.js",
+      "static/chunks/main-app-ef92bbc1a98eeba9.js",
+      "static/chunks/448-e08c7bd62b2dc12c.js",
+      "static/chunks/app/settings/page-b8b047c07813da34.js"
+    ],
     "/page": [
       "static/chunks/webpack-42d04204edd1732a.js",
       "static/chunks/fd9d1056-faca5e55fb7642b2.js",
@@ -45,22 +61,6 @@
       "static/chunks/117-5949527e77b12dba.js",
       "static/chunks/main-app-ef92bbc1a98eeba9.js",
       "static/chunks/app/subscription/page-acdf6fbed43eabda.js"
-    ],
-    "/memories/page": [
-      "static/chunks/webpack-42d04204edd1732a.js",
-      "static/chunks/fd9d1056-faca5e55fb7642b2.js",
-      "static/chunks/117-5949527e77b12dba.js",
-      "static/chunks/main-app-ef92bbc1a98eeba9.js",
-      "static/chunks/448-e08c7bd62b2dc12c.js",
-      "static/chunks/app/memories/page-dccdc50637373396.js"
-    ],
-    "/settings/page": [
-      "static/chunks/webpack-42d04204edd1732a.js",
-      "static/chunks/fd9d1056-faca5e55fb7642b2.js",
-      "static/chunks/117-5949527e77b12dba.js",
-      "static/chunks/main-app-ef92bbc1a98eeba9.js",
-      "static/chunks/448-e08c7bd62b2dc12c.js",
-      "static/chunks/app/settings/page-b8b047c07813da34.js"
     ]
   }
 }

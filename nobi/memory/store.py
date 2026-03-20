@@ -194,8 +194,14 @@ class MemoryManager:
     # ─── Embedding helpers ───────────────────────────────────────
 
     def _get_embedding_engine(self) -> "EmbeddingEngine | None":
-        """Get the embedding engine if available, lazily."""
+        """Get the embedding engine if available, lazily.
+
+        Set NOBI_DISABLE_EMBEDDINGS=1 to skip model loading (saves ~400MB RAM).
+        Useful for miners that don't need semantic search.
+        """
         if not _EMBEDDINGS_AVAILABLE:
+            return None
+        if os.environ.get("NOBI_DISABLE_EMBEDDINGS", "").strip() in ("1", "true", "yes"):
             return None
         if not hasattr(self, "_embedding_engine") or self._embedding_engine is None:
             self._embedding_engine = get_engine()
