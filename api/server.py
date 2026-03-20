@@ -833,3 +833,31 @@ async def v1_health():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=API_PORT)
+
+
+# ─── TTS for Web App ────────────────────────────────────────
+
+@app.post("/api/tts")
+async def web_tts(request: Request):
+    """Text-to-speech for webapp - uses browser-native speech or server TTS."""
+    try:
+        body = await request.json()
+        text = body.get("text", "")
+        if not text:
+            raise HTTPException(status_code=400, detail="Text is required")
+        
+        try:
+            from nobi.voice.tts import synthesize_speech
+            result = synthesize_speech(text, voice="default")
+            if result.get("audio"):
+                return {"success": True, "audio": result["audio"], "format": result.get("format", "mp3")}
+        except Exception as e:
+            logger.debug(f"Server TTS failed, client will use browser TTS: {e}")
+        
+        # Fallback: tell client to use browser's speechSynthesis
+        return {"success": True, "use_browser_tts": True, "text": text}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"TTS error: {e}")
+        return {"success": True, "use_browser_tts": True, "text": text}

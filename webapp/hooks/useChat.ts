@@ -55,6 +55,28 @@ export function useChat() {
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
+
+        // Play voice if enabled
+        try {
+          const settingsStr = localStorage.getItem("nobi_settings");
+          const voiceEnabled = settingsStr ? JSON.parse(settingsStr).voice_enabled : false;
+          if (voiceEnabled === "true" && response.response) {
+            // Use browser's built-in speech synthesis
+            const utterance = new SpeechSynthesisUtterance(response.response);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            // Try to find a nice voice
+            const voices = window.speechSynthesis.getVoices();
+            const preferred = voices.find(v => v.name.includes("Google") && v.lang.startsWith("en")) 
+              || voices.find(v => v.lang.startsWith("en"));
+            if (preferred) utterance.voice = preferred;
+            window.speechSynthesis.cancel(); // Stop any previous
+            window.speechSynthesis.speak(utterance);
+          }
+        } catch (voiceErr) {
+          console.debug("Voice playback not available:", voiceErr);
+        }
       } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : "Something went wrong";
