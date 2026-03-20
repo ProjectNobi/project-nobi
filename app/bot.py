@@ -604,7 +604,9 @@ class CompanionBot:
                 memory_context=memory_context,
                 detected_lang=detected_lang,
             )
-            if subnet_response:
+            # Filter out garbage/fallback responses from miners
+            _BAD_RESPONSES = ["limited mode", "I received your message:", "Please try again in a moment"]
+            if subnet_response and not any(bad in subnet_response for bad in _BAD_RESPONSES):
                 logger.info(f"[Routing] Used SUBNET path for user {user_id}")
                 # Save subnet response to conversation history
                 try:
