@@ -230,3 +230,77 @@
 ---
 
 *Full review saved for team reference. All findings to be addressed before mainnet launch.*
+
+---
+
+## Part 4: Launch Positioning, Vendor Governance & Final Recommendations
+
+### 🔴 Issue 9: Product Positioning at Launch
+
+**Recommendation:** Market Nobi as an **AI companion/chat product ONLY**. NOT:
+- ❌ Therapy
+- ❌ Crisis support
+- ❌ Mental health treatment
+- ❌ Regulated wellness solution
+
+**Required safeguards:**
+- Always-on AI disclosure
+- Crisis handoff language (helpline numbers)
+- Easy opt-out from proactive messages
+- Strict consent for voice/image memory capture
+- **18+ only** at launch (safest) OR hard block for under-13 + tightly controlled teen mode
+- FTC is actively scrutinizing companion bots and child impacts (Sept 2025 inquiry)
+
+### 🟡 Issue 10: Vendor Governance as Product Feature
+
+**Actions:**
+- Map every processor and subprocessor
+- Decide which providers may retain prompts/audio
+- Negotiate DPAs and transfer terms
+- Expose vendor map publicly
+- Offer region-aware routing where possible
+- Separate consumer and enterprise processor stacks early
+
+### 🟡 Issue 11: Delay Regulated-Enterprise & Federated Claims
+
+**Rule:** Follow the business plan's own instruction literally — do NOT present federated privacy or enterprise-grade controls as current capabilities.
+
+Future enterprise story can be strong IF:
+- On-device memory becomes real
+- True privacy-preserving learning is deployed
+- Control evidence exists (audit logs, IAM, BAA readiness)
+
+Until then: it's a **future story, not a present one.**
+
+---
+
+## THE PRACTICAL PATH (ChatGPT 5.4 Pro Summary)
+
+> "Nobi does not fully resolve the key legal/privacy/compliance issues yet, but it can. The fastest defensible path is:
+> 1. Truthful copy
+> 2. Real auth
+> 3. Formal privacy docs
+> 4. Adult-first launch
+> 5. Narrower claims
+> 6. Vendor contracts
+> 7. No regulated/therapy/federated sales language until architecture supports it
+>
+> Done that way, the business becomes much stronger legally and commercially, not weaker."
+
+---
+
+## References
+1. [Project Nobi Website](https://projectnobi.ai/)
+2. [Whitepaper](https://github.com/ProjectNobi/project-nobi/blob/main/docs/WHITEPAPER.md)
+3. [encryption.py source](https://github.com/ProjectNobi/project-nobi/raw/refs/heads/main/nobi/memory/encryption.py)
+4. [API Reference](https://github.com/ProjectNobi/project-nobi/blob/main/docs/API_REFERENCE.md)
+5. [Vision Doc](https://github.com/ProjectNobi/project-nobi/blob/main/docs/VISION.md)
+6. [server.py source](https://github.com/ProjectNobi/project-nobi/raw/refs/heads/main/api/server.py)
+7. [Business Plan](https://github.com/ProjectNobi/project-nobi/blob/main/docs/BUSINESS_PLAN.md)
+8. [Web App](https://app.projectnobi.ai/)
+9. [GDPR Full Text](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng)
+10. [FTC AI Companion Inquiry (Sept 2025)](https://www.ftc.gov/news-events/news/press-releases/2025/09/ftc-launches-inquiry-ai-chatbots-acting-companions)
+
+---
+
+*Full review complete. Saved as reference for Project Nobi legal compliance roadmap.*
