@@ -31,6 +31,8 @@ from nobi.i18n.languages import SUPPORTED_LANGUAGES, get_language_name
 from nobi.billing.subscription import SubscriptionManager, TIERS
 from nobi.billing.stripe_handler import StripeHandler
 from nobi.api_auth import ApiKeyManager
+from nobi.personality import PersonalityTuner, detect_mood
+from nobi.personality.prompts import get_dynamic_prompt
 
 try:
     from openai import OpenAI
@@ -143,11 +145,12 @@ user_settings: Dict[str, Dict[str, Any]] = {}  # In-memory settings cache
 billing: Optional[SubscriptionManager] = None
 stripe_handler: Optional[StripeHandler] = None
 api_key_mgr: Optional[ApiKeyManager] = None
+personality_tuner: Optional[PersonalityTuner] = None
 
 
 @app.on_event("startup")
 async def startup():
-    global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler, api_key_mgr
+    global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler, api_key_mgr, personality_tuner
 
     ensure_master_secret()
     memory = MemoryManager(db_path=DB_PATH)
@@ -157,6 +160,9 @@ async def startup():
     # Initialize API key manager
     api_key_mgr = ApiKeyManager(db_path=os.path.expanduser(API_KEYS_DB_PATH))
     logger.info("API key manager initialized")
+
+    # Initialize personality tuner
+    personality_tuner = PersonalityTuner(db_path=os.path.expanduser("~/.nobi/personality_api.db"))
 
     # Initialize billing
     billing = SubscriptionManager(db_path=BILLING_DB_PATH)
@@ -218,8 +224,11 @@ async def chat(req: ChatRequest):
     # Detect language
     detected_lang = lang_detector.detect(message, user_id) if lang_detector else "en"
 
-    # Build system prompt
+    # Detect mood and build system prompt with personality tuning
+    user_mood = detect_mood(message)
     system = SYSTEM_PROMPT.format(memory_context=memory_context or "Nothing yet — this is a new friend!")
+    mood_prompt = get_dynamic_prompt(user_id, message, user_mood)
+    system = system + "\n\n== PERSONALITY TUNING ==\n" + mood_prompt
     system = build_multilingual_system_prompt(system, detected_lang)
 
     try:
@@ -265,6 +274,13 @@ async def chat(req: ChatRequest):
         adapter_manager.update_adapter_from_conversation(user_id, message, response_text)
     except Exception as e:
         logger.warning(f"Save response error: {e}")
+
+    # Record personality metrics (best-effort)
+    try:
+        if personality_tuner:
+            personality_tuner.analyze_conversation(message, response_text)
+    except Exception as e:
+        logger.debug(f"Personality metrics error: {e}")
 
     return ChatResponse(response=response_text, memories_used=memories_used[:5])
 

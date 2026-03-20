@@ -81,21 +81,25 @@
 - [x] Mining guide with one-command setup
 - [x] Validating guide with Discord links
 
-## Phase 4: Community Growth & Mainnet Prep 📋 PLANNED
-*Target: April 2026*
+## Phase 4: Community Growth & Mainnet Prep 🔄 IN PROGRESS
+*March 20+, 2026*
 
+### Completed
+- [x] Miner specialization (query routing by category, --neuron.specialization flag, 15% bonus)
+- [x] Revenue model: subscription tiers (Free/Plus $4.99/Pro $9.99) with Stripe integration
+- [x] Third-party API with auth (nobi_ API keys, rate limits, 12 public endpoints)
+- [x] API documentation (API_REFERENCE.md with Python/curl/JS examples)
+- [x] Production deployment configs (Docker Compose, Nginx, systemd, Vercel)
+- [x] Nori personality tuning (mood detection, dynamic prompts, issue detection, quality scoring)
+
+### Remaining
 - [ ] 48h testnet stabilization run — observe, fix edge cases
 - [ ] Invite external miners to testnet (Bittensor Discord, X)
 - [ ] Gather community feedback on Nori UX
-- [ ] Improve Nori personality based on conversation logs
-- [ ] Deploy webapp to production (Vercel/Cloudflare)
-- [ ] Deploy FastAPI backend to production
-- [ ] Miner specialization (some miners better at advice, others at creativity)
-- [ ] Revenue model: subscription tier for premium features
+- [ ] Deploy webapp + API to production servers
 - [ ] Mainnet subnet registration (~1000+ TAO)
 - [ ] Funding strategy for registration
 - [ ] Production validator deployment (high-availability)
-- [ ] API access for third-party integration
 
 ## Phase 5: Scale & Growth 📋 PLANNED
 *Target: Q2-Q3 2026*
@@ -120,7 +124,7 @@
 | Miners | 7 |
 | Validators | 2 |
 | Servers | 5 |
-| Total tests | 424 |
+| Total tests | 683 |
 | Languages | 20 |
 | Bot users | 15+ unique |
 | Memory system | Semantic + Relationship Graphs |

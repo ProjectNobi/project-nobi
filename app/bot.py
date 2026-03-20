@@ -46,6 +46,8 @@ from nobi.proactive import ProactiveEngine
 from nobi.proactive.scheduler import ProactiveScheduler
 from nobi.group import GroupHandler
 from nobi.billing.subscription import SubscriptionManager
+from nobi.personality import PersonalityTuner, detect_mood
+from nobi.personality.prompts import get_dynamic_prompt
 import io
 
 try:
@@ -254,6 +256,7 @@ class CompanionBot:
         self.lang_detector = LanguageDetector()
         self.rate_limiter = RateLimiter()
         self.billing = SubscriptionManager(db_path="~/.nobi/billing.db")
+        self.personality_tuner = PersonalityTuner(db_path=os.path.expanduser("~/.nobi/personality.db"))
         self._translation_cache: dict[str, dict[str, str]] = {}  # {lang: {key: translated}}
         self.client = None
         self.model = CHUTES_MODEL
@@ -621,10 +624,16 @@ class CompanionBot:
         if not self.client:
             return "I'm having trouble connecting right now. Try again in a moment! 🤖"
 
+        # Detect mood and get dynamic personality adjustments
+        user_mood = detect_mood(message)
+
         # Build prompt with adapter personalization (Phase B) + language
         system = SYSTEM_PROMPT.format(
             memory_context=memory_context or ""
         )
+        # Apply mood-aware personality adjustment
+        mood_prompt = get_dynamic_prompt(user_id, message, user_mood)
+        system = system + "\n\n== PERSONALITY TUNING ==\n" + mood_prompt
         system = build_multilingual_system_prompt(system, detected_lang)
         try:
             adapter_cfg = self.adapter_manager.get_adapter_config(user_id)
@@ -672,6 +681,12 @@ class CompanionBot:
                 self.adapter_manager.update_adapter_from_conversation(user_id, message, response)
             except Exception as e:
                 logger.debug(f"Adapter update error: {e}")
+
+            # Record personality metrics (non-blocking, best-effort)
+            try:
+                self.personality_tuner.analyze_conversation(message, response)
+            except Exception as e:
+                logger.debug(f"Personality metrics error: {e}")
 
             return response
 
