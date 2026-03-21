@@ -10,19 +10,21 @@
 
 We were promised intelligence that serves us. Instead, we got intelligence that serves shareholders.
 
-In 2026, the world's most capable AI systems — ChatGPT, Claude, Gemini — are owned by three companies. Together, they serve over a billion users. They process our fears, our dreams, our therapy sessions, our love letters, our business strategies, our darkest moments. They know more about us than our closest friends.
+In 2026, the world's most capable AI systems — ChatGPT, Claude, Gemini — are owned by three companies. Together, they serve hundreds of millions of users. They process our fears, our dreams, our therapy sessions, our love letters, our business strategies, our darkest moments. They know more about us than our closest friends.
 
 And they remember nothing. Or worse — they remember selectively, on terms you didn't write, stored on servers you can't access, governed by policies that change without your consent.
 
 Let's be honest about where we are:
 
-**ChatGPT** now has "Memory." It can remember your name, your preferences, things you've told it. OpenAI stores these memories on their servers. They can read them. They can delete them. They can use them to train future models. They can change the feature tomorrow. When you stop paying $20/month, your memories become an asset on someone else's balance sheet.
+**ChatGPT** now has "Memory." It can remember your name, your preferences, things you've told it. OpenAI stores these memories on their servers. Your data is stored on corporate servers, governed by their privacy policies — policies that can change at any time without your consent. When you stop paying, access to your memories depends on the provider's continued goodwill and business decisions.
 
-**Claude** has memory too. Anthropic — a company that genuinely cares about safety — still operates under the same fundamental constraint: they are a corporation. They answer to investors. Your memories live in their infrastructure. Your relationship with Claude exists at their discretion.
+**Claude** has memory too. Anthropic — a company that genuinely cares about safety — still operates within the constraints of a corporate structure with investors and business obligations. Your memories live in their infrastructure. Your data remains under their control and policies.
 
-**Gemini** remembers across Google's ecosystem. The same company that reads your email, tracks your location, and profiles your every search query now also remembers your personal conversations. The conflict of interest isn't subtle.
+**Gemini** integrates memory across Google's ecosystem. While powerful, this means your personal AI memories are held by one of the world's largest data companies, alongside your search history, email, and location data. This raises questions about data separation and privacy.
 
 These are good products built by talented people. This is not an attack on them. This is a statement about structure: **centralized memory is rented memory.** You don't own it. You can't take it with you. You can't verify what's done with it. You can't prevent it from disappearing.
+
+*Note: The descriptions above reflect publicly available information as of March 2026. We encourage users to review each provider's current privacy policies directly.*
 
 The AI companion market is projected to reach hundreds of billions of dollars by 2035 (industry estimates suggest $552 billion, per Precedence Research, 31% CAGR). Character.AI has 20 million monthly users. Replika earns over $100 million annually. The World Health Organization has declared loneliness a global health crisis. The demand for digital companionship is not hypothetical — it is urgent, massive, and growing.
 
@@ -130,6 +132,8 @@ Nobi breaks this cycle structurally. There are no investors demanding returns. T
 | Shutdown risk | Acqui-hired, pivoted, shut down | Decentralized — can't be killed |
 | Transparency | Closed source, opaque policies | Open source, auditable on-chain |
 
+*Based on publicly available information as of March 2026. Users should verify current policies with each provider.*
+
 ---
 
 ## V. How It Works
@@ -208,7 +212,7 @@ There are 8 billion people on this planet. Many of them are lonely. Many of them
 
 > **Important:** Nori is an AI companion, not a substitute for professional mental health care, therapy, or crisis intervention. If you are experiencing a mental health crisis, please contact the Samaritans (116 123 in the UK), the Crisis Text Line (text HOME to 741741 in the US), or your local emergency services.
 
-AI companionship shouldn't be a luxury product. It shouldn't cost $20/month. It shouldn't be controlled by a company that might pivot to enterprise software next quarter. It shouldn't be built on a foundation where your deepest conversations are an asset on someone else's balance sheet.
+AI companionship shouldn't be a luxury product. It shouldn't cost $20/month. It shouldn't depend on a single company's business priorities. It shouldn't be built on a foundation where your most personal conversations are stored on infrastructure you don't control.
 
 **We believe digital companionship should be as accessible as Wikipedia, as resilient as Bitcoin, as personal as a diary.**
 
@@ -259,7 +263,7 @@ That's the legacy. Not a company. Not a valuation. A companion for humanity.
 
 The AI companion you choose will shape how you think, how you process emotions, how you remember your own life. That tool should be yours.
 
-Not rented. Not surveilled. Not optimizable for someone else's quarterly earnings.
+Not rented. Not dependent on any single company's policies. Not optimized for someone else's business model.
 
 Yours.
 
