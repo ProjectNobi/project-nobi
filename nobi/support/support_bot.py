@@ -159,7 +159,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
             "• Group memory is separate from personal memory\n"
             "• Each user maintains their own private memory profile\n"
             "• Nori moderates the vibe — she's a great group companion!\n\n"
-            "Group features are available on Pro plan. Add her with: @ProjectNobiBot"
+            "Group features are available to all users — free! Add her with: @ProjectNobiBot"
         ),
     },
     {
