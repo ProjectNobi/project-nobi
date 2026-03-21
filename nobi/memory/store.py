@@ -903,6 +903,8 @@ class MemoryManager:
                         '"content" (string, the memory), "type" (one of: fact, preference, event, emotion, context), '
                         '"importance" (float 0.0-1.0), "tags" (array of strings). '
                         "Only extract genuinely memorable information. Skip greetings and filler. "
+                        "Always include specific details (names, places, dates, numbers) in extracted memories. "
+                        "Never extract vague summaries when specific information is available. "
                         "Return [] if nothing worth remembering. Return ONLY valid JSON, no explanation."
                     )},
                     {"role": "user", "content": message},
@@ -1032,7 +1034,7 @@ class MemoryManager:
     # ─── Phase 2: Smart Context Window ─────────────────────────
 
     def get_smart_context(
-        self, user_id: str, current_message: str, max_tokens: int = 500
+        self, user_id: str, current_message: str, max_tokens: int = 800
     ) -> str:
         """
         Intelligently select which memories to include in prompt context.
@@ -1082,14 +1084,14 @@ class MemoryManager:
         except Exception:
             pass
 
-        # 3. Top 10 relevant memories (query-matched + high importance)
+        # 3. Top 15 relevant memories (query-matched + high importance)
         remaining_chars = max_chars - used_chars
         if remaining_chars > 100:
             try:
                 memories = self.recall(
                     user_id=user_id,
                     query=current_message,
-                    limit=10,
+                    limit=15,
                 )
                 if memories:
                     mem_lines = []
@@ -1098,8 +1100,29 @@ class MemoryManager:
                         if used_chars + len(line) < max_chars:
                             mem_lines.append(line)
                             used_chars += len(line)
-                    if mem_lines:
-                        parts.append("[Memories about this user:]\n" + "\n".join(mem_lines))
+
+                # 3b. Also include high-importance memories that semantic search may have missed
+                try:
+                    all_important = self._recall_keyword(
+                        user_id=user_id,
+                        query="",
+                        limit=15,
+                    )
+                    # Filter to high importance and deduplicate
+                    existing_contents = {line.split("] ", 1)[-1] if "] " in line else line for line in mem_lines}
+                    for m in all_important:
+                        if m.get("importance", 0) >= 0.8:
+                            line = f"- [{m['type']}] {m['content']}"
+                            content_part = m['content']
+                            if content_part not in existing_contents and used_chars + len(line) < max_chars:
+                                mem_lines.append(line)
+                                existing_contents.add(content_part)
+                                used_chars += len(line)
+                except Exception:
+                    pass
+
+                if mem_lines:
+                    parts.append("[Memories about this user:]\n" + "\n".join(mem_lines))
             except Exception:
                 pass
 
