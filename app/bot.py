@@ -211,8 +211,8 @@ WELCOME_MESSAGES = [
 TOS_SUMMARY = (
     "📋 Terms of Service Summary\n\n"
     "• Nori is an AI companion — not a doctor, lawyer, or financial advisor\n"
-    "• You must be 18+ to use this service (13+ with parental consent)\n"
-    "• You must be at least 18 years old. Users under 13 are not permitted.\n"
+    "• You must be 18+ to use this service\n"
+    "• You must be at least 18 years old. Users under 18 are not permitted.\n"
     "• Your data is encrypted (AES-128) and you can delete it anytime\n"
     "• We don't sell your personal data\n"
     "• Don't use Nori for illegal activities or to harm others\n"
@@ -228,7 +228,7 @@ PRIVACY_SUMMARY = (
     "• We never sell your data to third parties\n"
     "• Your rights: access (/memories), export (/export), delete (/forget)\n"
     "• Data auto-deleted after 12 months of inactivity\n"
-    "• Age requirements: 18+ recommended; users under 13 are not permitted\n\n"
+    "• Age requirements: 18+ required; users under 18 are not permitted\n\n"
     "Full Privacy Policy: projectnobi.ai/privacy\n"
     "Privacy questions? privacy@projectnobi.ai\n"
     "DPO: dpo@projectnobi.ai"
@@ -868,7 +868,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if is_new:
         welcome += (
-            "\n\n⚠️ You must be 18 or older to use Nori. If you are under 13, you cannot use this service. Please confirm your age by typing /agree"
+            "\n\n⚠️ You must be 18 or older to use Nori. If you are under 18, you cannot use this service. Please confirm your age by typing /agree"
         )
     
     await update.message.reply_text(
@@ -1387,7 +1387,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg_lower = message.lower()
     if any(phrase in msg_lower for phrase in _UNDER_13_PHRASES):
         await update.message.reply_text(
-            "⛔ We're sorry, but Nori is not available to users under 13 years of age. "
+            "⛔ We're sorry, but Nori is not available to users under 18 years of age. "
             "This is required by law (COPPA/GDPR). "
             "Please ask a parent or guardian for help finding age-appropriate services."
         )

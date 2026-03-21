@@ -239,8 +239,8 @@ class TestAgeVerification:
             pytest.skip("OnboardingWizard.tsx not found")
         with open(onboarding_path) as f:
             content = f.read()
-        assert "13 years old" in content
-        assert "18" in content  # EU minimum age
+        assert "18 years old" in content
+        assert "18" in content  # minimum age
         assert "checkbox" in content.lower() or 'type="checkbox"' in content
 
     def test_get_started_disabled_without_age(self):
@@ -267,8 +267,8 @@ class TestAgeVerification:
         bot_path = os.path.join(PROJECT_ROOT, "app", "bot.py")
         with open(bot_path) as f:
             content = f.read()
-        assert "13+" in content
-        assert "18" in content  # EU
+        assert "18+" in content
+        assert "18" in content  # minimum age
 
     def test_tos_mention_in_welcome(self):
         """Welcome message must mention Terms of Service."""

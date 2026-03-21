@@ -1073,12 +1073,12 @@ async def get_terms():
         "url": "https://projectnobi.ai/terms",
         "summary": (
             "By using Nori, you agree to our Terms of Service. "
-            "You must be 13+ (16+ in the EU). Nori is an AI companion — not a doctor, "
+            "You must be 18+ to use Nori. Nori is an AI companion — not a doctor, "
             "lawyer, or financial advisor. Your data is encrypted and you can delete it "
             "at any time. We do not sell your data. Governing law: England and Wales."
         ),
         "key_points": [
-            "Minimum age: 13 (US) / 16 (EU)",
+            "Minimum age: 18",
             "Nori is an AI companion — not professional advice",
             "Your data is encrypted with AES-128",
             "You own your data and can delete it anytime",
@@ -1109,7 +1109,7 @@ async def get_privacy():
             "No selling of personal data to third parties",
             "GDPR Articles 13/14 compliant",
             "CCPA compliant",
-            "COPPA compliant (13+/16+ age limits enforced)",
+            "COPPA compliant (18+ age limit enforced)",
             "Right to access, delete, export, and rectify your data",
             "Data auto-deleted after 12 months of inactivity",
             "72-hour breach notification to regulators",

@@ -43,9 +43,9 @@ Nori is powered by artificial intelligence that can make mistakes, provide inacc
 ## 3. Eligibility and Account Creation
 
 ### 3.1 Age Requirements
-- **United States:** You must be at least 13 years of age to use Nori.
-- **European Union / EEA:** You must be at least 16 years of age to use Nori, in compliance with the General Data Protection Regulation (GDPR).
-- **All other jurisdictions:** You must meet the minimum age of digital consent in your country, or 13 years, whichever is greater.
+- **United States:** You must be at least 18 years of age to use Nori.
+- **European Union / EEA:** You must be at least 18 years of age to use Nori, in compliance with the General Data Protection Regulation (GDPR).
+- **All other jurisdictions:** You must meet the minimum age of digital consent in your country, or 18 years, whichever is greater.
 
 If you are under 18 (or the age of majority in your jurisdiction), you represent that your parent or legal guardian has reviewed and agreed to these Terms on your behalf.
 

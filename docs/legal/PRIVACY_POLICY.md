@@ -192,8 +192,8 @@ When you request data deletion (e.g., via `/forget`), we initiate deletion immed
 ## 9. Children's Privacy
 
 ### 9.1 Age Requirements
-- **United States:** Nori is not directed to children under 13. We do not knowingly collect personal information from children under 13 (COPPA compliance).
-- **European Union / EEA:** We require users to be at least 16 years of age (GDPR Art. 8 compliance).
+- **United States:** Nori is not directed to users under 18. We do not knowingly collect personal information from users under 18 (COPPA compliance).
+- **European Union / EEA:** We require users to be at least 18 years of age (GDPR Art. 8 compliance).
 - **Other jurisdictions:** We comply with local digital consent age requirements.
 
 ### 9.2 Parental Controls
