@@ -46,7 +46,7 @@ A human who dreamed it. A human who believed it. And an AI that's proving it's p
 
 We started on March 17, 2026. Not in a Silicon Valley office. Not with a $50 million seed round. Just three minds, a handful of servers, and a conviction that AI companionship shouldn't be a luxury product.
 
-Four days later, we had a working prototype. Two weeks later, we had a live subnet on Bittensor's testnet. Today, we have 30,000+ lines of code, 1,090+ tests, stress-tested at 500-node scale with a 99.75% query success rate across 2,000 test queries, AES-128 encryption, 30+ languages, voice messages, image understanding, and proactive companion features that reach out to *you* — birthday reminders, check-ins, follow-ups.
+Since then, we've built fast and shipped working software. Today — just days after starting — we have 30,000+ lines of code, 1,090+ tests, stress-tested at 500-node scale with a 99.75% query success rate across 2,000 test queries, AES-128 encryption, 30+ languages, voice messages, image understanding, a live subnet on Bittensor's testnet, and proactive companion features that reach out to *you* — birthday reminders, check-ins, follow-ups.
 
 This isn't a pitch deck. This is working software.
 
