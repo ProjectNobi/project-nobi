@@ -590,8 +590,8 @@ class CompanionBot:
         learning_kw = ["self-learn", "self-evolv", "how do you learn", "how do you improve",
                        "how do you get better", "do you evolve", "do you learn",
                        "how do you grow", "upgrade yourself"]
-        identity_kw = ["who are you", "what are you", "what model", "how do you work",
-                       "how are you built", "which model", "are you chatgpt", "are you gpt"]
+        identity_kw = ["who are you", "what are you", "are you chatgpt", "are you gpt",
+                       "are you claude", "are you gemini", "are you siri"]
         if any(kw in msg for kw in privacy_kw):
             return self._translate_identity_response("privacy", lang_code)
         if any(kw in msg for kw in memory_kw):
