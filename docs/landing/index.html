@@ -767,7 +767,7 @@
       return;
     }
 
-    // Fallback to API if no local match
+    // Try FAQ API first, then fall back to chat API for real Nori responses
     try {
       const res = await fetch(SUPPORT_API + '/api/support', {
         method: 'POST',
@@ -780,15 +780,30 @@
         const preview = data.answer.length > 400 ? data.answer.slice(0, 400) + '…' : data.answer;
         responseEl.textContent = preview;
         responseEl.className = 'support-response';
-      } else if (data.type === 'ticket') {
-        responseEl.textContent = "I don't have an exact answer for that yet. Try asking Nori directly on Telegram (@ProjectNobiBot) or visit our Help Center at app.projectnobi.ai/help";
-        responseEl.className = 'support-response';
       } else {
-        responseEl.textContent = "Try asking Nori directly — she's great at answering questions! t.me/ProjectNobiBot";
-        responseEl.className = 'support-response';
+        // No FAQ match — ask Nori directly via the chat API
+        try {
+          const chatRes = await fetch(SUPPORT_API + '/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: question, user_id: 'landing_visitor' }),
+          });
+          const chatData = await chatRes.json();
+          if (chatData.response) {
+            const preview = chatData.response.length > 500 ? chatData.response.slice(0, 500) + '…' : chatData.response;
+            responseEl.textContent = preview;
+            responseEl.className = 'support-response';
+          } else {
+            responseEl.textContent = "Hmm, I'm having trouble right now. Try the full chat at app.projectnobi.ai/chat!";
+            responseEl.className = 'support-response';
+          }
+        } catch {
+          responseEl.textContent = "Couldn't connect right now. Try the full chat at app.projectnobi.ai/chat!";
+          responseEl.className = 'support-response';
+        }
       }
     } catch {
-      responseEl.textContent = "Try asking Nori directly on Telegram: t.me/ProjectNobiBot";
+      responseEl.textContent = "Couldn't connect right now. Try chatting with Nori at app.projectnobi.ai/chat!";
       responseEl.className = 'support-response';
     }
 

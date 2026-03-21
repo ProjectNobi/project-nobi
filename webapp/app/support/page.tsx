@@ -125,17 +125,44 @@ export default function SupportPage() {
 
     const result = await askSupport(q, userId);
     if (result) {
-      // If it's a ticket (no FAQ match), show friendly message instead of ticket ID
-      const content = result.type === "ticket"
-        ? "I don't have a specific answer for that yet, but great question! 🤔 Try asking Nori directly in Chat — she's much better at open-ended conversations. Or check our Help page for guides and FAQs."
-        : result.answer;
-      
-      const noriMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "nori",
-        content,
-      };
-      setChatMessages((prev) => [...prev, noriMsg]);
+      if (result.type === "ticket") {
+        // No FAQ match — ask Nori via chat API for a real answer
+        try {
+          const chatRes = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || "https://api.projectnobi.ai"}/api/chat`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ message: q, user_id: userId }),
+            }
+          );
+          const chatData = await chatRes.json();
+          if (chatData.response) {
+            const noriMsg: ChatMessage = {
+              id: (Date.now() + 1).toString(),
+              role: "nori",
+              content: chatData.response,
+            };
+            setChatMessages((prev) => [...prev, noriMsg]);
+            return;
+          }
+        } catch {
+          // Chat API failed — show fallback
+        }
+        const noriMsg: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "nori",
+          content: "Hmm, I'm having trouble answering that right now. Try the Chat page for a full conversation with Nori! 💬",
+        };
+        setChatMessages((prev) => [...prev, noriMsg]);
+      } else {
+        const noriMsg: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "nori",
+          content: result.answer,
+        };
+        setChatMessages((prev) => [...prev, noriMsg]);
+      }
     }
   };
 
