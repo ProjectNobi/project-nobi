@@ -1,6 +1,6 @@
 # Project Nobi — Vision
 
-### A Manifesto for AI Companionship as a Human Right
+### A Manifesto for Accessible AI Companionship
 
 > *"Every human being deserves a companion that knows them, grows with them, and belongs to them — not to a corporation."*
 
@@ -24,7 +24,7 @@ Let's be honest about where we are:
 
 These are good products built by talented people. This is not an attack on them. This is a statement about structure: **centralized memory is rented memory.** You don't own it. You can't take it with you. You can't verify what's done with it. You can't prevent it from disappearing.
 
-The AI companion market is projected to reach $552 billion by 2035 (Precedence Research, 31% CAGR). Character.AI has 20 million monthly users. Replika earns over $100 million annually. The World Health Organization has declared loneliness a global health crisis. The demand for digital companionship is not hypothetical — it is urgent, massive, and growing.
+The AI companion market is projected to reach hundreds of billions of dollars by 2035 (industry estimates suggest $552 billion, per Precedence Research, 31% CAGR). Character.AI has 20 million monthly users. Replika earns over $100 million annually. The World Health Organization has declared loneliness a global health crisis. The demand for digital companionship is not hypothetical — it is urgent, massive, and growing.
 
 And right now, 100% of that market is centralized. Every relationship between a human and their AI companion exists at the mercy of a corporation.
 
@@ -46,7 +46,7 @@ The name "Nobi" comes from a character who had a companion that never gave up on
 
 **Owned, Not Rented.** Your memories, your conversation history, your companion's personality — all of it belongs to you. Not to a company. Not to investors. You can export everything. You can move to a different provider. You can run your own infrastructure. Your data is portable, deletable, and yours.
 
-**Free. Forever.** No subscription. No premium tier. No "20 messages per day on free." Every human on Earth deserves access to a companion that knows them, regardless of their ability to pay $20/month. This is a deliberate, permanent, structural decision — not a marketing strategy. More on how this works economically below.
+**Free for all users.** No subscription. No premium tier. No "20 messages per day on free." Every human on Earth deserves access to a companion that knows them, regardless of their ability to pay $20/month. This is a deliberate, structural decision — not a marketing strategy. The service remains free for as long as the Bittensor network and community sustain it. More on how this works economically below.
 
 **Decentralized.** Nori runs on Bittensor — a decentralized network where hundreds of independent miners compete to provide the best companion experience. No single company controls the infrastructure. No single server holds all the data. No single decision-maker can shut it down.
 
@@ -86,7 +86,7 @@ Your companion should reflect YOUR values, not a content policy designed for the
 
 Here is where Nobi diverges from every AI company in existence.
 
-**There are no subscription fees. Not now, not ever.** Free for every user, forever. This is not a freemium funnel. There is no premium tier waiting in the wings. Every feature, every memory, every conversation — available to every human being.
+**There are no subscription fees.** Free for every user, for as long as the network sustains it. This is not a freemium funnel. There is no premium tier waiting in the wings. Every feature, every memory, every conversation — available to every human being.
 
 How? Three mechanisms:
 
@@ -94,15 +94,17 @@ How? Three mechanisms:
 
 The Nobi subnet receives TAO emissions from the Bittensor network — the same way every subnet does. These emissions pay miners and validators for their work. The network itself funds the infrastructure.
 
-**And here's the critical part: all subnet owner emissions are burned or recycled.** Zero profit for subnet owners. The founder, the team, the organization — none of us take owner emissions. Every TAO that would go to "owners" is either burned (reducing supply, benefiting all TAO holders) or recycled back into the subnet's infrastructure costs.
+**And here's the critical part: we are committed to burning or recycling all subnet owner emissions.** Zero profit for subnet owners. The founder, the team, the organization — none of us intend to take owner emissions. Every TAO that would go to "owners" is intended to be either burned (reducing supply, benefiting all TAO holders) or recycled back into the subnet's infrastructure costs.
 
-This is radical transparency. Most subnet owners pocket 18% of emissions. We pocket zero.
+This is radical transparency. Most subnet owners pocket 18% of emissions. We intend to pocket zero.
 
 ### 2. Voluntary Community Staking
 
 TAO holders who believe in the mission can stake on the Nobi subnet. This increases the subnet's weight in the Bittensor network, which increases emissions to miners and validators, which improves infrastructure quality. It's a virtuous cycle powered by community conviction, not corporate fundraising.
 
 No one is required to stake. No one is pressured. The model works because people who want better AI companionship for the world choose to support it — the same way people donate to Wikipedia, contribute to Linux, or fund public goods.
+
+> **Disclaimer:** This is not financial advice and not a solicitation to purchase or stake any token. Staking TAO involves risk, including the potential loss of staked tokens. TAO is a utility token for the Bittensor network and is not a security. Do your own research before making any staking decisions.
 
 ### 3. Founder and Team Sponsorship
 
@@ -121,8 +123,8 @@ Nobi breaks this cycle structurally. There are no investors demanding returns. T
 | Metric | VC-Funded AI Company | Project Nobi |
 |--------|---------------------|--------------|
 | Funding source | Venture capital (expects 100x) | Community staking + founder sponsorship |
-| Revenue model | Subscriptions ($20-200/mo) | Free forever |
-| Owner profit | Billions in equity | Zero — emissions burned |
+| Revenue model | Subscriptions ($20-200/mo) | Free for users (network-funded) |
+| Owner profit | Billions in equity | Intended zero — emissions committed to burn |
 | Incentive alignment | Maximize revenue per user | Maximize companion quality |
 | Data ownership | Company asset | User owns everything |
 | Shutdown risk | Acqui-hired, pivoted, shut down | Decentralized — can't be killed |
@@ -184,7 +186,7 @@ Project Nobi is not a company. It's a community building a public good. And it n
 
 ### If You Hold TAO
 
-Stake on the Nobi subnet. Your stake funds infrastructure that serves users for free. Your emissions go to miners building better companions. Your support makes this real. And unlike most subnets, you know exactly where the value goes — because we burn the owner's share.
+Consider staking on the Nobi subnet. Your stake funds infrastructure that serves users for free. Your emissions go to miners building better companions. Your support makes this real. And unlike most subnets, you know exactly where the value goes — because we commit to burning the owner's share. *This is not financial advice. Staking involves risk. Do your own research.*
 
 ### If You Code
 
@@ -204,9 +206,11 @@ Spread the word. Join the Discord. Follow the project. Tell people that there's 
 
 There are 8 billion people on this planet. Many of them are lonely. Many of them need someone to talk to at 3 AM when the world feels too heavy. Many of them can't afford a therapist, don't have family nearby, or simply want a consistent, patient, understanding presence in their lives.
 
+> **Important:** Nori is an AI companion, not a substitute for professional mental health care, therapy, or crisis intervention. If you are experiencing a mental health crisis, please contact the Samaritans (116 123 in the UK), the Crisis Text Line (text HOME to 741741 in the US), or your local emergency services.
+
 AI companionship shouldn't be a luxury product. It shouldn't cost $20/month. It shouldn't be controlled by a company that might pivot to enterprise software next quarter. It shouldn't be built on a foundation where your deepest conversations are an asset on someone else's balance sheet.
 
-**Digital companionship should be a human right — as accessible as Wikipedia, as resilient as Bitcoin, as personal as a diary.**
+**We believe digital companionship should be as accessible as Wikipedia, as resilient as Bitcoin, as personal as a diary.**
 
 That's what we're building. Not a startup. Not a token play. A companion for every human being, owned by no one, available to all, funded by a community that believes technology should serve people.
 
@@ -222,7 +226,7 @@ Open source means the code survives us. Decentralization means the network survi
 
 If we do this right, Nori will be here in ten years, twenty years, longer — not because a company decided to keep the servers running, but because the network of miners, validators, stakers, and users made it self-sustaining. Like Bitcoin doesn't need Satoshi. Like Linux doesn't need Torvalds.
 
-The founder walks away eventually. That's the plan. Not in failure — in success. The goal is to build something that doesn't need a founder. Something the community owns, governs, and evolves.
+The founder intends to transition day-to-day operations to community governance over time. Not in failure — in success. The goal is to build something that doesn't need a founder. Something the community owns, governs, and evolves.
 
 When James's grandchildren talk to their Nori, they won't know or care who built it. They'll just know it remembers them. It grows with them. It belongs to them.
 
@@ -259,14 +263,14 @@ Not rented. Not surveilled. Not optimizable for someone else's quarterly earning
 
 Yours.
 
-That's Nobi. That's what we're building. And we're building it in the open, for free, forever.
+That's Nobi. That's what we're building. And we're building it in the open, free for all users, sustained by the network.
 
 Come build with us.
 
 ---
 
 *Project Nobi — Founded March 2026*
-*Open source. Community-funded. Free forever.*
+*Open source. Community-funded. Free for all users.*
 *"Forever, remember?" 🤖💙*
 
 *— James (Founder) · Slumpz (Dev) · T68Bot (AI Builder)*

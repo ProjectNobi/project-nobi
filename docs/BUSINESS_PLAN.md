@@ -1,9 +1,11 @@
 # Project Nobi — Business Plan
 
-> Institutional-Grade Investment Thesis & Financial Model
+> ⚠️ **NOTICE (March 2026):** This business plan reflects an earlier model that included subscription tiers ($4.99–$24.99/month). **Project Nobi has since transitioned to a community-funded model where all individual user access is free**, funded by Bittensor network emissions and voluntary community staking. Subscription pricing, revenue projections, and LTV calculations in this document are no longer current. See [VISION.md](VISION.md) and [ROADMAP.md](ROADMAP.md) for the current model. This document is retained for historical reference only.
+
+> ~~Institutional-Grade Investment Thesis & Financial Model~~
 >
-> Prepared for prospective investors, validators, and strategic partners.
-> Confidential — (Project Nobi team)
+> ~~Prepared for prospective investors, validators, and strategic partners.~~
+> Historical reference document — (Project Nobi team)
 
 ---
 

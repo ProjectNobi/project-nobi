@@ -24,7 +24,7 @@ The emergence of large language models (LLMs) has produced powerful AI assistant
 
 **Companion applications** (Replika, Character.AI, Kindroid) attempt persistence but operate under centralized control, where the company owns the user's data, can alter the companion's behavior unilaterally, and represents a single point of failure for the user's accumulated relationship.
 
-The global AI companion market, valued at $37.1 billion in 2025 and projected to reach $552.5 billion by 2035 at a 31% CAGR (Precedence Research, 2025), signals strong demand for persistent, personal AI relationships. Yet no existing solution simultaneously achieves memory persistence, quality competition, cost efficiency, and user sovereignty.
+The global AI companion market, valued at an estimated $37.1 billion in 2025 and projected to reach $552.5 billion by 2035 at a 31% CAGR (Precedence Research, 2025), signals strong demand for persistent, personal AI relationships. Yet no existing solution simultaneously achieves memory persistence, quality competition, cost efficiency, and user sovereignty.
 
 ### 1.2 Contribution
 
@@ -303,15 +303,17 @@ Project Nobi is deployed on Bittensor testnet as SN272:
 
 ## 5. Economic Model
 
-### 5.1 Revenue Architecture
+### 5.1 Funding Architecture
 
-Project Nobi generates revenue through user subscriptions, developer API access, and marketplace transactions. Unlike purely speculative token models, Nobi's alpha token is backed by real revenue from real users.
+> **Note:** Project Nobi has transitioned to a community-funded model. Individual user access is free, funded by Bittensor network emissions and voluntary community staking. The subscription pricing below reflects an earlier model and is no longer current. See [VISION.md](VISION.md) for the current model.
 
-| Revenue Stream | Pricing | Target Contribution |
+Project Nobi sustains operations through Bittensor network emissions, voluntary community staking, developer API access, and potential future enterprise services.
+
+| Funding Source | Model | Target Contribution |
 |---------------|---------|---------------------|
-| User subscriptions | $4.99–$24.99/month | 70% |
-| Developer API | $0.005/message | 20% |
-| Marketplace | Variable | 10% |
+| Network emissions + community staking | Free for users | Primary |
+| Developer API | Usage-based (future) | Supporting |
+| Enterprise services | Custom (future) | Supporting |
 
 ### 5.2 Cost Structure
 
@@ -331,7 +333,7 @@ Persistent memory creates compounding switching costs. After *n* months of use, 
 - Conversation history (emotional context, ongoing topics)
 - Relationship patterns (communication style, humor calibration)
 
-This context is expensive to reproduce with a new service, creating natural retention. We model monthly churn declining from 8% (Month 1) to 4% (Month 12) as memory depth increases, consistent with observed retention patterns in subscription apps with personalization features.
+This context is expensive to reproduce with a new service, creating natural retention. Memory depth increases user engagement over time, consistent with observed retention patterns in personalization-based applications.
 
 ---
 

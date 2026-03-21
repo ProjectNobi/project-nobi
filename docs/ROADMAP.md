@@ -13,7 +13,7 @@ This roadmap is structured in five phases, from the current foundation to global
 - Ship working software, not announcements
 - Be honest about what's built vs. what's planned
 - Community feedback drives priorities
-- Free for users at every phase — no exception
+- Free for users at every phase, sustained by the network
 
 ---
 
@@ -185,7 +185,7 @@ Wallet address, all transactions, and all emission burns will be publicly verifi
 #### 2.1 Subnet Registration
 - Register Nobi subnet on Bittensor mainnet
 - Publish wallet address and all transactions publicly
-- Activate emission burn mechanism — all owner emissions burned from block 1
+- Activate emission burn mechanism — all owner emissions committed to burn from block 1
 - On-chain verification: anyone can audit emission distribution
 
 #### 2.2 Initial Network Deployment
@@ -213,7 +213,7 @@ Wallet address, all transactions, and all emission burns will be publicly verifi
   - Owner emissions burned (with proof)
   - Miner/validator distribution
   - Infrastructure costs covered
-- Community staking campaign: "Stake for free AI companionship"
+- Community staking campaign: "Support free AI companionship" (*staking involves risk; this is not financial advice*)
 
 ### Timeline
 
@@ -244,7 +244,7 @@ Wallet address, all transactions, and all emission burns will be publicly verifi
 ### Success Metrics
 
 - [ ] Subnet registered and emitting on mainnet
-- [ ] 100% of owner emissions verifiably burned
+- [ ] 100% of owner emissions committed to verifiable burn
 - [ ] 20+ active miners with >0.5 average quality score
 - [ ] 5+ validators operational
 - [ ] 1,000+ active users (weekly active)
@@ -343,7 +343,7 @@ Wallet address, all transactions, and all emission burns will be publicly verifi
 - On-chain governance: stakers vote on major decisions (protocol changes, emission allocation, feature priorities)
 - Founder steps back from day-to-day operations
 - Community council: elected representatives from miners, validators, users, developers
-- Constitution: published principles that cannot be changed (free forever, open source, emissions burned)
+- Constitution: published principles intended to be foundational (free for users, open source, emissions burned)
 - Fork protection: if the community disagrees with direction, they can fork — the code is open
 
 #### 4.2 Federated Privacy Architecture
@@ -366,7 +366,7 @@ Wallet address, all transactions, and all emission burns will be publicly verifi
 - **Education:** AI study companions for students
   - Partnered with schools and universities
   - Always free for individual students
-- **Important:** Individual use is free forever. Enterprise/education verticals may generate revenue to sustain infrastructure, but no individual human ever pays.
+- **Important:** Individual use is intended to remain free for as long as the network sustains it. Enterprise/education verticals may generate revenue to sustain infrastructure, but no individual human is intended to pay.
 
 #### 4.5 Advanced Capabilities
 - Voice-first interaction (natural spoken conversation)
@@ -406,7 +406,7 @@ Bittensor allocates TAO emissions to subnets based on their weight in the networ
 2. **Validators** — who ensure quality (scoring miners)
 3. **Subnet owner** — a percentage allocated to the registrant
 
-Most subnets keep the owner allocation (typically 18%). **Nobi burns 100% of it.**
+Most subnets keep the owner allocation (typically 18%). **Nobi is committed to burning 100% of it.**
 
 ### Why We Burn Owner Emissions
 
@@ -416,7 +416,7 @@ Most subnets keep the owner allocation (typically 18%). **Nobi burns 100% of it.
 
 **Precedent.** We want Nobi to demonstrate that a subnet can be a public good. If it works, others may follow. The Bittensor ecosystem benefits from subnets that exist to serve users, not to extract value.
 
-**Verification.** Every emission, every burn, every transaction is on-chain. Anyone can verify. This isn't a promise — it's math.
+**Verification.** Every emission, every burn, every transaction is on-chain. Anyone can verify. Transparency is built into the architecture.
 
 ### Emission Flow
 
@@ -444,7 +444,9 @@ When TAO holders stake on Nobi:
 4. Higher quality → more users → more community support → more staking
 5. Virtuous cycle
 
-This is economically similar to how Wikipedia operates: the product is free, and people who believe in the mission fund the infrastructure. The difference is that stakers on Bittensor also earn returns (validator dividends), so it's not pure charity — it's aligned investment.
+This is economically similar to how Wikipedia operates: the product is free, and people who believe in the mission fund the infrastructure. The difference is that stakers on Bittensor also earn returns (validator dividends), so it's not pure charity — it's aligned participation.
+
+> **Disclaimer:** Staking returns are not guaranteed and depend on network performance, TAO token value, and other factors outside our control. This is not financial advice or a solicitation to invest. TAO is a utility token, not a security. Past performance is not indicative of future results.
 
 ### Comparison with Traditional Funding Models
 
@@ -452,7 +454,7 @@ This is economically similar to how Wikipedia operates: the product is free, and
 |-------|----------|-------------|----------|
 | VC-funded AI company | Users ($20+/mo) → Shareholders (exits) | Investors first, users second | Maximize revenue per user ≠ maximize user happiness |
 | Ad-supported AI | Users (data) → Advertisers (targeting) | Advertisers first | Your attention is the product |
-| Project Nobi | Network emissions + voluntary staking | Users (free service) + Stakers (validator dividends) + TAO holders (burned supply) | None — all incentives point toward quality |
+| Project Nobi | Network emissions + voluntary staking | Users (free service) + Stakers (validator dividends) + TAO holders (burned supply) | Minimal — incentives designed to point toward quality |
 
 ### Financial Sustainability Analysis
 
@@ -528,7 +530,7 @@ This roadmap is a living document. If you want to help:
 - **Miners:** Run a miner — [Mining Guide](MINING_GUIDE.md)
 - **Validators:** Run a validator — [Validating Guide](VALIDATING_GUIDE.md)
 - **Developers:** Pick an issue on [GitHub](https://github.com/ProjectNobi/project-nobi) and build
-- **Stakers:** Stake TAO on the Nobi subnet when mainnet launches
+- **Stakers:** Consider staking TAO on the Nobi subnet when mainnet launches (*not financial advice; staking involves risk*)
 - **Community:** Join [Discord](https://discord.gg/e6StezHM), spread the word, give feedback
 - **Security:** Review the code and report vulnerabilities responsibly
 

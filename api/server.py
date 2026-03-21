@@ -1084,7 +1084,7 @@ async def get_terms():
             "You own your data and can delete it anytime",
             "No selling of personal data to third parties",
             "Governing law: England and Wales",
-            "7-day refund window for paid subscriptions",
+            "Free for all individual users",
         ],
         "contact": "legal@projectnobi.ai",
     }

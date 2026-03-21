@@ -199,9 +199,10 @@ Validator
 - No user payments yet
 
 ### Planned (Mainnet)
-- User subscriptions ($4.99–$24.99/month)
-- Subscription revenue used to buy-back TAO and stake → increases alpha value
-- API access for developers ($0.005/message)
+- Free for all individual users (community-funded model)
+- Network emissions + voluntary community staking sustain operations
+- Potential API access for developers (pricing TBD)
+- Potential enterprise services (pricing TBD)
 
 ### NOT Implemented
 - Custom payment splitting (70/18/12) — uses standard Bittensor mechanism

@@ -47,9 +47,9 @@ Nori is powered by artificial intelligence that can make mistakes, provide inacc
 - **European Union / EEA:** You must be at least 18 years of age to use Nori, in compliance with the General Data Protection Regulation (GDPR).
 - **All other jurisdictions:** You must meet the minimum age of digital consent in your country, or 18 years, whichever is greater.
 
-If you are under 18 (or the age of majority in your jurisdiction), you represent that your parent or legal guardian has reviewed and agreed to these Terms on your behalf.
+**If you are under 18, you may not use this service.** We do not permit users under 18 regardless of parental consent.
 
-We do not knowingly collect data from children below the applicable age threshold. If we become aware that a child below the applicable age has created an account, we will terminate the account and delete all associated data.
+We do not knowingly collect data from users under 18. If we become aware that a user under 18 has created an account, we will terminate the account and delete all associated data.
 
 ### 3.2 Account Responsibility
 By creating an account, you agree to:
@@ -131,33 +131,20 @@ If you provide us with feedback, suggestions, or ideas about our service, you gr
 
 ---
 
-## 7. Payment Terms
+## 7. Pricing and Service Model
 
-### 7.1 Subscription Tiers
-- **Free Tier:** Available at no charge, with limitations on daily messages, features, and memory capacity.
-- **Plus Plan:** Paid subscription with expanded message limits, voice features, image analysis, and enhanced memory. Current pricing is displayed at app.projectnobi.ai/subscription.
-- **Pro Plan:** Paid subscription with unlimited access to all features. Current pricing is displayed at app.projectnobi.ai/subscription.
+### 7.1 Free Service
+Nori is provided free of charge for all individual users. The service is funded through Bittensor network emissions and voluntary community support. There are no subscription fees for individual users.
 
-Pricing is displayed in USD and may be subject to local taxes and currency conversion.
+### 7.2 Future Paid Services
+We may introduce paid services in the future (such as enterprise deployments or API access). If paid services are introduced:
+- We will provide clear notice before any paid features are launched
+- Individual companion access is intended to remain free
+- Payment processing, if applicable, would be handled via Stripe (a PCI-DSS compliant payment processor) or cryptocurrency
+- Refund policies will be published at the time of any paid service launch
 
-### 7.2 Payment Methods
-We accept payment via:
-- Credit and debit cards processed through Stripe (a PCI-DSS compliant payment processor)
-- Cryptocurrency payments where available (specific cryptocurrencies accepted are listed at checkout)
-
-### 7.3 Billing and Renewal
-- Paid subscriptions renew automatically at the end of each billing period unless cancelled
-- You authorise us to charge your payment method on a recurring basis
-- We will provide advance notice of any price changes before they take effect
-- Failed payments may result in suspension of paid features
-
-### 7.4 Refund Policy
-- **Stripe payments:** You may request a refund within 7 days of initial purchase of a subscription. No refunds are available after 7 days or for partial subscription periods.
-- **Cryptocurrency payments:** Due to the irreversible nature of blockchain transactions, cryptocurrency payments are generally non-refundable. Exceptions may be made at our discretion for proven technical failures on our part.
-- To request a refund, contact us at billing@projectnobi.ai with your account details and reason for the request.
-
-### 7.5 Cancellation
-You may cancel your subscription at any time through your account settings or by contacting us. Upon cancellation, your paid access continues until the end of the current billing period. No partial-period refunds are provided.
+### 7.3 Service Availability
+As a community-funded, network-sustained service, availability depends on the continued operation of the Bittensor network and community support. We do not guarantee uninterrupted service.
 
 ---
 
