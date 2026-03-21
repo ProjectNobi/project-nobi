@@ -46,7 +46,7 @@ A human who dreamed it. A human who believed it. And an AI that's proving it's p
 
 We started on March 17, 2026. Not in a Silicon Valley office. Not with a $50 million seed round. Just three minds, a handful of servers, and a conviction that AI companionship shouldn't be a luxury product.
 
-Four days later, we had a working prototype. Two weeks later, we had a live subnet on Bittensor's testnet. Today, we have 30,000+ lines of code, 1,030 tests, stress-tested infrastructure at 500 nodes with 99.75% reliability, AES-128 encryption, 20 languages, voice messages, image understanding, and proactive companion features that reach out to *you* — birthday reminders, check-ins, follow-ups.
+Four days later, we had a working prototype. Two weeks later, we had a live subnet on Bittensor's testnet. Today, we have 30,000+ lines of code, 1,090+ tests, stress-tested at 500-node scale with a 99.75% query success rate across 2,000 test queries, AES-128 encryption, 30+ languages, voice messages, image understanding, and proactive companion features that reach out to *you* — birthday reminders, check-ins, follow-ups.
 
 This isn't a pitch deck. This is working software.
 
@@ -144,7 +144,7 @@ You don't need to understand any of this to use Nori. You just talk to her. But 
 
 ## What We're Building Toward
 
-**Phase 1 (Now):** Working testnet, Telegram bot, web app, full memory system, 20 languages, voice, vision, proactive features. ✅ Done.
+**Phase 1 (Now):** Working testnet, Telegram bot, web app, full memory system, 30+ languages, voice, vision, proactive features. ✅ Done.
 
 **Phase 2 (Q2-Q3 2026):** Mainnet launch. Open to the public. Community staking begins. External miners and validators join the network.
 

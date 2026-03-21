@@ -37,7 +37,7 @@ Three people. Zero VC money. One mission.
 • All owner emissions burned — zero profit
 • Open source (MIT license)
 • 30,000+ lines of code
-• 20 languages, voice, vision, proactive check-ins
+• 30+ languages, voice, vision, proactive check-ins
 
 This isn't a startup. It's a public good.
 ```
@@ -99,7 +99,7 @@ What makes us different:
 • Nori actually remembers you across conversations (semantic memory, relationship graphs)
 • Completely free — no subscriptions, no premium tiers
 • All owner emissions are burned — zero profit for the team
-• Open source (MIT) — 30,000+ lines, 1,030 tests
+• Open source (MIT) — 30,000+ lines, 1,090+ tests
 • No GPU needed to mine — any $5/mo VPS works
 
 We're preparing for mainnet and looking for:
@@ -143,7 +143,7 @@ No GPU required. 2 CPU cores, 2GB RAM, any $5/mo VPS. One command setup. Miners 
 📊 WHAT'S BUILT
 • 30,000+ lines of Python
 • 1,030+ tests (117 pass on legal + privacy suites)
-• 20 languages (auto-detected)
+• 30+ languages (auto-detected)
 • Voice messages, image understanding, proactive companion features
 • AES-128 encrypted memory
 • Stress-tested at 500 nodes, 99.75% reliability

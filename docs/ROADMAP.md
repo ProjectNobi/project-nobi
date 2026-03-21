@@ -40,7 +40,7 @@ Everything below is live, tested, and operational.
 | Stress Test | ✅ Passed | 500 nodes, 2000 queries, 99.75% success rate |
 | Documentation | ✅ Complete | Whitepaper, subnet design, mining guide, validating guide, vision, roadmap |
 | Legal Framework | ✅ Complete | Privacy policy, terms, safety disclaimers |
-| Multi-language | ✅ Live | 20 languages, auto-detected |
+| Multi-language | ✅ Live | 30+ languages, auto-detected |
 | Voice Messages | ✅ Live | STT + TTS integration |
 | Image Understanding | ✅ Live | Vision model support |
 | Relationship Graphs | ✅ Live | Entity extraction, BFS traversal, 30+ relationship types |
@@ -303,7 +303,7 @@ The community model significantly simplifies legal requirements compared to a su
 - Offline mode: basic companion functionality without network (cached personality)
 
 #### 3.2 Multi-Language Expansion
-- Current: 20 languages (auto-detected)
+- Current: 30+ languages (auto-detected)
 - Target: 50+ languages with localized companion personalities
 - Cultural adaptation: companion understands local context, holidays, social norms
 - Community-contributed language packs and personality tuning
