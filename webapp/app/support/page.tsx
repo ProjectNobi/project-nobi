@@ -111,7 +111,7 @@ export default function SupportPage() {
     // Local greeting/FAQ matching first (instant, no API call)
     const qLower = q.toLowerCase().trim();
     const greetings = ["hello", "hi", "hey", "yo", "sup", "howdy", "hola", "good morning", "good evening", "hello there", "hi there"];
-    const isGreeting = greetings.some(g => qLower === g || qLower === g + " there" || qLower === g + "!");
+    const isGreeting = greetings.some(g => qLower.startsWith(g));
     
     if (isGreeting) {
       const noriMsg: ChatMessage = {
@@ -128,14 +128,18 @@ export default function SupportPage() {
       if (result.type === "ticket") {
         // No FAQ match — ask Nori via chat API for a real answer
         try {
+          const chatController = new AbortController();
+          const chatTimeout = setTimeout(() => chatController.abort(), 15000);
           const chatRes = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL || "https://api.projectnobi.ai"}/api/chat`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ message: q, user_id: userId }),
+              signal: chatController.signal,
             }
           );
+          clearTimeout(chatTimeout);
           const chatData = await chatRes.json();
           if (chatData.response) {
             const noriMsg: ChatMessage = {
