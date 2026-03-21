@@ -76,8 +76,16 @@ SUBNET_TIMEOUT = float(os.environ.get("SUBNET_TIMEOUT", "6"))
 SUBNET_WALLET_NAME = os.environ.get("SUBNET_WALLET_NAME", "T68Coldkey")
 SUBNET_HOTKEY_NAME = os.environ.get("SUBNET_HOTKEY_NAME", "nobi-validator")
 
-# Rate limit: max messages per user per minute
-MAX_MESSAGES_PER_MINUTE = 10
+# Configurable rate limits — adjust via env vars without code changes
+# Testnet defaults are generous; tighten for mainnet
+MESSAGES_PER_DAY = int(os.environ.get("NOBI_MESSAGES_PER_DAY", "300"))
+MESSAGES_PER_MINUTE = int(os.environ.get("NOBI_MESSAGES_PER_MINUTE", "10"))
+VOICE_PER_DAY = int(os.environ.get("NOBI_VOICE_PER_DAY", "30"))
+IMAGE_PER_DAY = int(os.environ.get("NOBI_IMAGE_PER_DAY", "30"))
+MEMORY_SLOTS = int(os.environ.get("NOBI_MEMORY_SLOTS", "300"))
+MAX_RESPONSE_TOKENS = int(os.environ.get("NOBI_MAX_RESPONSE_TOKENS", "512"))
+# Legacy alias kept for any code that references it directly
+MAX_MESSAGES_PER_MINUTE = MESSAGES_PER_MINUTE
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 logging.basicConfig(
@@ -264,7 +272,7 @@ from collections import defaultdict
 class RateLimiter:
     """Simple per-user rate limiter."""
 
-    def __init__(self, max_per_minute: int = MAX_MESSAGES_PER_MINUTE):
+    def __init__(self, max_per_minute: int = MESSAGES_PER_MINUTE):
         self.max = max_per_minute
         self.timestamps: dict = defaultdict(list)
 
@@ -288,6 +296,10 @@ class CompanionBot:
     """The Nobi companion bot — connects users to their personal Dora."""
 
     def __init__(self):
+        # Log active limits for operational visibility
+        logger.info(f"[Limits] messages/day={MESSAGES_PER_DAY}, messages/min={MESSAGES_PER_MINUTE}, "
+                    f"voice/day={VOICE_PER_DAY}, image/day={IMAGE_PER_DAY}, "
+                    f"memory_slots={MEMORY_SLOTS}, max_tokens={MAX_RESPONSE_TOKENS}")
         # Ensure encryption secret exists before initializing memory
         ensure_master_secret()
         self.memory = MemoryManager(db_path="~/.nobi/bot_memories.db")
@@ -1842,6 +1854,25 @@ async def cmd_faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def cmd_limits(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show current rate limits and today's usage."""
+    if not update.message:
+        return
+
+    user_id = companion._user_id(update)
+    usage = companion.billing.get_usage(user_id)
+    tier = companion.billing.get_tier_config(user_id)
+
+    await update.message.reply_text(
+        f"📊 Your Usage Today\n\n"
+        f"💬 Messages: {usage.get('messages_today', 0)}/{tier['messages_per_day']}\n"
+        f"🎙️ Voice: {usage.get('voice_today', 0)}/{tier['voice_per_day']}\n"
+        f"📷 Images: {usage.get('image_today', 0)}/{tier['image_per_day']}\n"
+        f"🧠 Memories: {usage.get('memory_count', '?')}/{tier['memory_slots']}\n\n"
+        f"All features are free! Limits help us maintain quality for everyone."
+    )
+
+
 async def _handle_support_callback(update: Update, data: str) -> None:
     """Handle support/feedback-related callback queries."""
     query = update.callback_query
@@ -2013,6 +2044,7 @@ def main():
     app.add_handler(CommandHandler("feedback", cmd_feedback))
     app.add_handler(CommandHandler("support", cmd_support))
     app.add_handler(CommandHandler("faq", cmd_faq))
+    app.add_handler(CommandHandler("limits", cmd_limits))
     app.add_handler(CommandHandler("terms", cmd_terms))
     app.add_handler(CommandHandler("privacy", cmd_privacy))
     app.add_handler(CommandHandler("agree", cmd_agree))

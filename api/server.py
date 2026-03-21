@@ -271,12 +271,12 @@ class IPRateLimiter:
         self._requests: dict[str, list[float]] = defaultdict(list)
         self._blocked: dict[str, float] = {}  # IP → blocked until timestamp
         
-        # Limits per endpoint category
+        # Limits per endpoint category — configurable via env vars
         self.LIMITS = {
-            "chat": {"max_requests": 30, "window_seconds": 60},     # 30 msgs/min
-            "memory": {"max_requests": 60, "window_seconds": 60},    # 60 reads/min
-            "general": {"max_requests": 120, "window_seconds": 60},  # 120 req/min
-            "auth": {"max_requests": 10, "window_seconds": 60},      # 10 auth/min
+            "chat": {"max_requests": int(os.environ.get("NOBI_API_CHAT_RPM", "30")), "window_seconds": 60},
+            "memory": {"max_requests": int(os.environ.get("NOBI_API_MEMORY_RPM", "60")), "window_seconds": 60},
+            "general": {"max_requests": int(os.environ.get("NOBI_API_GENERAL_RPM", "120")), "window_seconds": 60},
+            "auth": {"max_requests": int(os.environ.get("NOBI_API_AUTH_RPM", "10")), "window_seconds": 60},
         }
         self.BLOCK_DURATION = 300  # 5 min block for repeat offenders
         self._violations: dict[str, int] = defaultdict(int)
