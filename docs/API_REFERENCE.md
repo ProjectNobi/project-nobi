@@ -35,11 +35,16 @@ Example: `nobi_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6`
 
 ## Rate Limits
 
-| Tier | Requests/Day | Description |
-|------|-------------|-------------|
-| Free | 100 | Default tier for new keys |
-| Plus | 1,000 | For growing projects |
-| Pro  | 10,000 | For production apps |
+The API is **free for all users** — no tiers, no paid plans. Rate limits exist to ensure fair usage and service quality for everyone.
+
+| Limit | Value | Configurable via |
+|-------|-------|-----------------|
+| Chat requests | 30/minute per IP | `NOBI_API_CHAT_RPM` |
+| Memory requests | 60/minute per IP | `NOBI_API_MEMORY_RPM` |
+| General requests | 120/minute per IP | `NOBI_API_GENERAL_RPM` |
+| Auth requests | 10/minute per IP | `NOBI_API_AUTH_RPM` |
+
+Limits may be adjusted as the project scales. Repeat offenders are temporarily blocked for 5 minutes.
 
 When rate limited, the API returns `429 Too Many Requests` with a descriptive message.
 
@@ -307,7 +312,7 @@ Convert text to speech.
 
 #### `POST /v1/api/keys`
 
-Create a new API key (inherits the tier of the authenticating key).
+Create a new API key.
 
 **Request:**
 ```json
