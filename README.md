@@ -41,7 +41,7 @@ No setup, no account, no payment. It remembers you.
 
 | Feature | ChatGPT | Siri | Project Nobi |
 |---------|---------|------|-------------|
-| Remembers you | ❌ Resets each session | Barely | ✅ Semantic memory + relationship graphs |
+| Remembers you | Basic (flat fact list) | Barely | ✅ Semantic memory + relationship graphs |
 | Understands connections | ❌ | ❌ | ✅ Knows your sister lives in London |
 | Reaches out first | ❌ | ❌ | ✅ Birthday reminders, check-ins, follow-ups |
 | Voice messages | ❌ Text only | ✅ | ✅ STT + TTS |
@@ -165,7 +165,7 @@ Full guide: **[VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)**
 
 | Phase | Status | Highlights |
 |-------|--------|------------|
-| **0. Foundation** | ✅ Complete | Protocol, miner, validator, memory, scoring, 500-node stress test |
+| **0. Foundation** | ✅ Complete | Protocol, miner, validator, memory, scoring, 500 simulated-node stress test |
 | **1. Mainnet Prep** | 🔄 Current | Code hardening, external miners, security review, community growth |
 | **2. Mainnet Launch** | ⏳ Q3 2026 | Subnet registration, subnet routing, public beta, community staking |
 | **3. Growth** | ⏳ Q4 2026+ | Mobile app, 50+ languages, plugin ecosystem, governance |

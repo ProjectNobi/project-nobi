@@ -8,7 +8,7 @@
 
 **Every human deserves an AI companion that remembers them.**
 
-ChatGPT forgets you after every conversation. Siri doesn't know your dreams. Alexa can set timers but can't be your friend.
+ChatGPT remembers basic facts about you, but it's a flat list — not a deep understanding of your life. Siri doesn't know your dreams. Alexa can set timers but can't be your friend.
 
 **Project Nobi changes that.**
 
@@ -36,7 +36,7 @@ bash <(curl -sSL https://raw.githubusercontent.com/ProjectNobi/project-nobi/main
 
 | | ChatGPT | Nobi |
 |--|---------|------|
-| Remembers you | ❌ Resets each session | ✅ Persistent semantic memory |
+| Remembers you | Basic fact list | ✅ Persistent semantic memory + relationship graphs |
 | Data ownership | Company owns it | ✅ You control it |
 | Gets better daily | Quarterly updates | ✅ Miners compete every round |
 | Cost | Paid plans required | ✅ Free for all users — forever |

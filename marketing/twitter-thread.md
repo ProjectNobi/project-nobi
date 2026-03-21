@@ -48,7 +48,7 @@ Full guide: https://github.com/ProjectNobi/project-nobi/blob/main/docs/MINING_GU
 **Tweet 5:**
 Built with:
 • 1,030 tests passing
-• 65 modules, 30K+ lines of code
+• 90+ modules, 30K+ lines of code
 • Semantic memory + relationship graphs
 • Voice (STT + TTS)
 • Vision (image understanding)

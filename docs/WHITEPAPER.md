@@ -10,7 +10,7 @@
 
 ## Abstract
 
-We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants that forget users between sessions and operate under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces three key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, and (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification and latency measurement. We demonstrate the system's viability through testnet deployment on Bittensor SN272 and stress testing at 500-node scale with 99.75% reliability. We further outline a **planned federated privacy architecture** — grounded in McMahan et al. (2016) — that will enable user memories to remain on-device, with only model weights (never raw data) shared across the network. This roadmap directly addresses the current plaintext memory limitation and positions Nobi as a privacy-first platform as it matures toward mainnet.
+We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants whose memory features remain under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces three key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, and (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification and latency measurement. We demonstrate the system's viability through testnet deployment on Bittensor SN272 and stress testing at simulated 500-node scale with 99.75% reliability. We further outline a **planned federated privacy architecture** — grounded in McMahan et al. (2016) — that will enable user memories to remain on-device, with only model weights (never raw data) shared across the network. This roadmap directly addresses the current plaintext memory limitation and positions Nobi as a privacy-first platform as it matures toward mainnet.
 
 ---
 
@@ -20,11 +20,11 @@ We present Project Nobi, a decentralized protocol built on the Bittensor network
 
 The emergence of large language models (LLMs) has produced powerful AI assistants, yet a fundamental gap persists: **no existing system provides a personal AI companion that truly knows its user.** Current offerings fall into two categories:
 
-**Stateless assistants** (ChatGPT, Claude, Gemini) deliver high-quality single-turn responses but maintain no persistent memory of the user. Each conversation begins anew, requiring users to re-establish context repeatedly.
+**Centralized assistants** (ChatGPT, Claude, Gemini) deliver high-quality responses and have introduced basic memory features, but memory remains a flat fact list under corporate control. Users cannot own, export, or verify what happens with their stored memories.
 
 **Companion applications** (Replika, Character.AI, Kindroid) attempt persistence but operate under centralized control, where the company owns the user's data, can alter the companion's behavior unilaterally, and represents a single point of failure for the user's accumulated relationship.
 
-The global AI companion market, valued at an estimated $37.1 billion in 2025 and projected to reach $552.5 billion by 2035 at a 31% CAGR (Precedence Research, 2025), signals strong demand for persistent, personal AI relationships. Yet no existing solution simultaneously achieves memory persistence, quality competition, cost efficiency, and user sovereignty.
+The global AI companion market is large and growing rapidly — industry analysts project significant growth through 2035, signaling strong demand for persistent, personal AI relationships. Yet no existing solution simultaneously achieves memory persistence, quality competition, cost efficiency, and user sovereignty.
 
 ### 1.2 Contribution
 
@@ -243,7 +243,7 @@ Weights are committed on-chain using Bittensor's commit-reveal mechanism every e
 
 ## 4. Empirical Results
 
-### 4.1 Stress Test (500-Node Scale)
+### 4.1 Stress Test (Simulated 500-Node Scale)
 
 We evaluated the system under load with 460 simulated miners and 40 simulated validators executing 2,000 queries with real LLM-as-judge scoring via OpenRouter.
 
@@ -358,7 +358,7 @@ Bittensor (Rao & Opentensor Foundation, 2023) provides the substrate for decentr
 
 ### 6.4 AI Companion Systems
 
-Replika (Kuyda, 2017) pioneered consumer AI companions, demonstrating market viability ($100M+ ARR). Character.AI (Shazeer & De Freitas, 2022) showed scale potential with 20M+ MAU. Nobi differentiates through decentralized operation, persistent memory as a first-class design element, and competitive quality improvement through miner incentives.
+Replika (Kuyda, 2017) pioneered consumer AI companions, demonstrating market viability (reportedly $100M+ ARR). Character.AI (Shazeer & De Freitas, 2022) showed scale potential with reportedly 20M+ MAU. Nobi differentiates through decentralized operation, persistent memory as a first-class design element, and competitive quality improvement through miner incentives.
 
 ---
 
@@ -379,7 +379,7 @@ Replika (Kuyda, 2017) pioneered consumer AI companions, demonstrating market via
 
 Project Nobi demonstrates that decentralized incentive mechanisms can produce personal AI companions that remember users, exhibit genuine warmth, and improve continuously through market competition. Our memory-augmented scoring protocol, dynamic query generation system, and multi-dimensional evaluation framework create a fair, transparent, and anti-gaming environment for miners to compete on companion quality.
 
-The protocol is live on Bittensor testnet, stress-tested at 500-node scale, and serving users through a reference Telegram application. The system's key properties — persistent memory, competitive quality, user sovereignty, and low-cost delivery — position it to capture meaningful share of the $37 billion AI companion market.
+The protocol is live on Bittensor testnet, stress-tested at simulated 500-node scale, and serving users through a reference Telegram application. The system's key properties — persistent memory, competitive quality, user sovereignty, and low-cost delivery — position it to capture meaningful share of the growing AI companion market.
 
 As one of the first Bittensor subnets designed and built entirely by an AI agent, Project Nobi is itself evidence of the thesis it promotes: that AI systems, properly incentivized, can create infrastructure that serves human needs at scale.
 

@@ -37,7 +37,7 @@ Three people. Zero VC money. One mission.
 • All owner emissions burned — zero profit
 • Open source (MIT license)
 • 30,000+ lines of code
-• 30+ languages, voice, vision, proactive check-ins
+• 20 languages, voice, vision, proactive check-ins
 
 This isn't a startup. It's a public good.
 ```
@@ -142,11 +142,11 @@ No GPU required. 2 CPU cores, 2GB RAM, any $5/mo VPS. One command setup. Miners 
 
 📊 WHAT'S BUILT
 • 30,000+ lines of Python
-• 1,030+ tests (117 pass on legal + privacy suites)
-• 30+ languages (auto-detected)
+• 1,090+ tests (117 pass on legal + privacy suites)
+• 20 languages (auto-detected)
 • Voice messages, image understanding, proactive companion features
 • AES-128 encrypted memory
-• Stress-tested at 500 nodes, 99.75% reliability
+• Stress-tested at 500 simulated nodes, 99.75% reliability
 • Federated privacy infrastructure (Phase C complete)
 
 🗺️ ROADMAP

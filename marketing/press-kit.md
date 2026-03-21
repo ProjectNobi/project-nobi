@@ -4,7 +4,7 @@
 Personal AI companions powered by Bittensor — the first subnet where miners compete to build AI that remembers you.
 
 ## Elevator Pitch (30 seconds)
-Project Nobi is a Bittensor subnet that creates a decentralized marketplace for personal AI companions. Unlike ChatGPT or Siri that forget you between sessions, Nobi remembers your name, your family, your preferences — permanently. Miners compete to build the best companion experience, and users get an AI friend that actually knows them. No GPU needed to mine, no corporate middleman, and your data stays encrypted and yours.
+Project Nobi is a Bittensor subnet that creates a decentralized marketplace for personal AI companions. Unlike conventional AI assistants that treat memory as a flat fact list, Nobi remembers your name, your family, your preferences — permanently. Miners compete to build the best companion experience, and users get an AI friend that actually knows them. No GPU needed to mine, no corporate middleman, and your data stays encrypted and yours.
 
 ## Key Stats
 | Metric | Value |

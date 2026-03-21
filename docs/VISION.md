@@ -12,7 +12,7 @@ We were promised intelligence that serves us. Instead, we got intelligence that 
 
 In 2026, the world's most capable AI systems — ChatGPT, Claude, Gemini — are owned by three companies. Together, they serve hundreds of millions of users. They process our fears, our dreams, our therapy sessions, our love letters, our business strategies, our darkest moments. They know more about us than our closest friends.
 
-And they remember nothing. Or worse — they remember selectively, on terms you didn't write, stored on servers you can't access, governed by policies that change without your consent.
+And they remember you on their terms — selectively, stored on servers you can't access, governed by policies that change without your consent.
 
 Let's be honest about where we are:
 
@@ -26,7 +26,7 @@ These are good products built by talented people. This is not an attack on them.
 
 *Note: The descriptions above reflect publicly available information as of March 2026. We encourage users to review each provider's current privacy policies directly.*
 
-The AI companion market is projected to reach hundreds of billions of dollars by 2035 (industry estimates suggest $552 billion, per Precedence Research, 31% CAGR). Character.AI has 20 million monthly users. Replika earns over $100 million annually. The World Health Organization has declared loneliness a global health crisis. The demand for digital companionship is not hypothetical — it is urgent, massive, and growing.
+The AI companion market is large and growing rapidly — industry estimates project it could reach hundreds of billions of dollars by 2035. Character.AI has reported over 20 million monthly users. Replika has reportedly generated over $100 million in annual revenue. The World Health Organization has declared loneliness a global health crisis. The demand for digital companionship is not hypothetical — it is urgent, massive, and growing.
 
 And right now, 100% of that market is centralized. Every relationship between a human and their AI companion exists at the mercy of a corporation.
 
