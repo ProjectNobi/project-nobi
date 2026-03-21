@@ -1056,7 +1056,7 @@ async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     if usage["tier"] == "free":
-        lines.append("\n💡 Want more? Use /subscribe to upgrade!")
+        lines.append("\n💡 All features are free! 🎉")
 
     await update.message.reply_text("\n".join(lines))
 
@@ -1448,7 +1448,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Billing limit check
     allowed, reason = companion.billing.check_limits(user_id, "message")
     if not allowed:
-        await update.message.reply_text(f"{reason}\n\nUse /subscribe to see upgrade options!")
+        await update.message.reply_text(f"{reason}\n\nJoin our community: https://discord.gg/e6StezHM")
         return
 
     # Record usage
@@ -1489,7 +1489,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Billing limit check (voice)
     allowed, reason = companion.billing.check_limits(user_id, "voice")
     if not allowed:
-        await update.message.reply_text(f"{reason}\n\nUse /subscribe to see upgrade options!")
+        await update.message.reply_text(f"{reason}\n\nJoin our community: https://discord.gg/e6StezHM")
         return
 
     # Record usage
@@ -1622,7 +1622,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Billing limit check (image)
     allowed, reason = companion.billing.check_limits(user_id, "image")
     if not allowed:
-        await update.message.reply_text(f"{reason}\n\nUse /subscribe to see upgrade options!")
+        await update.message.reply_text(f"{reason}\n\nJoin our community: https://discord.gg/e6StezHM")
         return
 
     # Record usage
