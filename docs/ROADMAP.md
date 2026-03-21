@@ -286,14 +286,14 @@ The community model significantly simplifies legal requirements compared to a su
 | Resource | Need | Source |
 |----------|------|--------|
 | Subnet registration TAO | Hundreds of TAO | Founder + community |
-| Infrastructure (mainnet) | ~$300-400/month | Emissions + founder sponsorship |
+| Infrastructure (mainnet) | ~$300-400/month | Subnet emissions + community staking |
 | Server fleet (7 servers) | ~$165/month | Existing fleet continues |
-| LLM API (scaled usage) | ~$50-100/month | Chutes enterprise plan or emissions |
-| CDN / monitoring tools | ~$20-50/month | As needed |
+| LLM API (scaled usage) | ~$50-100/month | Subnet emissions |
+| CDN / monitoring tools | ~$20-50/month | Subnet emissions |
 | Domain + SSL | ~$20/year | Founder |
 | Development | Ongoing | Team |
 | Community management | Part-time | Founder + community volunteers |
-| **Phase 2 total** | **~$300-400/month + registration TAO** | **Emissions + founder** |
+| **Phase 2 total** | **~$300-400/month + registration TAO** | **Subnet emissions + community** |
 
 ### Risks and Mitigations
 
@@ -371,10 +371,10 @@ The community model significantly simplifies legal requirements compared to a su
 | Resource | Need | Source |
 |----------|------|--------|
 | Mobile development | Significant | Team + community contributors |
-| Infrastructure scaling | ~$500-1,000/month | Emissions |
-| Server fleet (est. 10-15 servers) | ~$300-500/month | Additional servers for scale |
-| LLM API (10K+ users) | ~$100-300/month | Chutes enterprise or self-hosted |
-| App Store fees (Apple + Google) | ~$125/year one-time + 15% if any in-app | Founder |
+| Infrastructure scaling | ~$500-1,000/month | Subnet emissions + community |
+| Server fleet (est. 10-15 servers) | ~$300-500/month | Subnet emissions |
+| LLM API (10K+ users) | ~$100-300/month | Subnet emissions |
+| App Store fees (Apple + Google) | ~$125/year one-time | Subnet emissions |
 | Community management | Growing | Volunteer moderators + founder |
 | Plugin review/security | Ongoing | Community security reviewers |
 | **Phase 3 total** | **~$500-1,000/month** | **Emissions + community** |
@@ -529,18 +529,24 @@ This is economically similar to how Wikipedia operates: the product is free, and
 
 | Component | Current (testnet) | At Scale (mainnet) | Funded By |
 |-----------|-------------------|-------------------|-----------|
-| Server fleet (7 servers) | ~$165/month | ~$300-500/month (10-15 servers) | Founder → emissions |
-| Hetzner dedicated (primary) | ~$55/month | ~$55-110/month | Founder → emissions |
-| Contabo VPS fleet (5-10) | ~$60-110/month | ~$120-250/month | Founder → emissions |
-| High-memory server (validator) | ~$30/month | ~$30-60/month | Founder → emissions |
-| LLM API (Chutes + backup) | ~$20-50/month | ~$100-300/month | Founder → emissions |
+| Server fleet (7 servers) | ~$165/month | ~$300-500/month (10-15 servers) | Subnet emissions |
+| Hetzner dedicated (primary) | ~$55/month | ~$55-110/month | Subnet emissions |
+| Contabo VPS fleet (5-10) | ~$60-110/month | ~$120-250/month | Subnet emissions |
+| High-memory server (validator) | ~$30/month | ~$30-60/month | Subnet emissions |
+| LLM API (Chutes + backup) | ~$20-50/month | ~$100-300/month | Subnet emissions |
 | Miner inference | $0 (miner-borne) | $0 (miner-borne) | Miner rewards from emissions |
 | Domain + SSL | ~$20/year | ~$20/year | Founder |
 | App Store fees | N/A | ~$125/year | Founder |
 | Development | Founder + team time | Community + team | Volunteer |
-| **Total** | **~$200-250/month** | **~$500-1,000/month** | **Founder → emissions** |
+| **Total** | **~$200-250/month** | **~$500-1,000/month** | **Subnet emissions** |
 
 **Total monthly infrastructure cost:** ~$200-250/month currently, scaling to ~$500-1,000/month at 10K+ users.
+
+**Funding transition:**
+- **Before mainnet (now):** All infrastructure costs are sponsored by the founder personally.
+- **After mainnet launch:** All infrastructure costs are covered by subnet emissions and community staking. The founder stops sponsoring — the network sustains itself.
+- **Subnet owners do not benefit from emissions.** All owner emissions are burned. Infrastructure costs are covered by the operational portion of emissions allocated to validators and infrastructure, not by owner take.
+- This is a permanent structural commitment, not a temporary arrangement.
 
 **Emissions at even modest subnet weight:** Significantly exceeds infrastructure costs, with surplus going to miners (quality) and burned (TAO holders benefit).
 
