@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 import Navbar from "@/components/Navbar";
 import { useSupport } from "@/hooks/useSupport";
 import type { FaqEntry, FeedbackEntry } from "@/lib/types";
@@ -239,7 +240,13 @@ export default function SupportPage() {
                         : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {msg.role === "nori" ? (
+                      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-a:text-nori-400 prose-strong:text-white">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    )}
 
                   </div>
                 </div>
