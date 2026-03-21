@@ -684,7 +684,8 @@ class CompanionBot:
                 detected_lang=detected_lang,
             )
             # Filter out garbage/fallback responses from miners
-            _BAD_RESPONSES = ["limited mode", "I received your message:", "Please try again in a moment"]
+            _BAD_RESPONSES = ["limited mode", "I received your message:", "Please try again in a moment",
+                              "I'm Nori, built by Project Nobi on Bittensor — a decentralized AI network"]
             # Also reject responses in wrong language
             _is_bad = not subnet_response or any(bad in (subnet_response or "") for bad in _BAD_RESPONSES)
             if not _is_bad and subnet_response:
