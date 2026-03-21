@@ -17,7 +17,7 @@ This document describes how long Project Nobi retains different categories of pe
 | Inactive accounts | Auto-deleted after 12 months of inactivity | N/A (automatic) |
 | Feedback submissions | 6 months (anonymised after 6 months) | N/A |
 | API access logs | 30 days (rolling) | N/A |
-| Payment data | Handled by Stripe — not stored by us | Stripe account |
+| Payment data | Not applicable — Nori is free for all users | N/A |
 | Age consent record | Until account deletion | Account deletion |
 
 ---
@@ -63,10 +63,9 @@ This document describes how long Project Nobi retains different categories of pe
 - **Note:** Logs contain hashed identifiers, not plaintext user data
 
 ### 7. Payment Data
-- **Policy:** Project Nobi does NOT store payment card numbers, CVV codes, or full billing details
-- **What we store:** Stripe customer ID, subscription tier, payment status, and transaction reference (no card data)
-- **Stripe retention:** Stripe retains payment data per their own retention policies (see [stripe.com/privacy](https://stripe.com/privacy))
-- **User control:** Manage payment methods and history directly in your Stripe billing portal
+- **Policy:** Nori is free for all users. No payment data is collected from individual users.
+- **Community funding:** The project is sustained through Bittensor network emissions and voluntary TAO staking — no user payment processing required.
+- **Future note:** If payment processing is ever needed for enterprise deployments, it will be handled by a third-party processor with no card data stored by Project Nobi.
 
 ### 8. Age Consent Record
 - **What:** A record that the user confirmed they are 18+ years old at onboarding
