@@ -33,7 +33,7 @@ Project Nobi addresses this gap by deploying a Bittensor subnet where:
 1. **Miners** compete to provide the highest-quality companion responses with persistent memory
 2. **Validators** evaluate miners through dynamic, multi-turn conversation tests
 3. **Users** receive companions that remember them across sessions, improve over time through miner competition, and cannot be unilaterally altered or terminated by any single entity
-4. **Stakers** earn returns proportional to the network's growing utility value
+4. **Stakers** support the network and earn validator dividends
 
 The protocol's key insight is that **memory creates a moat**. A companion that has known a user for six months possesses context that is expensive to reproduce, creating natural retention that sustains network economics.
 
@@ -303,17 +303,21 @@ Project Nobi is deployed on Bittensor testnet as SN272:
 
 ## 5. Economic Model
 
-### 5.1 Funding Architecture
+### 5.1 Community-Funded Architecture
 
-> **Note:** Project Nobi has transitioned to a community-funded model. Individual user access is free, funded by Bittensor network emissions and voluntary community staking. The subscription pricing below reflects an earlier model and is no longer current. See [VISION.md](VISION.md) for the current model.
+Project Nobi is **free for all users**, funded entirely by the Bittensor network and community support. There are no subscriptions, no premium tiers, and no plans to introduce them.
 
-Project Nobi sustains operations through Bittensor network emissions, voluntary community staking, developer API access, and potential future enterprise services.
+| Funding Source | Model | Role |
+|---------------|---------|------|
+| Bittensor network emissions | Automatic — subnet earns TAO emissions | Primary — pays miners and validators |
+| Voluntary community staking | TAO holders stake on the Nobi subnet | Increases subnet weight → more emissions |
+| Founder sponsorship | Bootstrap costs (infrastructure, registration) | Bridge funding until self-sustaining |
 
-| Funding Source | Model | Target Contribution |
-|---------------|---------|---------------------|
-| Network emissions + community staking | Free for users | Primary |
-| Developer API | Usage-based (future) | Supporting |
-| Enterprise services | Custom (future) | Supporting |
+**Owner emission commitment:** All subnet owner emissions (typically 18% of total) are committed to being burned or recycled. Zero profit for founders or operators. Every transaction is verifiable on-chain.
+
+This model is analogous to Wikipedia: the product is free, and people who believe in the mission fund the infrastructure. The key difference is that Bittensor stakers also earn validator dividends, making it aligned participation rather than pure charity.
+
+For the full philosophy and comparison with VC-funded AI models, see [VISION.md](VISION.md).
 
 ### 5.2 Cost Structure
 
@@ -324,16 +328,17 @@ The protocol's key economic advantage: **miners bear inference costs, not the pl
 | LLM inference/user/month | $0.00 (miner-borne) | $0.50–$2.00 |
 | Memory storage | $0.01 | $0.05–$0.20 |
 | Infrastructure | $0.03 | $0.10–$0.50 |
-| **Gross margin** | **~85–90%** | **~50–60%** |
 
-### 5.3 Memory Lock-In Economics
+The model is inherently sustainable because the primary cost (LLM inference) is borne by miners incentivized by emissions, infrastructure costs are minimal, and development is open source and community-driven.
 
-Persistent memory creates compounding switching costs. After *n* months of use, the user's companion holds:
+### 5.3 Memory Retention Economics
+
+Persistent memory creates compounding value for users. After *n* months of use, the user's companion holds:
 - Personal facts (name, occupation, family, preferences)
 - Conversation history (emotional context, ongoing topics)
 - Relationship patterns (communication style, humor calibration)
 
-This context is expensive to reproduce with a new service, creating natural retention. Memory depth increases user engagement over time, consistent with observed retention patterns in personalization-based applications.
+This context represents genuine value that grows over time, creating natural engagement. Memory depth increases user satisfaction, consistent with observed retention patterns in personalization-based applications.
 
 ---
 
@@ -364,9 +369,9 @@ Replika (Kuyda, 2017) pioneered consumer AI companions, demonstrating market via
 | Foundation | Q1 2026 ✅ | Protocol, miner, validator, memory, scoring, testnet, bot |
 | Intelligence & Memory | Q1 2026 ✅ | Semantic memory, relationship graphs, 20 languages, privacy (A+B+C) |
 | Advanced Features | Q1 2026 ✅ | Voice, vision, proactive companion, group mode, web/mobile apps, auto-update |
-| Community & Mainnet | Q2 2026 | External miners, community growth, mainnet registration, revenue model |
-| Growth | Q3-Q4 2026 | App store launch, 50K+ users, enterprise, partnerships |
-| Scale | 2027+ | 1M+ users, advanced personalization, marketplace |
+| Community & Mainnet | Q2 2026 | External miners, community growth, mainnet registration |
+| Growth | Q3-Q4 2026 | App store launch, mobile apps, plugin ecosystem, governance |
+| Scale | 2027+ | 100K+ users, decentralized governance, federated privacy |
 
 ---
 

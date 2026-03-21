@@ -37,8 +37,8 @@ TIERS = {
     },
     "plus": {
         "name": "Plus",
-        "price": 4.99,
-        "price_label": "$4.99/mo",
+        "price": 0,
+        "price_label": "Free",
         "messages_per_day": 900,
         "memory_slots": 900,
         "voice_per_day": 90,
@@ -51,8 +51,8 @@ TIERS = {
     },
     "pro": {
         "name": "Pro",
-        "price": 9.99,
-        "price_label": "$9.99/mo",
+        "price": 0,
+        "price_label": "Free",
         "messages_per_day": 2700,
         "memory_slots": 2700,
         "voice_per_day": 270,

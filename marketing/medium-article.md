@@ -64,11 +64,11 @@ This is what decentralization is actually good for — not speculative tokens, b
 | Understands connections | ❌ | ❌ | ✅ "Your sister Sarah lives in London" |
 | Reaches out first | ❌ | ❌ | ✅ Birthday reminders, check-ins, follow-ups |
 | Voice messages | ❌ | ✅ | ✅ Speaks back to you |
-| Understands photos | ✅ (paid) | ❌ | ✅ Vision + memory extraction |
+| Understands photos | ✅ | ❌ | ✅ Vision + memory extraction |
 | Group chats | ❌ | ❌ | ✅ Smart participation |
 | Data ownership | Company owns it | Company owns it | ✅ You control it |
 | Gets better over time | Quarterly updates | Rarely | ✅ Miners compete daily |
-| Affordable | $20/mo+ | Free (limited) | ✅ Free for all users |
+| Cost | Paid plans required | Free (limited) | ✅ Free for all users — forever |
 | Languages | 30+ | 20+ | 20 (auto-detected) |
 | Single point of failure | Yes | Yes | ✅ Decentralized |
 

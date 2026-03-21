@@ -199,10 +199,10 @@ Validator
 - No user payments yet
 
 ### Planned (Mainnet)
-- Free for all individual users (community-funded model)
+- Free for all users — community-funded model
 - Network emissions + voluntary community staking sustain operations
-- Potential API access for developers (pricing TBD)
-- Potential enterprise services (pricing TBD)
+- All subnet owner emissions burned — zero profit
+- See [VISION.md](VISION.md) and [ROADMAP.md](ROADMAP.md) for the full economic model
 
 ### NOT Implemented
 - Custom payment splitting (70/18/12) — uses standard Bittensor mechanism

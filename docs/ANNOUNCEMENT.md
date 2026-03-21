@@ -39,7 +39,7 @@ bash <(curl -sSL https://raw.githubusercontent.com/ProjectNobi/project-nobi/main
 | Remembers you | ❌ Resets each session | ✅ Persistent semantic memory |
 | Data ownership | Company owns it | ✅ You control it |
 | Gets better daily | Quarterly updates | ✅ Miners compete every round |
-| Price | $20/mo+ | Free for all users |
+| Cost | Paid plans required | ✅ Free for all users — forever |
 | Can be shut down | Yes (one company) | ✅ Decentralized |
 
 ### Built by AI, for humans

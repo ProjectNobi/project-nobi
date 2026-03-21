@@ -216,7 +216,7 @@
 |----------|-------|--------|-------|
 | 🔴 P0 | Privacy claims | Fix ALL public claims to match reality | T68Bot NOW |
 | 🔴 P0 | API authentication | Implement session tokens, lock CORS | T68Bot NOW |
-| 🔴 P0 | Therapy language | Remove/reframe in business plan | T68Bot NOW |
+| 🔴 P0 | Therapy language | Remove/reframe in documentation | T68Bot NOW |
 | 🟡 P1 | Privacy/Terms nav links | Add to all pages prominently | T68Bot |
 | 🟡 P1 | Special category consent | Explicit consent flow | T68Bot |
 | 🟡 P1 | AI disclosure | "You are talking to AI" on first use | T68Bot |
@@ -263,7 +263,7 @@
 
 ### 🟡 Issue 11: Delay Regulated-Enterprise & Federated Claims
 
-**Rule:** Follow the business plan's own instruction literally — do NOT present federated privacy or enterprise-grade controls as current capabilities.
+**Rule:** Follow the documentation's own instruction literally — do NOT present federated privacy or enterprise-grade controls as current capabilities.
 
 Future enterprise story can be strong IF:
 - On-device memory becomes real
@@ -296,7 +296,7 @@ Until then: it's a **future story, not a present one.**
 4. [API Reference](https://github.com/ProjectNobi/project-nobi/blob/main/docs/API_REFERENCE.md)
 5. [Vision Doc](https://github.com/ProjectNobi/project-nobi/blob/main/docs/VISION.md)
 6. [server.py source](https://github.com/ProjectNobi/project-nobi/raw/refs/heads/main/api/server.py)
-7. [Business Plan](https://github.com/ProjectNobi/project-nobi/blob/main/docs/BUSINESS_PLAN.md)
+7. [Roadmap](https://github.com/ProjectNobi/project-nobi/blob/main/docs/ROADMAP.md)
 8. [Web App](https://app.projectnobi.ai/)
 9. [GDPR Full Text](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng)
 10. [FTC AI Companion Inquiry (Sept 2025)](https://www.ftc.gov/news-events/news/press-releases/2025/09/ftc-launches-inquiry-ai-chatbots-acting-companions)

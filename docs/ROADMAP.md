@@ -38,7 +38,7 @@ Everything below is live, tested, and operational.
 | Content Safety | ✅ Live | Filtering, compliance, responsible AI |
 | Anti-Gaming | ✅ Live | Dynamic queries, fake user IDs, heuristic cap, moving averages |
 | Stress Test | ✅ Passed | 500 nodes, 2000 queries, 99.75% success rate |
-| Documentation | ✅ Complete | Whitepaper, subnet design, mining guide, validating guide, business plan |
+| Documentation | ✅ Complete | Whitepaper, subnet design, mining guide, validating guide, vision, roadmap |
 | Legal Framework | ✅ Complete | Privacy policy, terms, safety disclaimers |
 | Multi-language | ✅ Live | 20 languages, auto-detected |
 | Voice Messages | ✅ Live | STT + TTS integration |
