@@ -342,7 +342,7 @@ class GroupHandler:
                 messages=messages,
                 max_tokens=256,  # Shorter for groups — be concise
                 temperature=0.7,
-                timeout=25,
+                timeout=15,  # Reduced from 25s for faster failure
             )
             response = completion.choices[0].message.content
 
@@ -358,5 +358,34 @@ class GroupHandler:
             return response
 
         except Exception as e:
-            logger.error(f"[Group] LLM error: {e}")
+            logger.error(f"[Group] LLM error (primary): {e}")
+
+            # Fallback to OpenRouter for group chats too
+            try:
+                import os
+                openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
+                if openrouter_key and self.companion:
+                    from openai import OpenAI as _OAI
+                    fallback_client = _OAI(
+                        base_url="https://openrouter.ai/api/v1",
+                        api_key=openrouter_key,
+                    )
+                    fallback_completion = fallback_client.chat.completions.create(
+                        model="anthropic/claude-3.5-haiku",
+                        messages=messages,
+                        max_tokens=256,
+                        temperature=0.7,
+                        timeout=20,
+                    )
+                    response = fallback_completion.choices[0].message.content
+                    if response and response.strip():
+                        logger.info(f"[Group] OpenRouter fallback succeeded")
+                        try:
+                            self.memory.save_conversation_turn(group_user_id, "assistant", response)
+                        except Exception:
+                            pass
+                        return response
+            except Exception as fallback_err:
+                logger.error(f"[Group] OpenRouter fallback failed: {fallback_err}")
+
             return "Something hiccuped on my end — try again? 🤖"

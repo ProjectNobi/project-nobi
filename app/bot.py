@@ -616,17 +616,24 @@ class CompanionBot:
             except Exception as e:
                 logger.warning(f"Memory recall error: {e}")
 
-        # Save user message + extract memories (regex + LLM)
+        # Save user message + extract memories (regex fast, LLM deferred)
         try:
             self.memory.save_conversation_turn(user_id, "user", message)
-            # Regex extraction (fast, always runs)
+            # Regex extraction (fast, <1ms, always runs)
             self.memory.extract_memories_from_message(user_id, message, "")
-            # Phase 2: LLM extraction (richer, async-safe)
-            self.memory.extract_memories_llm(user_id, message)
-            # Phase 2: Trigger profile summarization if enough memories
-            self.memory.summarize_user_profile(user_id)
         except Exception as e:
             logger.warning(f"Memory store error: {e}")
+
+        # LLM extraction runs AFTER response is sent (deferred, non-blocking)
+        # This prevents Chutes timeouts from delaying the user's response
+        import threading
+        def _deferred_llm_extract():
+            try:
+                self.memory.extract_memories_llm(user_id, message)
+                self.memory.summarize_user_profile(user_id)
+            except Exception as e:
+                logger.debug(f"Deferred LLM memory extraction error: {e}")
+        threading.Thread(target=_deferred_llm_extract, daemon=True).start()
 
         # Phase 2: Track conversation turns for periodic decay
         if not hasattr(self, '_turn_count'):
@@ -728,7 +735,7 @@ class CompanionBot:
                 messages=messages,
                 max_tokens=self._get_max_tokens(user_id),
                 temperature=0.7,
-                timeout=25,
+                timeout=15,  # Reduced from 25s — fail fast, fallback to OpenRouter
             )
             response = completion.choices[0].message.content
 

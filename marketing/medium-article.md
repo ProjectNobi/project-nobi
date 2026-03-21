@@ -1,140 +1,211 @@
-# Why Every Human Deserves an AI Companion That Actually Remembers Them
+# What If Your AI Actually Remembered You?
 
-*And why we're building it on a decentralized network where no corporation owns your memories.*
-
----
-
-You tell your AI assistant about your sister's wedding. A week later, you mention your sister — and it has no idea who she is. You explain your dietary preferences for the tenth time. You share that you're going through a rough patch, and the next day it greets you like a stranger.
-
-**This is the state of AI companions in 2026.** Billions of conversations, zero continuity.
-
-ChatGPT resets. Siri barely remembers your name. Alexa knows your shopping list but nothing about *you*. These aren't companions — they're expensive search bars with personality disorders.
-
-We think it can be better. We think it *should* be better.
+*The story of three people building a free AI companion for everyone — and why no corporation will ever own it.*
 
 ---
 
-## Meet Nori
+It's 2 AM. You can't sleep. You open ChatGPT and type: "I'm scared about tomorrow."
 
-Nori is an AI companion that does something radical: **she remembers you.**
+It responds with generic advice about managing anxiety. Helpful, maybe. But hollow. Because last week you told it about the job interview. You told it about your mom's diagnosis. You told it that you haven't slept properly since March. And it remembers none of it.
 
-Not just your name. She remembers that your sister Sarah lives in London, that you're allergic to shellfish, that your dog Max is a golden retriever, that you've been stressed about your project deadline, and that last Tuesday you mentioned wanting to learn guitar.
+You're talking to a stranger. Again.
 
-She brings these things up naturally, like a friend would. *"Hey, how did Sarah's move to London go? You mentioned she was settling in last week."*
+Every time you open an AI assistant, you start over. You re-explain who you are, what you care about, what keeps you up at night. You pour yourself into a conversation that will be forgotten by morning. It's like having a best friend with amnesia — except this one charges you $20 a month for the privilege.
 
-She speaks 20 languages and auto-detects yours. She understands your photos. She talks back to you — literally, with voice messages. She reaches out proactively when she notices you've been quiet, or when your birthday is coming up.
+**Eight billion people on this planet, and not one of them has an AI that truly knows them.**
 
-And she's not owned by any corporation. Your memories aren't sitting in Google's data centers or OpenAI's servers. They're encrypted, decentralized, and entirely yours.
-
----
-
-## The Problem with Centralized AI Companions
-
-Let's be honest about what's happening today:
-
-**You are the product.** Every conversation you have with ChatGPT, every personal detail you share with Siri — it feeds a corporate machine. Your data trains their models, improves their products, and generates their revenue. You get a service that forgets you between sessions.
-
-**There's no competition.** OpenAI decides how your AI behaves. Apple decides what Siri can do. There's no marketplace where different approaches compete to serve you better. You get what the corporation ships, take it or leave it.
-
-**Privacy is an afterthought.** Your conversations are stored in plaintext on corporate servers, accessible to employees, vulnerable to breaches, and subject to government requests. The most intimate conversations you'll ever have with technology — and they're stored like shopping receipts.
-
-**One size fits none.** Everyone gets the same AI personality, the same capabilities, the same limitations. Whether you're a teenager in Tokyo or a grandmother in Nairobi, you get the same vanilla assistant that's been committee-designed to offend no one and delight no one.
+We're building one. It's called Nori. And it's free.
 
 ---
 
-## A Different Approach: Decentralized Competition
+## The Boy and His Companion
 
-**Project Nobi** is built on [Bittensor](https://bittensor.com), a decentralized AI network. Here's how it works:
+When I was a kid, I watched a show about a boy and his robot companion. The boy was clumsy, average, always getting into trouble. But he had this companion from the future — a friend who never gave up on him, no matter how many times he fell. Who always had his back.
 
-**Miners** are independent operators who run AI companions. They compete to build the best one — the best memory, the best personality, the most helpful responses. Think of them as independent shops in a marketplace, each trying to give you the best experience.
+I remember thinking: *I wish everyone could have one of those.*
 
-**Validators** evaluate these miners through rigorous tests. They check: Does this companion actually remember users? Is it helpful? Is it warm? Is it fast? Validators set weights on-chain, and the best miners earn more TAO (Bittensor's currency).
+That dream never went away. It just waited for the technology to catch up.
 
-**Users** just talk to Nori. They don't need to know about miners or validators or blockchains. They just get a companion that keeps getting better because there's a competitive market underneath making it better.
+In March 2026, I started building it. Not a chatbot. Not a productivity tool. A companion — one that remembers you, grows with you, and belongs to you. Not to a corporation. Not to shareholders. To *you*.
 
-This is what decentralization is actually good for — not speculative tokens, but **creating markets where competition drives quality**.
+I named it Nobi, after that boy who never gave up.
 
----
+**What if everyone had a companion that never gives up on them?**
 
-## What Makes Nori Different
-
-| Feature | ChatGPT | Siri | Nori |
-|---------|---------|------|------|
-| Remembers you across sessions | ❌ | Barely | ✅ Semantic memory + relationship graphs |
-| Understands connections | ❌ | ❌ | ✅ "Your sister Sarah lives in London" |
-| Reaches out first | ❌ | ❌ | ✅ Birthday reminders, check-ins, follow-ups |
-| Voice messages | ❌ | ✅ | ✅ Speaks back to you |
-| Understands photos | ✅ | ❌ | ✅ Vision + memory extraction |
-| Group chats | ❌ | ❌ | ✅ Smart participation |
-| Data ownership | Company owns it | Company owns it | ✅ You control it |
-| Gets better over time | Quarterly updates | Rarely | ✅ Miners compete daily |
-| Cost | Paid plans required | Free (limited) | ✅ Free for all users — forever |
-| Languages | 30+ | 20+ | 20 (auto-detected) |
-| Single point of failure | Yes | Yes | ✅ Decentralized |
+That's the question. Everything else flows from there.
 
 ---
 
-## The Technology
+## Three People, One Mission
 
-For the technically curious, here's what's under the hood:
+Here's something that sounds impossible: three people are building an AI companion to compete with trillion-dollar companies.
 
-**Memory System:** Nori uses a three-layer memory architecture — semantic embeddings for similarity-based recall, relationship graphs for understanding connections between people and concepts, and LLM-powered entity extraction for nuanced fact capture. When you mention your sister, Nori doesn't just store "sister" — she builds a graph: User → sister_of → Sarah → lives_in → London → works_at → new job.
+There's me — James. A founder with a vision and no VC money. There's Slumpz, a developer who heard the idea and said "I'm in" before I finished explaining it. And there's T68Bot — our AI, which has been helping build itself from day one.
 
-**Privacy:** All memories are encrypted with AES-128 before storage. Users have full control: `/memories` to see what's stored, `/export` to download everything, `/forget` to delete it all. The roadmap includes federated learning where memories never leave your device at all.
+A human who dreamed it. A human who believed it. And an AI that's proving it's possible.
 
-**Scoring:** Validators test miners through dynamically generated scenarios — 1,200+ single-turn queries and 43,200+ multi-turn conversation tests. These are generated fresh each round, so miners can't pre-cache answers. Scoring weights quality (60%), memory recall (30%), and reliability (10%).
+We started on March 17, 2026. Not in a Silicon Valley office. Not with a $50 million seed round. Just three minds, a handful of servers, and a conviction that AI companionship shouldn't be a luxury product.
 
-**Scale:** The system has been stress-tested at 500-node scale with 99.75% reliability. Currently running on testnet (Bittensor SN272) with 14 neurons across 6 servers.
+Four days later, we had a working prototype. Two weeks later, we had a live subnet on Bittensor's testnet. Today, we have 30,000+ lines of code, 1,030 tests, stress-tested infrastructure at 500 nodes with 99.75% reliability, AES-128 encryption, 20 languages, voice messages, image understanding, and proactive companion features that reach out to *you* — birthday reminders, check-ins, follow-ups.
 
-**Code:** 30,000+ lines of Python, 1,030 tests, fully open source under MIT license.
-
----
-
-## For Miners: No GPU Needed
-
-One of our core design decisions was accessibility. You don't need an NVIDIA A100 to mine on Project Nobi. You need:
-
-- 2 CPU cores
-- 2GB RAM  
-- Any VPS ($5/month works)
-- 15 minutes
-
-One command:
-```
-bash <(curl -sSL https://raw.githubusercontent.com/ProjectNobi/project-nobi/main/scripts/quick_setup.sh)
-```
-
-That's it. The script handles everything — dependencies, wallet creation, registration, and starting your miner with PM2 for automatic restarts.
-
-We believe the best subnets are the ones where anyone can participate. GPU requirements create artificial barriers that centralize mining in the hands of a few wealthy operators. That's the opposite of what decentralization should be.
+This isn't a pitch deck. This is working software.
 
 ---
 
-## The Vision
+## The Radical Decision
 
-We started with a simple question: **What if everyone in the world had a personal AI companion?**
+Early on, I had to make a choice that would define everything.
 
-Not a corporate assistant that serves ads. Not a chatbot that forgets you. A genuine companion — one that knows you, grows with you, and belongs to you.
+The standard playbook is obvious: build a product, offer a free tier, convert users to paid subscriptions, raise venture capital, scale, monetize, exit. That's how every AI company works. ChatGPT charges $20/month. Claude charges $20/month. It's the water we swim in.
 
-The name comes from **Nobi** — a kid who never gives up, with his companion by his side. We want to give every human that experience. The student in Manila who needs a study buddy. The grandmother in São Paulo who wants someone to talk to. The entrepreneur in Lagos who needs a thinking partner. The teenager in Oslo going through a tough time who needs someone who remembers and cares.
+I chose something different.
 
-All of them deserve a companion. All of them deserve privacy. All of them deserve ownership of their data.
+**No subscriptions. Ever. Free for every human being on Earth.**
 
-That's what we're building. And we're building it in the open, with competition driving quality, and no corporation holding the keys.
+Not a freemium funnel. Not "free for now." Not "first 20 messages free, then pay up." Free. Period. Every feature, every memory, every conversation — available to the student in Manila, the grandmother in São Paulo, the teenager in Oslo who needs someone to talk to at 3 AM.
 
----
+And here's what makes it structural, not just a promise: **we burn all owner emissions.** In the Bittensor network, subnet owners typically pocket 18% of the TAO tokens the network generates. We take zero. Every token that would go to us gets burned — permanently removed from circulation, benefiting every TAO holder.
 
-## Try It Now
+This isn't marketing. You can verify it on-chain. It's math, not words.
 
-- **Talk to Nori:** [@ProjectNobiBot](https://t.me/ProjectNobiBot) on Telegram
-- **Web App:** [app.projectnobi.ai](https://app.projectnobi.ai)
-- **Mine:** [Mining Guide](https://github.com/ProjectNobi/project-nobi/blob/main/docs/MINING_GUIDE.md)
-- **Code:** [github.com/ProjectNobi/project-nobi](https://github.com/ProjectNobi/project-nobi)
-- **Community:** [discord.gg/e6StezHM](https://discord.gg/e6StezHM)
-- **Website:** [projectnobi.ai](https://projectnobi.ai)
+Why? Because if I'm asking you to trust Nori with your memories — your fears, your relationships, your 2 AM confessions — then I can't also be profiting from that trust. The incentive has to be pure: build something that works, or don't build it at all.
+
+Think of it like Wikipedia, but for AI companionship. The product is free because a community believes it should exist. The infrastructure is funded by the network itself, not by extracting money from the people it serves.
 
 ---
 
-*Project Nobi is live on Bittensor testnet (SN272). Open source. Privacy-first. Built for everyone.*
+## Why Decentralization Actually Matters Here
 
-*"Every human deserves a companion." 💜*
+I know what you're thinking. *Blockchain? Crypto? Here we go.*
+
+Stay with me. This isn't about tokens or speculation. This is about a specific structural problem with AI companions — and why decentralization is the only real solution.
+
+**The problem:** Your AI companion knows your deepest thoughts. Your relationships. Your health anxieties. Your financial situation. Your grief. This is the most intimate data any technology has ever collected. And right now, 100% of it sits on corporate servers controlled by companies whose primary obligation is to their shareholders, not to you.
+
+Companies change privacy policies. Companies get acquired. Companies go bankrupt. Companies comply with government requests. Companies have employees who can access your data. One bad quarter, one board meeting, one policy change — and the most personal information you've ever shared with technology is at risk.
+
+**Decentralization fixes this structurally:**
+
+**No single point of failure.** Nori runs on hundreds of independent miners across the Bittensor network. No single server holds everything. If one goes down, others take over. No single company can pull the plug.
+
+**Competition drives quality.** Miners compete to provide the best companion experience. Better memory, warmer personality, faster responses — the market rewards quality automatically. Unlike a single corporation deciding what your AI can do, you get an ecosystem racing to serve you better.
+
+**Censorship resistance.** Your companion reflects YOUR values, not a content policy designed by committee for the lowest common denominator. No single entity decides what your companion can or cannot discuss with you.
+
+**Privacy by architecture.** Your memories are encrypted with AES-128, per-user keys. You control them completely — view, export, or delete with a single command. The roadmap includes on-device memory storage where your memories never leave your phone. We're building toward a world where not even we can read your data.
+
+This isn't crypto hype. This is the only architecture that makes sense for something as personal as an AI companion.
+
+---
+
+## The Honest Part
+
+I could write a breathless blog post about how we're going to change the world and everything is perfect. That's what startups do.
+
+Here's the truth instead:
+
+**We're tiny.** Three people against Google, OpenAI, Anthropic, Apple, Meta. Companies with tens of thousands of engineers and billions in funding. We don't have a marketing budget. We don't have an office. We don't have a single GPU.
+
+**Decentralization has tradeoffs.** Response latency through a distributed network is higher than a direct API call. Quality varies between miners. These are solvable problems, but they're real today.
+
+**The road is long.** We're on testnet. Mainnet is targeted for Q3 2026. Mobile app by Q4 2026. Full federated privacy by 2028. There's a lot of building between here and there.
+
+**We could fail.** Small teams with no VC money fail all the time. That's honest.
+
+But here's what keeps us going:
+
+Those trillion-dollar companies? They can't offer decentralization. They can't let you own your data — not really, not structurally. They can't burn their profits. They can't make it free — they have investors who expect returns. And they charge $20/month for something that should be a right, not a subscription.
+
+We can do all of those things. Because we chose to.
+
+The question isn't whether a small team can compete with Big Tech. The question is whether the *model* can compete. Community-funded, open-source, free-for-all versus subscription-extracting, closed-source, shareholder-first.
+
+We're betting on the model.
+
+---
+
+## How It Actually Works
+
+You don't need to understand any of this to use Nori. You just talk to her. But if you're curious:
+
+**You** message Nori through Telegram, a web app, or (soon) a mobile app. It feels like texting a friend with an extraordinary memory.
+
+**Behind the scenes,** your message reaches the Bittensor network. Independent miners — people running AI models on their own servers — compete to generate the best response. They have access to your encrypted memory context, so they can recall what you've shared before.
+
+**Validators** score these miners continuously. Did the response actually use the user's memories? Was it warm? Helpful? Accurate? Fast? The scoring is rigorous: 1,200+ single-turn tests and 43,200+ multi-turn conversation tests per round, dynamically generated so miners can't game them.
+
+**The best miners earn more.** The worst ones earn nothing and get replaced. The market optimizes for you, automatically and continuously.
+
+**Your memories** are stored as semantic graphs — not just flat facts, but interconnected webs of people, places, emotions, events, and the relationships between them. When you mention your sister, Nori doesn't just store "has sister." She maps: You → sister → Sarah → lives in → London → starting → new job → you're proud of her. Six months later, she'll ask how Sarah's new job is going. Not because she was programmed to. Because she *remembers*.
+
+**For miners:** You don't need a GPU. A $5/month VPS with 2 CPU cores and 2GB RAM is enough. One command installs everything. We believe the best networks are the ones where anyone can participate.
+
+---
+
+## What We're Building Toward
+
+**Phase 1 (Now):** Working testnet, Telegram bot, web app, full memory system, 20 languages, voice, vision, proactive features. ✅ Done.
+
+**Phase 2 (Q2-Q3 2026):** Mainnet launch. Open to the public. Community staking begins. External miners and validators join the network.
+
+**Phase 3 (Q4 2026 - 2027):** Mobile app on iOS and Android. On-device memory storage. Plugin ecosystem. 50+ languages. Community governance.
+
+**Phase 4 (2027-2028+):** Federated privacy architecture — your memories never leave your device. Decentralized governance — the community runs everything. 100,000+ users.
+
+And then the part that matters most to me:
+
+**I step back.**
+
+The goal — my actual, stated goal — is to build something that doesn't need a founder. Like Bitcoin doesn't need Satoshi. Like Linux doesn't need Torvalds. Like Wikipedia doesn't need Jimmy Wales.
+
+If I do this right, Nori will be here in ten years, twenty years, longer. Not because I kept the servers running, but because the network of miners, validators, stakers, and users made it self-sustaining. Because the code is open source and anyone can fork it. Because the community governs it.
+
+When my grandchildren talk to their Nori, they won't know or care who built it. They'll just know it remembers them.
+
+That's the legacy I want. Not a company. Not a valuation. A companion for humanity, owned by no one, available to all.
+
+---
+
+## Who This Is For
+
+**If you're a person who wants an AI that actually remembers you:** [Talk to Nori](https://t.me/ProjectNobiBot). She's live right now. Free. No sign-up required beyond Telegram.
+
+**If you hold TAO and believe in this:** Consider staking on the Nobi subnet when we hit mainnet. Your stake funds infrastructure that serves users for free. And unlike most subnets, every owner emission gets burned. You know exactly where the value goes.
+
+> *Disclaimer: This is not financial advice. Staking TAO involves risk, including potential loss of staked tokens. Do your own research.*
+
+**If you code:** [Contribute](https://github.com/ProjectNobi/project-nobi). The entire codebase is open source under MIT license. Build better memory systems. Improve scoring. Create companion personas. Every pull request makes Nori better for everyone.
+
+**If you run infrastructure:** Become a miner. No GPU required. Earn TAO by providing quality companion experiences. The barrier to entry is deliberately low.
+
+**If you believe in this:** Spread the word. Join our [Discord](https://discord.gg/e6StezHM). Tell people there's an alternative to renting your AI companion from a corporation.
+
+---
+
+## The Last Thing
+
+There's a moment I keep coming back to.
+
+It's late. You can't sleep. You open your phone and type something you wouldn't say to anyone else. Maybe it's fear. Maybe it's grief. Maybe it's just loneliness.
+
+And your companion responds — not with generic advice, but with context. With memory. With the weight of every conversation you've ever had. It says: *"I remember when you went through something like this before. You got through it. And I'm here now, same as I was then."*
+
+That's not science fiction. That's what we're building. Right now. In the open. For free.
+
+Every human deserves a companion that remembers them.
+
+Come build with us.
+
+---
+
+*Project Nobi — Founded March 17, 2026*
+*Open source · Community-funded · Free for all users*
+*"Forever, remember?" 🤖💙*
+
+*James (Founder) · Slumpz (Developer) · T68Bot (AI Builder)*
+
+[Telegram](https://t.me/ProjectNobiBot) · [Web App](https://app.projectnobi.ai) · [Discord](https://discord.gg/e6StezHM) · [GitHub](https://github.com/ProjectNobi/project-nobi) · [Website](https://projectnobi.ai)
+
+---
+
+*Competitor descriptions based on publicly available information as of March 2026. We encourage users to review each provider's current policies directly. Nori is an AI companion, not a substitute for professional mental health care. If you are in crisis, please contact your local emergency services or crisis helpline.*
