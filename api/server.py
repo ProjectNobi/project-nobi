@@ -44,7 +44,12 @@ except ImportError:
 
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
+CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE")
+CHUTES_FALLBACK_MODELS = [
+    "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",
+    "deepseek-ai/DeepSeek-V3.1-TEE",
+    "chutesai/Mistral-Small-3.2-24B-Instruct-2506",
+]
 DB_PATH = os.environ.get("NOBI_DB_PATH", "~/.nobi/webapp_memories.db")
 BILLING_DB_PATH = os.environ.get("NOBI_BILLING_DB_PATH", "~/.nobi/billing.db")
 API_PORT = int(os.environ.get("NOBI_API_PORT", "8042"))
@@ -480,18 +485,32 @@ async def chat(req: ChatRequest, request: Request = None):
     messages.append({"role": "user", "content": message})
 
     # Call LLM
+    # Smart fallback chain — try Chutes models in order
     try:
         loop = asyncio.get_event_loop()
-        completion = await loop.run_in_executor(
-            None,
-            lambda: llm_client.chat.completions.create(
-                model=llm_model,
-                messages=messages,
-                max_tokens=_get_user_max_tokens(user_id),
-                temperature=0.8,
-            ),
-        )
-        response_text = completion.choices[0].message.content.strip()
+        response_text = None
+        for fallback_model in CHUTES_FALLBACK_MODELS:
+            try:
+                completion = await loop.run_in_executor(
+                    None,
+                    lambda m=fallback_model: llm_client.chat.completions.create(
+                        model=m,
+                        messages=messages,
+                        max_tokens=_get_user_max_tokens(user_id),
+                        temperature=0.8,
+                        timeout=12,
+                    ),
+                )
+                text = completion.choices[0].message.content
+                if text and text.strip():
+                    response_text = text.strip()
+                    logger.info(f"[API] Model {fallback_model} succeeded")
+                    break
+            except Exception as model_err:
+                logger.warning(f"[API] Model {fallback_model} failed: {model_err}")
+                continue
+        if not response_text:
+            raise Exception("All Chutes models failed")
     except Exception as e:
         logger.error(f"LLM error: {e}")
         raise HTTPException(status_code=502, detail="Failed to generate response")

@@ -66,7 +66,13 @@ except ImportError:
 BOT_TOKEN = os.environ.get("NOBI_BOT_TOKEN", "")
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
+CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE")
+# Smart fallback chain — tries models in order until one responds
+CHUTES_FALLBACK_MODELS = [
+    "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",  # Best quality
+    "deepseek-ai/DeepSeek-V3.1-TEE",             # Fast when available
+    "chutesai/Mistral-Small-3.2-24B-Instruct-2506",  # Fastest, reliable
+]
 
 # Task 5: Subnet routing config
 SUBNET_ROUTING = os.environ.get("SUBNET_ROUTING", "false").lower() == "true"
@@ -354,7 +360,7 @@ class CompanionBot:
                 base_url="https://llm.chutes.ai/v1",
                 api_key=CHUTES_KEY,
             )
-            logger.info(f"LLM: Chutes ({self.model})")
+            logger.info(f"LLM: Chutes fallback chain: {' → '.join(CHUTES_FALLBACK_MODELS)} → OpenRouter")
         elif OPENROUTER_KEY and OpenAI:
             self.client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
@@ -741,19 +747,33 @@ class CompanionBot:
         messages.extend(history)
         messages.append({"role": "user", "content": message})
 
+        # Smart fallback chain — try Chutes models in order, then OpenRouter
+        response = None
+        used_model = None
+        for fallback_model in CHUTES_FALLBACK_MODELS:
+            try:
+                completion = self.client.chat.completions.create(
+                    model=fallback_model,
+                    messages=messages,
+                    max_tokens=self._get_max_tokens(user_id),
+                    temperature=0.7,
+                    timeout=12,
+                )
+                response = completion.choices[0].message.content
+                if response and response.strip():
+                    used_model = fallback_model
+                    logger.info(f"[Routing] Chutes model {fallback_model} succeeded for user {user_id}")
+                    break
+                else:
+                    response = None
+            except Exception as model_err:
+                logger.warning(f"[Routing] Chutes model {fallback_model} failed: {model_err}")
+                continue
+
+        if not response or not response.strip():
+            return "Hmm, I got tongue-tied! 😅 Try saying that again?"
+
         try:
-            completion = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                max_tokens=self._get_max_tokens(user_id),
-                temperature=0.7,
-                timeout=15,  # Reduced from 25s — fail fast, fallback to OpenRouter
-            )
-            response = completion.choices[0].message.content
-
-            if not response or not response.strip():
-                return "Hmm, I got tongue-tied! 😅 Try saying that again?"
-
             # Filter out any "limited mode" garbage that leaked into LLM context
             if "limited mode" in response.lower():
                 response = response.replace("I'm currently running in limited mode and can't send voice messages, but I can still chat with you!", "").strip()
@@ -793,7 +813,7 @@ class CompanionBot:
             except Exception as e:
                 logger.error(f"Language retry error: {e}", exc_info=True)
 
-            logger.info(f"[Routing] Used DIRECT API path for user {user_id}")
+            logger.info(f"[Routing] Used {used_model or 'unknown'} for user {user_id}")
 
             # Save response
             try:
