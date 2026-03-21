@@ -123,7 +123,41 @@ Wallet address, all transactions, and all emission burns will be publicly verifi
 
 **Approach:** Community security review (open source audit) + targeted expert review if funding allows.
 
-#### 1.5 Community Building
+#### 1.5 Legal Entity Strategy (Recommended)
+
+> *This is a recommended strategy, not a firm commitment. The founder will decide timing and structure based on project needs.*
+
+The community model significantly simplifies legal requirements compared to a subscription-based business. No payment processing, no consumer refund liability, no revenue tax structure needed.
+
+**Phased approach:**
+
+| Phase | Recommendation | Cost | Rationale |
+|-------|---------------|------|-----------|
+| Now → Mainnet | No entity needed | £0 | Open source project run by individuals. MIT license protects contributors. Founder named as GDPR data controller (acceptable for small projects). |
+| Mainnet → Growth | UK Community Interest Company (CIC) | ~£50 | Personal liability shield, GDPR-compliant entity, "for community benefit" structure with asset lock, aligns with mission. Cheap and simple. |
+| Scale (100K+ users) | Foundation (UK/Swiss) | Variable | Maximum credibility, formal governance structure, international recognition. Evaluate when scale justifies it. |
+
+**Why a CIC over a Ltd:**
+- Explicitly "for community benefit" — legally enshrined, not just a promise
+- Asset lock: if dissolved, assets go to another community purpose, never to founders
+- Costs ~£50 to register vs ~£500+ for Ltd
+- Simpler governance, lighter reporting requirements
+- Aligns perfectly with "no profit, no subscriptions, community-owned" model
+
+**What a CIC protects against:**
+- Personal liability if Nori causes harm (AI safety incident, data breach)
+- Domain/infra ownership clarity
+- GDPR data controller designation
+- Subnet wallet custody legal framework
+- Trademark protection for "Nobi" / "Nori"
+
+**What's NOT needed (thanks to community model):**
+- ❌ Payment processing entity
+- ❌ Financial services registration
+- ❌ Revenue tax structure
+- ❌ Expensive lawyer review for subscription terms (~£2,000-5,000 GDPR audit can wait until real scale)
+
+#### 1.6 Community Building
 
 | Task | Target | Description |
 |------|--------|-------------|
