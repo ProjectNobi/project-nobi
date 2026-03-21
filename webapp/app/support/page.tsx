@@ -108,16 +108,32 @@ export default function SupportPage() {
     setChatMessages((prev) => [...prev, userMsg]);
     setChatInput("");
 
-    const result = await askSupport(q, userId);
-    if (result) {
+    // Local greeting/FAQ matching first (instant, no API call)
+    const qLower = q.toLowerCase().trim();
+    const greetings = ["hello", "hi", "hey", "yo", "sup", "howdy", "hola", "good morning", "good evening", "hello there", "hi there"];
+    const isGreeting = greetings.some(g => qLower === g || qLower === g + " there" || qLower === g + "!");
+    
+    if (isGreeting) {
       const noriMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "nori",
-        content: result.answer,
-        isTicket: result.type === "ticket",
-        ticketId: result.ticket_id
-          ? result.ticket_id.slice(0, 8).toUpperCase()
-          : undefined,
+        content: "Hey there! 👋 I'm here to help with questions about Project Nobi. You can ask me about how Nori works, mining, privacy, or anything else. What would you like to know?",
+      };
+      setChatMessages((prev) => [...prev, noriMsg]);
+      return;
+    }
+
+    const result = await askSupport(q, userId);
+    if (result) {
+      // If it's a ticket (no FAQ match), show friendly message instead of ticket ID
+      const content = result.type === "ticket"
+        ? "I don't have a specific answer for that yet, but great question! 🤔 Try asking Nori directly in Chat — she's much better at open-ended conversations. Or check our Help page for guides and FAQs."
+        : result.answer;
+      
+      const noriMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "nori",
+        content,
       };
       setChatMessages((prev) => [...prev, noriMsg]);
     }
@@ -193,11 +209,7 @@ export default function SupportPage() {
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{msg.content}</p>
-                    {msg.isTicket && msg.ticketId && (
-                      <div className="mt-2 text-xs opacity-70 flex items-center gap-1">
-                        🎟️ Ticket #{msg.ticketId}
-                      </div>
-                    )}
+
                   </div>
                 </div>
               ))}
