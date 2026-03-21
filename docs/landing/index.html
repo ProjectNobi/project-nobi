@@ -730,7 +730,7 @@
     answerEl.innerHTML = `
       <button onclick="backToFaq()" style="background:none;border:none;cursor:pointer;font-size:12px;color:#7c3aed;margin-bottom:8px;padding:0;font-family:inherit;">← Back</button>
       <div style="font-weight:600;margin-bottom:6px;color:#111827;font-size:13px;">${entry.topic}</div>
-      <div>${md(preview)}</div>
+      <div>${md(cap(preview))}</div>
     `;
     answerEl.style.display = 'block';
   }
@@ -738,6 +738,13 @@
   function backToFaq() {
     document.getElementById('support-faq-section').style.display = 'block';
     document.getElementById('support-answer').style.display = 'none';
+  }
+
+  // Cap long responses and add "Read more" link
+  function cap(text, limit = 300) {
+    if (text.length <= limit) return text;
+    const trimmed = text.slice(0, limit).replace(/\s+\S*$/, '');
+    return trimmed + '… <br><a href="https://app.projectnobi.ai/help" target="_blank" style="color:#7c3aed;font-size:12px;margin-top:6px;display:inline-block">Read more on the Help page →</a>';
   }
 
   // Simple markdown to HTML (bold, code, links, bullets)
@@ -782,7 +789,7 @@
     });
 
     if (localMatch) {
-      responseEl.innerHTML = md(localMatch.answer);
+      responseEl.innerHTML = md(cap(localMatch.answer));
       responseEl.className = 'support-response';
       input.value = '';
       input.disabled = false;
@@ -803,8 +810,8 @@
       const data = await res.json();
 
       if (data.type === 'faq') {
-        const preview = data.answer.length > 400 ? data.answer.slice(0, 400) + '…' : data.answer;
-        responseEl.innerHTML = md(preview);
+        const preview = data.answer;
+        responseEl.innerHTML = md(cap(preview));
         responseEl.className = 'support-response';
       } else {
         // No FAQ match — ask Nori directly via the chat API
@@ -820,8 +827,8 @@
           clearTimeout(chatTimeout);
           const chatData = await chatRes.json();
           if (chatData.response) {
-            const preview = chatData.response.length > 500 ? chatData.response.slice(0, 500) + '…' : chatData.response;
-            responseEl.innerHTML = md(preview);
+            const preview = chatData.response;
+            responseEl.innerHTML = md(cap(preview));
             responseEl.className = 'support-response';
           } else {
             responseEl.textContent = "Hmm, I'm having trouble right now. Try the full chat at app.projectnobi.ai/chat!";
