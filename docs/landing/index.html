@@ -666,7 +666,7 @@
 <!-- Support Widget Script -->
 <script>
   const SUPPORT_API = 'https://api.projectnobi.ai';
-  const TOP_FAQ_LIMIT = 5;
+  const TOP_FAQ_LIMIT = 6;
   let supportOpen = false;
   let faqData = [];
 
@@ -698,11 +698,14 @@
       faqData = data.faq || [];
     } catch {
       faqData = [
-        { id: 'what_is_nobi', topic: 'What is Project Nobi?', answer: 'Project Nobi is a decentralized AI companion built on Bittensor. Nori remembers you, grows with you, and keeps your data private.' },
-        { id: 'how_memory_works', topic: 'How does memory work?', answer: 'Nori automatically extracts and stores facts from your conversations — encrypted, on your server. You can view or delete them anytime.' },
-        { id: 'privacy', topic: 'Is my data private?', answer: 'All memories are encrypted with AES-128 before storage. You can export or delete everything at any time. On-device encryption (where data never leaves your device) is on our roadmap for mainnet.' },
-        { id: 'how_to_mine', topic: 'How do I mine on the subnet?', answer: 'Install Bittensor, register a wallet, register on the Nobi subnet, and run the miner script. Check our GitHub for the full Mining Guide.' },
-        { id: 'pricing', topic: 'How much does Nori cost?', answer: 'Nori is free for all users. The service is funded by Bittensor network emissions and voluntary community support — no subscriptions required.' },
+        { id: 'what_is_nobi', topic: 'What is Project Nobi?', answer: 'Project Nobi is a free, open-source AI companion built on Bittensor. Nori remembers you across conversations, speaks 20 languages, and keeps your data encrypted. No subscriptions, no corporations — community-funded and community-owned.' },
+        { id: 'how_memory_works', topic: "How does Nori's memory work?", answer: 'Nori builds a semantic memory graph from your conversations — tracking facts, preferences, emotions, relationships, and events. She remembers your sister lives in London, that you like Italian food, and that you have a job interview next Tuesday. All encrypted with AES-128.' },
+        { id: 'privacy', topic: 'Is my data private?', answer: 'Yes. All memories are encrypted with AES-128 before storage. You have full control: view your memories (/memories), export everything (/export), or delete it all (/forget). On-device memory storage is on our roadmap.' },
+        { id: 'how_to_mine', topic: 'How do I mine on the Nobi subnet?', answer: 'No GPU needed! Just 2 CPU cores, 2GB RAM, and any VPS ($5/month). Install Bittensor, register a wallet, and run our setup script. Full guide: github.com/ProjectNobi/project-nobi/blob/main/docs/MINING_GUIDE.md' },
+        { id: 'hardware', topic: 'What hardware do I need to mine?', answer: 'Minimal requirements: 2 CPU cores, 2GB RAM, 10GB disk. Any $5/month VPS works (Contabo, Hetzner, DigitalOcean). No GPU needed — Nobi mines on CPU. This is intentional: we believe mining should be accessible to everyone.' },
+        { id: 'pricing', topic: 'How much does Nori cost?', answer: 'Nori is completely free for all users — no subscriptions, no premium tiers, no limits. The service is funded by Bittensor network emissions and voluntary community staking. All subnet owner emissions are burned.' },
+        { id: 'how_to_use', topic: 'How do I start using Nori?', answer: 'Just message @ProjectNobiBot on Telegram or visit app.projectnobi.ai — no signup needed. Start chatting and Nori will remember you automatically. She speaks 20 languages and auto-detects yours.' },
+        { id: 'open_source', topic: 'Is Project Nobi open source?', answer: 'Yes — 100% open source under MIT license. 30,000+ lines of code, 1,090+ tests. Anyone can inspect, fork, or contribute: github.com/ProjectNobi/project-nobi' },
       ];
     }
     renderFaq();
@@ -748,6 +751,23 @@
     responseEl.style.display = 'block';
     input.disabled = true;
 
+    // Try local FAQ matching first (instant, no API call needed)
+    const qLower = question.toLowerCase();
+    const localMatch = faqData.find(f => {
+      const words = f.topic.toLowerCase().split(/\s+/);
+      const matchCount = words.filter(w => w.length > 3 && qLower.includes(w)).length;
+      return matchCount >= 2 || qLower.includes(f.id.replace(/_/g, ' '));
+    });
+
+    if (localMatch) {
+      responseEl.textContent = localMatch.answer;
+      responseEl.className = 'support-response';
+      input.value = '';
+      input.disabled = false;
+      return;
+    }
+
+    // Fallback to API if no local match
     try {
       const res = await fetch(SUPPORT_API + '/api/support', {
         method: 'POST',
@@ -761,15 +781,15 @@
         responseEl.textContent = preview;
         responseEl.className = 'support-response';
       } else if (data.type === 'ticket') {
-        responseEl.textContent = data.answer;
-        responseEl.className = 'support-response ticket';
+        responseEl.textContent = "I don't have an exact answer for that yet. Try asking Nori directly on Telegram (@ProjectNobiBot) or visit our Help Center at app.projectnobi.ai/help";
+        responseEl.className = 'support-response';
       } else {
-        responseEl.textContent = "I couldn't answer that right now — please try the full support page.";
-        responseEl.className = 'support-response error';
+        responseEl.textContent = "Try asking Nori directly — she's great at answering questions! t.me/ProjectNobiBot";
+        responseEl.className = 'support-response';
       }
     } catch {
-      responseEl.textContent = "Couldn't reach support right now. Try the web app for full support.";
-      responseEl.className = 'support-response error';
+      responseEl.textContent = "Try asking Nori directly on Telegram: t.me/ProjectNobiBot";
+      responseEl.className = 'support-response';
     }
 
     input.value = '';
