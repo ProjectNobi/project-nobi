@@ -299,9 +299,13 @@ class GroupHandler:
             except Exception:
                 pass
 
-        # Save user message + extract memories (user-level)
+        # Save user message + extract memories
+        # Use group-scoped ID for conversation history to prevent group context
+        # from leaking into DM conversations (e.g., language preferences)
+        group_user_id = f"{user_id}_group_{group_id}"
         try:
-            self.memory.save_conversation_turn(user_id, "user", message)
+            self.memory.save_conversation_turn(group_user_id, "user", message)
+            # Extract memories to the real user_id (memories are universal)
             self.memory.extract_memories_from_message(user_id, message, "")
         except Exception as e:
             logger.warning(f"[Group] Memory save error: {e}")
@@ -345,9 +349,9 @@ class GroupHandler:
             if not response or not response.strip():
                 return "Hmm, I got tongue-tied! 😅"
 
-            # Save assistant response
+            # Save assistant response (group-scoped to prevent leaking to DM)
             try:
-                self.memory.save_conversation_turn(user_id, "assistant", response)
+                self.memory.save_conversation_turn(group_user_id, "assistant", response)
             except Exception:
                 pass
 
