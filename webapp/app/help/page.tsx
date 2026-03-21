@@ -120,7 +120,7 @@ const LINKS = [
   {
     icon: "⛏️",
     label: "Mining Guide",
-    href: "https://github.com/ProjectNobi/project-nobi/blob/main/docs/MINING.md",
+    href: "https://github.com/ProjectNobi/project-nobi/blob/main/docs/MINING_GUIDE.md",
     description: "Learn how to mine on Bittensor SN272",
   },
   {
@@ -132,7 +132,7 @@ const LINKS = [
   {
     icon: "💬",
     label: "Discord",
-    href: "https://discord.gg/projectnobi",
+    href: "https://discord.gg/e6StezHM",
     description: "Join our community",
   },
   {

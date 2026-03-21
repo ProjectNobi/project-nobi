@@ -114,12 +114,11 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "topic": "How much does Nori cost?",
         "keywords": ["price", "pricing", "cost", "free", "subscription", "plan", "tier", "pay", "billing", "premium"],
         "answer": (
-            "Nori has tiered plans to fit everyone! 💰\n\n"
-            "• **Free:** Core chat + memory, limited messages/day\n"
-            "• **Pro:** Unlimited messages, voice features, advanced memory graph\n"
-            "• **Enterprise:** Custom deployment, API access, white-label options\n\n"
-            "Check the web app at `/subscription` for current pricing. "
-            "We also plan TAO-based payment options for Bittensor community members — stay tuned!"
+            "Nori is **free for all users**! 🎉\n\n"
+            "The service is funded by Bittensor network emissions and community support — "
+            "no subscriptions required. Every feature, every memory, every conversation is "
+            "available to everyone.\n\n"
+            "Want to support the project? Run a miner or validator, or stake TAO on our subnet!"
         ),
     },
     {
@@ -132,7 +131,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
             "• Voice responses via text-to-speech (TTS) — Nori can talk back!\n"
             "• Powered by Whisper (STT) and ElevenLabs/OpenAI TTS\n\n"
             "In the Telegram bot, just send a voice note — Nori handles the rest automatically. "
-            "Voice features are available on Pro plan and above."
+            "Voice features are available to all users — free!"
         ),
     },
     {
@@ -204,7 +203,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
             "• Authentication: API keys (generate in Settings → API Keys)\n"
             "• Endpoints: /api/chat, /api/memories, /api/settings, /api/feedback\n\n"
             "API access is available on Pro and Enterprise plans. "
-            "See the API docs at https://docs.projectnobi.ai/api for full reference."
+            "See the API docs at https://github.com/ProjectNobi/project-nobi/blob/main/docs/API_REFERENCE.md for full reference."
         ),
     },
     {
@@ -294,19 +293,17 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
     },
     {
         "id": "subscription_upgrade",
-        "topic": "How do I upgrade my subscription?",
+        "topic": "Is there a paid plan?",
         "keywords": ["upgrade", "subscribe", "subscription", "pro plan", "pay", "stripe", "billing page", "premium"],
         "answer": (
-            "Upgrading to Pro is quick! ⭐\n\n"
-            "**Web App:**\n"
-            "• Go to the Subscription page\n"
-            "• Choose your plan\n"
-            "• Pay via Stripe (card or TAO coming soon)\n\n"
-            "**Telegram:**\n"
-            "• Use /subscription or /upgrade\n"
-            "• Follow the link to the billing portal\n\n"
-            "Pro unlocks: unlimited messages, voice features, advanced memory graph, "
-            "group chat support, and API access."
+            "Nori is **free for all users** — no subscriptions needed! 🎉\n\n"
+            "All features are available to everyone:\n"
+            "• Full chat with memory\n"
+            "• Voice features\n"
+            "• Memory graph\n"
+            "• Group chat support\n\n"
+            "The service is funded by Bittensor network emissions and community support. "
+            "Want to help? Run a miner, run a validator, or stake TAO on our subnet!"
         ),
     },
     {
@@ -344,7 +341,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "answer": (
             "I can handle most questions, but sometimes you need a real human! 🧑‍💼\n\n"
             "• **Telegram:** Use /feedback and choose 'complaint' — our team monitors all tickets\n"
-            "• **Email:** support@projectnobi.ai\n"
+            "• **Discord:** Join our community at discord.gg/e6StezHM\n"
             "• **Community:** Join our Telegram community group\n"
             "• **GitHub Issues:** For technical bugs\n\n"
             "We typically respond within 24-48 hours. For urgent issues, "

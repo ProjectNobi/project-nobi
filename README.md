@@ -41,7 +41,7 @@ No setup, no commands. It remembers you.
 | Group chats | ❌ | ❌ | ✅ Smart participation |
 | Data ownership | Company owns it | Company owns it | ✅ User controls it¹ |
 | Gets better over time | Quarterly updates | Rarely | ✅ Miners compete daily |
-| Affordable | $20/mo+ | Free (limited) | $4.99/mo target |
+| Affordable | $20/mo+ | Free (limited) | ✅ Free for all users |
 | Languages | 30+ | 20+ | ✅ 20 (auto-detected) |
 | Single point of failure | Yes | Yes | ✅ Decentralized |
 

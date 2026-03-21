@@ -1023,30 +1023,14 @@ async def cmd_import(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show subscription info and upgrade options."""
-    user_id = companion._user_id(update)
-    sub = companion.billing.get_subscription(user_id)
-    tier = sub["tier"]
-
-    if tier in ("plus", "pro"):
-        await update.message.reply_text(
-            f"You're already on the {tier.title()} plan! 🎉\n\n"
-            "Manage your subscription at app.projectnobi.ai/subscription"
-        )
-        return
-
-    keyboard = [
-        [InlineKeyboardButton("⭐ Plus — $4.99/mo", url="https://app.projectnobi.ai/subscription")],
-        [InlineKeyboardButton("🚀 Pro — $9.99/mo", url="https://app.projectnobi.ai/subscription")],
-    ]
+    """Show subscription info."""
     await update.message.reply_text(
-        "✨ Upgrade your Nori experience!\n\n"
-        "⭐ Plus ($4.99/mo)\n"
-        "  500 messages/day, 1000 memories, voice & image boost, group mode\n\n"
-        "🚀 Pro ($9.99/mo)\n"
-        "  Unlimited everything, priority responses, all features\n\n"
-        "Visit app.projectnobi.ai/subscription to upgrade!",
-        reply_markup=InlineKeyboardMarkup(keyboard),
+        "🎉 Nori is free for all users!\n\n"
+        "All features are available to everyone — no subscription needed.\n"
+        "The service is funded by Bittensor network emissions and community support.\n\n"
+        "Want to support the project? Run a miner or validator, or stake TAO on our subnet!\n\n"
+        "📖 Mining Guide: https://github.com/ProjectNobi/project-nobi/blob/main/docs/MINING_GUIDE.md\n"
+        "💬 Discord: https://discord.gg/e6StezHM"
     )
 
 

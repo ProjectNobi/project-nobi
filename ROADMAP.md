@@ -86,7 +86,7 @@
 
 ### Completed
 - [x] Miner specialization (query routing by category, --neuron.specialization flag, 15% bonus)
-- [x] Revenue model: subscription tiers (Free/Plus $4.99/Pro $9.99) with Stripe integration
+- [x] Revenue model: community-funded (free for all users, Bittensor emissions-funded)
 - [x] Third-party API with auth (nobi_ API keys, rate limits, 12 public endpoints)
 - [x] API documentation (API_REFERENCE.md with Python/curl/JS examples)
 - [x] Production deployment configs (Docker Compose, Nginx, systemd, Vercel)

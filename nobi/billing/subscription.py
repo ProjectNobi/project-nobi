@@ -16,6 +16,9 @@ from typing import Optional, Dict, Tuple
 logger = logging.getLogger("nobi-billing")
 
 # ─── Tier Definitions ────────────────────────────────────────
+# NOTE: Project Nobi has transitioned to a community-funded model.
+# All individual user access is free. Tier infrastructure remains
+# for potential future enterprise/API use and backwards compatibility.
 
 TIERS = {
     "free": {

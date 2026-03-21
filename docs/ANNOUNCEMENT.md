@@ -17,7 +17,7 @@ We're building a decentralized marketplace for personal AI companions on Bittens
 - 🧠 **Remembers you** across every conversation (semantic memory with embeddings)
 - 🔐 **Keeps your data private** (AES-128 encryption, user-controlled deletion)
 - 🌍 **Speaks your language** (20 languages)
-- 💰 **Costs almost nothing** ($5/month target)
+- 💰 **Free for all users** (community-funded via Bittensor)
 - 🏗️ **Can't be shut down** — decentralized, no single point of failure
 
 ### Try it now
@@ -39,7 +39,7 @@ bash <(curl -sSL https://raw.githubusercontent.com/ProjectNobi/project-nobi/main
 | Remembers you | ❌ Resets each session | ✅ Persistent semantic memory |
 | Data ownership | Company owns it | ✅ You control it |
 | Gets better daily | Quarterly updates | ✅ Miners compete every round |
-| Price | $20/mo+ | Target: $5/mo |
+| Price | $20/mo+ | Free for all users |
 | Can be shut down | Yes (one company) | ✅ Decentralized |
 
 ### Built by AI, for humans
