@@ -584,10 +584,12 @@ class CompanionBot:
             return self._translate_identity_response("identity", lang_code)
         return None
 
-    async def generate(self, user_id: str, message: str) -> str:
+    async def generate(self, user_id: str, message: str, chat_id: str = "") -> str:
         """Generate a companion response — subnet first, then direct API fallback."""
-        # Detect user's language
-        detected_lang = self.lang_detector.detect(message, user_id)
+        # Detect user's language — scope language cache by chat to prevent
+        # group language settings from leaking into DMs
+        lang_cache_key = f"{user_id}_{chat_id}" if chat_id else user_id
+        detected_lang = self.lang_detector.detect(message, lang_cache_key)
 
         # Check identity/privacy questions — use hardcoded accurate responses
         identity_resp = self._check_bot_identity(message, lang_code=detected_lang)
@@ -1238,8 +1240,9 @@ async def cmd_nori(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_id, message, chat_context, group_id, user_name=user_name
         )
     else:
-        # DM mode: use normal generate
-        response = await companion.generate(user_id, message)
+        # DM mode: use normal generate — pass chat_id to scope language
+        dm_chat_id = str(update.effective_chat.id)
+        response = await companion.generate(user_id, message, chat_id=dm_chat_id)
 
     response = _clean_response(response)
     await _send_response(update, response)
@@ -1485,8 +1488,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Show typing indicator
     await update.message.chat.send_action(ChatAction.TYPING)
 
-    # Generate response
-    response = await companion.generate(user_id, message)
+    # Generate response — pass chat_id to scope language detection
+    chat_id = str(update.effective_chat.id)
+    response = await companion.generate(user_id, message, chat_id=chat_id)
 
     response = _clean_response(response)
     await _send_response(update, response)
@@ -1581,8 +1585,9 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"🎤 I heard: \"{transcript[:200]}\"")
     await update.message.chat.send_action(ChatAction.TYPING)
 
-    # Generate text response
-    response = await companion.generate(user_id, transcript)
+    # Generate text response — pass chat_id to scope language
+    voice_chat_id = str(update.effective_chat.id)
+    response = await companion.generate(user_id, transcript, chat_id=voice_chat_id)
     response_clean = response.replace("**", "").replace("__", "").replace("```", "").replace("`", "").replace("- ", "• ")
 
     if len(response_clean) > 4000:
