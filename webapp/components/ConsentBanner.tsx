@@ -39,7 +39,7 @@ export default function ConsentBanner() {
         <p className="text-sm text-gray-300 flex-1">
           By using Nori, you agree to our{" "}
           <a
-            href="/terms"
+            href="https://projectnobi.ai/terms.html"
             className="text-purple-400 underline hover:text-purple-300"
             target="_blank"
             rel="noopener noreferrer"
@@ -48,7 +48,7 @@ export default function ConsentBanner() {
           </a>{" "}
           and{" "}
           <a
-            href="/privacy"
+            href="https://projectnobi.ai/privacy.html"
             className="text-purple-400 underline hover:text-purple-300"
             target="_blank"
             rel="noopener noreferrer"
