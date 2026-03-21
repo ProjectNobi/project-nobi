@@ -751,8 +751,19 @@
     responseEl.style.display = 'block';
     input.disabled = true;
 
-    // Try local FAQ matching first (instant, no API call needed)
-    const qLower = question.toLowerCase();
+    // Handle greetings locally (instant)
+    const qLower = question.toLowerCase().trim();
+    const greetWords = ['hello', 'hi', 'hey', 'yo', 'sup', 'howdy', 'hola', 'good morning', 'good evening'];
+    const isGreeting = greetWords.some(g => qLower.startsWith(g));
+    if (isGreeting) {
+      responseEl.textContent = "Hey there! 👋 I'm Nori. Ask me anything about Project Nobi — how memory works, mining, privacy, or anything else!";
+      responseEl.className = 'support-response';
+      input.value = '';
+      input.disabled = false;
+      return;
+    }
+
+    // Try local FAQ matching (instant, no API call needed)
     const localMatch = faqData.find(f => {
       const words = f.topic.toLowerCase().split(/\s+/);
       const matchCount = words.filter(w => w.length > 3 && qLower.includes(w)).length;
@@ -769,11 +780,15 @@
 
     // Try FAQ API first, then fall back to chat API for real Nori responses
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
       const res = await fetch(SUPPORT_API + '/api/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question, user_id: 'landing_visitor', platform: 'landing' }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       const data = await res.json();
 
       if (data.type === 'faq') {
@@ -783,11 +798,15 @@
       } else {
         // No FAQ match — ask Nori directly via the chat API
         try {
+          const chatController = new AbortController();
+          const chatTimeout = setTimeout(() => chatController.abort(), 15000);
           const chatRes = await fetch(SUPPORT_API + '/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: question, user_id: 'landing_visitor' }),
+            signal: chatController.signal,
           });
+          clearTimeout(chatTimeout);
           const chatData = await chatRes.json();
           if (chatData.response) {
             const preview = chatData.response.length > 500 ? chatData.response.slice(0, 500) + '…' : chatData.response;
