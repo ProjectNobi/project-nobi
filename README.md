@@ -23,7 +23,7 @@ The name comes from **Nobi** — a kid who never gives up, with his companion by
 
 Nobi is **free for every human being**. No subscriptions. No premium tiers. No "20 messages per day on free." Every feature, every memory, every conversation — available to all.
 
-How? Community-funded through Bittensor network emissions and voluntary TAO staking. All subnet owner emissions are burned — zero profit. See our [Vision](docs/VISION.md) for the full philosophy.
+How? Community-funded through Bittensor network emissions and voluntary TAO staking. The owner receives the mandatory 18% take and burns 100% of it via Bittensor's native `burn_alpha()` extrinsic — every transaction verifiable on-chain. See our [Vision](docs/VISION.md) for the full philosophy.
 
 ---
 

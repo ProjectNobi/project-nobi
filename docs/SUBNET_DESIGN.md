@@ -201,7 +201,7 @@ Validator
 ### Planned (Mainnet)
 - Free for all users — community-funded model
 - Network emissions + voluntary community staking sustain operations
-- All subnet owner emissions burned — zero profit
+- Owner receives mandatory 18% take, burns 100% via `burn_alpha()` — zero profit (on-chain verifiable)
 - See [VISION.md](VISION.md) and [ROADMAP.md](ROADMAP.md) for the full economic model
 
 ### NOT Implemented

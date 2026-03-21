@@ -64,7 +64,7 @@ I chose something different.
 
 Not a freemium funnel. Not "free for now." Not "first 20 messages free, then pay up." Free. Period. Every feature, every memory, every conversation — available to the student in Manila, the grandmother in São Paulo, the teenager in Oslo who needs someone to talk to at 3 AM.
 
-And here's what makes it structural, not just a promise: **we burn all owner emissions.** In the Bittensor network, subnet owners typically pocket 18% of the TAO tokens the network generates. We take zero. Every token that would go to us gets burned — permanently removed from circulation, benefiting every TAO holder.
+And here's what makes it structural, not just a promise: **we burn 100% of owner emissions via Bittensor's native `burn_alpha()` extrinsic.** In the Bittensor network, all subnet owners receive a mandatory 18% take — it cannot be set to zero. We receive that 18% and immediately burn every token of it on-chain. Every transaction is publicly verifiable by anyone — permanently removed from circulation, benefiting every TAO holder.
 
 This isn't marketing. You can verify it on-chain. It's math, not words.
 
@@ -170,7 +170,7 @@ That's the legacy I want. Not a company. Not a valuation. A companion for humani
 
 **If you're a person who wants an AI that actually remembers you:** [Talk to Nori](https://t.me/ProjectNobiBot). She's live right now. Free. No sign-up required beyond Telegram.
 
-**If you hold TAO and believe in this:** Consider staking on the Nobi subnet when we hit mainnet. Your stake funds infrastructure that serves users for free. And unlike most subnets, every owner emission gets burned. You know exactly where the value goes.
+**If you hold TAO and believe in this:** Consider staking on the Nobi subnet when we hit mainnet. Your stake funds infrastructure that serves users for free. And unlike most subnets, every owner emission gets burned via `burn_alpha()` — verifiable on-chain. You know exactly where the value goes.
 
 > *Disclaimer: This is not financial advice. Staking TAO involves risk, including potential loss of staked tokens. Do your own research.*
 

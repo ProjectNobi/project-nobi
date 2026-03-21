@@ -313,7 +313,7 @@ Project Nobi is **free for all users**, funded entirely by the Bittensor network
 | Voluntary community staking | TAO holders stake on the Nobi subnet | Increases subnet weight → more emissions |
 | Founder sponsorship | Bootstrap costs (infrastructure, registration) | Bridge funding until self-sustaining |
 
-**Owner emission commitment:** All subnet owner emissions (typically 18% of total) are committed to being burned or recycled. Zero profit for founders or operators. Every transaction is verifiable on-chain.
+**Owner emission commitment:** The subnet owner receives the mandatory 18% take and burns 100% of it via Bittensor's native `burn_alpha()` extrinsic. Zero profit for founders or operators. Every transaction is verifiable on-chain.
 
 This model is analogous to Wikipedia: the product is free, and people who believe in the mission fund the infrastructure. The key difference is that Bittensor stakers also earn validator dividends, making it aligned participation rather than pure charity.
 

@@ -96,9 +96,9 @@ How? Three mechanisms:
 
 The Nobi subnet receives TAO emissions from the Bittensor network — the same way every subnet does. These emissions pay miners and validators for their work. The network itself funds the infrastructure.
 
-**And here's the critical part: we are committed to burning or recycling all subnet owner emissions.** Zero profit for subnet owners. The founder, the team, the organization — none of us intend to take owner emissions. Every TAO that would go to "owners" is intended to be either burned (reducing supply, benefiting all TAO holders) or recycled back into the subnet's infrastructure costs.
+**And here's the critical part: we commit to burning 100% of our subnet owner emissions via Bittensor's native `burn_alpha()` extrinsic.** All subnet owners receive the mandatory 18% take — it cannot be set to zero. The founder, the team, the organization — we receive that 18% and immediately burn every token of it on-chain. Every burn is publicly verifiable by anyone.
 
-This is radical transparency. Most subnet owners pocket 18% of emissions. We intend to pocket zero.
+This is radical transparency. All subnet owners receive 18% of emissions — it's mandatory. We commit to burning 100% of ours via Bittensor's `burn_alpha()` extrinsic. Every transaction is on-chain and verifiable by anyone.
 
 ### 2. Voluntary Community Staking
 
@@ -112,7 +112,7 @@ No one is required to stake. No one is pressured. The model works because people
 
 The bootstrap costs — code development, infrastructure, subnet registration — are sponsored by the founder and early team. This is sweat equity and personal investment, not venture capital expecting 100x returns.
 
-We are actively calling on the OpenTensor Foundation and the broader Bittensor community to support subnet registration costs. A subnet that burns its owner emissions and serves users for free is a public good for the entire Bittensor ecosystem. It demonstrates what decentralized AI can be.
+We are actively calling on the OpenTensor Foundation and the broader Bittensor community to support subnet registration costs. A subnet that burns its owner emissions via `burn_alpha()` and serves users for free is a public good for the entire Bittensor ecosystem. It demonstrates what decentralized AI can be.
 
 ### Why This Model Works
 
@@ -126,7 +126,7 @@ Nobi breaks this cycle structurally. There are no investors demanding returns. T
 |--------|---------------------|--------------|
 | Funding source | Venture capital (expects 100x) | Community staking + founder sponsorship |
 | Revenue model | Subscriptions ($20-200/mo) | Free for users (network-funded) |
-| Owner profit | Billions in equity | Intended zero — emissions committed to burn |
+| Owner profit | Billions in equity | 18% received, 100% burned via `burn_alpha()` (on-chain verifiable) |
 | Incentive alignment | Maximize revenue per user | Maximize companion quality |
 | Data ownership | Company asset | User owns everything |
 | Shutdown risk | Acqui-hired, pivoted, shut down | Decentralized — can't be killed |
@@ -190,7 +190,7 @@ Project Nobi is not a company. It's a community building a public good. And it n
 
 ### If You Hold TAO
 
-Consider staking on the Nobi subnet. Your stake funds infrastructure that serves users for free. Your emissions go to miners building better companions. Your support makes this real. And unlike most subnets, you know exactly where the value goes — because we commit to burning the owner's share. *This is not financial advice. Staking involves risk. Do your own research.*
+Consider staking on the Nobi subnet. Your stake funds infrastructure that serves users for free. Your emissions go to miners building better companions. Your support makes this real. And unlike most subnets, you know exactly where the value goes — because we commit to burning 100% of owner emissions via `burn_alpha()` — every transaction verifiable on-chain. *This is not financial advice. Staking involves risk. Do your own research.*
 
 ### If You Code
 

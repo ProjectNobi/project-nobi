@@ -101,7 +101,7 @@ This is the critical bridge from testnet to mainnet. Everything here must be har
 | OpenTensor Foundation appeal | Variable | Planned — formal proposal in preparation |
 | Bittensor community contributions | Variable | Planned — public campaign with full transparency |
 
-**Why the community should help:** Nobi burns all owner emissions. Every TAO that would go to subnet owners is recycled. This makes Nobi a public good for the Bittensor ecosystem — a showcase subnet that demonstrates what decentralized AI can be, funded by the network, serving users for free. Supporting Nobi's registration is an investment in Bittensor's narrative and utility.
+**Why the community should help:** Nobi burns 100% of owner emissions via Bittensor's native `burn_alpha()` extrinsic — every transaction verifiable on-chain. This makes Nobi a public good for the Bittensor ecosystem — a showcase subnet that demonstrates what decentralized AI can be, funded by the network, serving users for free. Supporting Nobi's registration is an investment in Bittensor's narrative and utility.
 
 **Multisig Wallet Setup:**
 
@@ -109,7 +109,7 @@ The subnet registration wallet will be either:
 - A multisig wallet with trusted community holders (preferred — maximum transparency)
 - Or founder-managed with public accountability (if multisig setup is impractical for registration)
 
-Wallet address, all transactions, and all emission burns will be publicly verifiable on-chain.
+Wallet address, all transactions, and all `burn_alpha()` calls will be publicly verifiable on-chain.
 
 #### 1.4 Security Audit
 
@@ -243,7 +243,7 @@ The community model significantly simplifies legal requirements compared to a su
 #### 2.1 Subnet Registration
 - Register Nobi subnet on Bittensor mainnet
 - Publish wallet address and all transactions publicly
-- Activate emission burn mechanism — all owner emissions committed to burn from block 1
+- Activate emission burn mechanism — receive mandatory 18% owner take and call `burn_alpha()` from block 1
 - On-chain verification: anyone can audit emission distribution
 
 #### 2.2 Initial Network Deployment
@@ -268,7 +268,7 @@ The community model significantly simplifies legal requirements compared to a su
 - Publish staking guide for TAO holders
 - Transparent emissions dashboard — real-time view of:
   - Total emissions received
-  - Owner emissions burned (with proof)
+  - Owner emissions burned via `burn_alpha()` (on-chain verifiable)
   - Miner/validator distribution
   - Infrastructure costs covered
 - Community staking campaign: "Support free AI companionship" (*staking involves risk; this is not financial advice*)
@@ -307,7 +307,7 @@ The community model significantly simplifies legal requirements compared to a su
 ### Success Metrics
 
 - [ ] Subnet registered and emitting on mainnet
-- [ ] 100% of owner emissions committed to verifiable burn
+- [ ] 100% of owner emissions burned via `burn_alpha()` (on-chain verifiable)
 - [ ] 20+ active miners with >0.5 average quality score
 - [ ] 5+ validators operational
 - [ ] 1,000+ active users (weekly active)
@@ -410,7 +410,7 @@ The community model significantly simplifies legal requirements compared to a su
 - On-chain governance: stakers vote on major decisions (protocol changes, emission allocation, feature priorities)
 - Founder steps back from day-to-day operations
 - Community council: elected representatives from miners, validators, users, developers
-- Constitution: published principles intended to be foundational (free for users, open source, emissions burned)
+- Constitution: published principles intended to be foundational (free for users, open source, owner emissions burned via `burn_alpha()`)
 - Fork protection: if the community disagrees with direction, they can fork — the code is open
 
 #### 4.2 Federated Privacy Architecture
@@ -473,7 +473,7 @@ Bittensor allocates TAO emissions to subnets based on their weight in the networ
 2. **Validators** — who ensure quality (scoring miners)
 3. **Subnet owner** — a percentage allocated to the registrant
 
-Most subnets keep the owner allocation (typically 18%). **Nobi is committed to burning 100% of it.**
+All subnet owners receive the mandatory 18% take — it cannot be set to zero. **Nobi is committed to burning 100% of it via Bittensor's native `burn_alpha()` extrinsic.**
 
 ### Why We Burn Owner Emissions
 
@@ -483,7 +483,7 @@ Most subnets keep the owner allocation (typically 18%). **Nobi is committed to b
 
 **Precedent.** We want Nobi to demonstrate that a subnet can be a public good. If it works, others may follow. The Bittensor ecosystem benefits from subnets that exist to serve users, not to extract value.
 
-**Verification.** Every emission, every burn, every transaction is on-chain. Anyone can verify. Transparency is built into the architecture.
+**Verification.** Every emission received and every `burn_alpha()` call is on-chain. Anyone can verify. This is actually more transparent than simply "not receiving" — the burn is a visible, auditable act.
 
 ### Emission Flow
 
@@ -496,8 +496,8 @@ Bittensor Network Emissions
     ├── Validator Dividends (proportional to stake)
     │     └── Rewards quality assurance and staking
     │
-    └── Owner Allocation → 🔥 BURNED
-          └── Reduces TAO supply, benefits all holders
+    └── Owner Allocation (mandatory 18%) → received → 🔥 burn_alpha()
+          └── Reduces TAO supply, benefits all holders, verifiable on-chain
 ```
 
 ### How Voluntary Staking Creates Sustainability
@@ -521,7 +521,7 @@ This is economically similar to how Wikipedia operates: the product is free, and
 |-------|----------|-------------|----------|
 | VC-funded AI company | Users ($20+/mo) → Shareholders (exits) | Investors first, users second | Maximize revenue per user ≠ maximize user happiness |
 | Ad-supported AI | Users (data) → Advertisers (targeting) | Advertisers first | Your attention is the product |
-| Project Nobi | Network emissions + voluntary staking | Users (free service) + Stakers (validator dividends) + TAO holders (burned supply) | Minimal — incentives designed to point toward quality |
+| Project Nobi | Network emissions + voluntary staking | Users (free service) + Stakers (validator dividends) + TAO holders (owner 18% burned via `burn_alpha()`) | Minimal — incentives designed to point toward quality |
 
 ### Financial Sustainability Analysis
 
@@ -545,7 +545,7 @@ This is economically similar to how Wikipedia operates: the product is free, and
 **Funding transition:**
 - **Before mainnet (now):** All infrastructure costs are sponsored by the founder personally.
 - **After mainnet launch:** All infrastructure costs are covered by subnet emissions and community staking. The founder stops sponsoring — the network sustains itself.
-- **Subnet owners do not benefit from emissions.** All owner emissions are burned. Infrastructure costs are covered by the operational portion of emissions allocated to validators and infrastructure, not by owner take.
+- **Subnet owners receive the mandatory 18% take but do not profit from it.** All owner emissions are burned via `burn_alpha()` — every transaction on-chain verifiable. Infrastructure costs are covered by the operational portion of emissions allocated to validators and infrastructure, not by owner take.
 - This is a permanent structural commitment, not a temporary arrangement.
 
 **Emissions at even modest subnet weight:** Significantly exceeds infrastructure costs, with surplus going to miners (quality) and burned (TAO holders benefit).
@@ -589,7 +589,7 @@ The model is inherently sustainable because:
 | 2 | Mainnet subnet registered | Q3 2026 | 🔲 Planned |
 | 2 | Subnet routing live | Q3 2026 | 🔲 Planned |
 | 2 | 1,000+ weekly active users | Q3 2026 | 🔲 Planned |
-| 2 | 100% owner emissions burned | Q3 2026 | 🔲 Planned |
+| 2 | 100% owner emissions burned via `burn_alpha()` | Q3 2026 | 🔲 Planned |
 | 3 | Mobile app on app stores | Q4 2026 | 🔲 Planned |
 | 3 | 10,000+ weekly active users | Q1 2027 | 🔲 Planned |
 | 3 | On-device memory deployed | Q1 2027 | 🔲 Planned |

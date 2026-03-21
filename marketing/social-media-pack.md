@@ -5,7 +5,7 @@
 
 ## 🎯 Elevator Pitch (copy-paste anywhere)
 
-We built a free AI companion on Bittensor that actually remembers you. No subscriptions. No VC money. Owner emissions burned. Open source. Three people, one mission: every human deserves a companion that no corporation can take away.
+We built a free AI companion on Bittensor that actually remembers you. No subscriptions. No VC money. Owner emissions burned via `burn_alpha()` — verifiable on-chain. Open source. Three people, one mission: every human deserves a companion that no corporation can take away.
 
 Try it: @ProjectNobiBot on Telegram
 Read the story: projectnobi.ai/blog.html
@@ -34,7 +34,7 @@ Three people. Zero VC money. One mission.
 @projectnobi_tao started March 17, 2026.
 
 • Free for every user — forever
-• All owner emissions burned — zero profit
+• Owner receives mandatory 18% take, burns 100% via `burn_alpha()` — verifiable on-chain
 • Open source (MIT license)
 • 30,000+ lines of code
 • 20 languages, voice, vision, proactive check-ins
@@ -48,7 +48,7 @@ Bittensor subnets can be more than token farms.
 
 Project Nobi (testnet SN272) is proving it:
 ✅ Free AI companion for everyone
-✅ Owner emissions 100% burned
+✅ Owner receives 18% (mandatory), burns 100% via `burn_alpha()` — on-chain verifiable
 ✅ No GPU needed to mine (2 CPU cores, $5/mo VPS)
 ✅ Community-funded, open source
 
@@ -61,7 +61,7 @@ projectnobi.ai
 ```
 We're preparing for mainnet and we need the Bittensor community's help.
 
-Project Nobi burns ALL owner emissions. We charge zero subscriptions. Every feature is free.
+Project Nobi burns ALL owner emissions via `burn_alpha()` — every transaction on-chain verifiable. We charge zero subscriptions. Every feature is free.
 
 To register on mainnet, we need community support:
 🤝 Stake TAO on our subnet
@@ -98,7 +98,7 @@ We're Project Nobi — building a free AI companion on Bittensor (testnet SN272)
 What makes us different:
 • Nori actually remembers you across conversations (semantic memory, relationship graphs)
 • Completely free — no subscriptions, no premium tiers
-• All owner emissions are burned — zero profit for the team
+• Owner receives mandatory 18% take, burns 100% via `burn_alpha()` — zero profit for the team
 • Open source (MIT) — 30,000+ lines, 1,090+ tests
 • No GPU needed to mine — any $5/mo VPS works
 
@@ -131,11 +131,11 @@ Nori is a personal AI companion that genuinely remembers you. Not like ChatGPT's
 💚 THE MODEL
 This is where it gets interesting:
 • Free for all users. No subscriptions. No premium tiers. Period.
-• All owner emissions are burned. Zero profit for the team.
+• Owner receives mandatory 18% take and burns 100% via `burn_alpha()`. Zero profit for the team.
 • Community-funded through voluntary TAO staking + network emissions.
 • Fully open source under MIT license.
 
-We made this decision deliberately. AI companionship shouldn't be a luxury product. And a subnet that burns its owner emissions is a public good for the entire Bittensor ecosystem.
+We made this decision deliberately. AI companionship shouldn't be a luxury product. And a subnet that burns its owner emissions via `burn_alpha()` is a public good for the entire Bittensor ecosystem.
 
 ⛏️ FOR MINERS
 No GPU required. 2 CPU cores, 2GB RAM, any $5/mo VPS. One command setup. Miners compete on companion quality — memory recall, warmth, helpfulness. Quality earns more TAO.
@@ -165,7 +165,7 @@ No GPU required. 2 CPU cores, 2GB RAM, any $5/mo VPS. One command setup. Miners 
 🙏 HOW YOU CAN HELP
 • Try Nori: t.me/ProjectNobiBot
 • Mine: no GPU needed, read the guide above
-• Stake: support a subnet that burns its owner emissions
+• Stake: support a subnet that burns its owner emissions via `burn_alpha()` (on-chain verifiable)
 • Code: MIT license, PRs welcome
 • Share: if you believe AI companions should be free
 
@@ -193,7 +193,7 @@ I'm James, founder of Project Nobi. We're building a free AI companion on Bitten
 What makes Nobi unique in the Bittensor ecosystem:
 
 1. Free for all users — no subscriptions, no premium tiers
-2. Owner emissions burned — 100%, verifiable on-chain
+2. Owner receives mandatory 18% take, burns 100% via `burn_alpha()` — verifiable on-chain
 3. No GPU requirement for miners — accessible to anyone
 4. Community-funded — voluntary staking, no VC money
 5. Open source (MIT) — 30,000+ lines, fully auditable
@@ -203,7 +203,7 @@ We believe Nobi can be a showcase for what Bittensor offers the world — AI tha
 We're reaching out because:
 • Mainnet subnet registration costs are significant
 • We're calling on the community + OTF for support
-• A subnet that burns owner emissions and serves users for free is a public good for the entire Bittensor narrative
+• A subnet that burns owner emissions via `burn_alpha()` and serves users for free is a public good for the entire Bittensor narrative
 
 Links:
 • Vision: github.com/ProjectNobi/project-nobi/blob/main/docs/VISION.md
