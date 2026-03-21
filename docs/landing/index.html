@@ -730,7 +730,7 @@
     answerEl.innerHTML = `
       <button onclick="backToFaq()" style="background:none;border:none;cursor:pointer;font-size:12px;color:#7c3aed;margin-bottom:8px;padding:0;font-family:inherit;">← Back</button>
       <div style="font-weight:600;margin-bottom:6px;color:#111827;font-size:13px;">${entry.topic}</div>
-      <div>${preview}</div>
+      <div>${md(preview)}</div>
     `;
     answerEl.style.display = 'block';
   }
@@ -738,6 +738,17 @@
   function backToFaq() {
     document.getElementById('support-faq-section').style.display = 'block';
     document.getElementById('support-answer').style.display = 'none';
+  }
+
+  // Simple markdown to HTML (bold, code, links, bullets)
+  function md(text) {
+    return text
+      .replace(/```([\s\S]*?)```/g, '<pre style="background:#1a1a2e;padding:8px;border-radius:6px;overflow-x:auto;font-size:12px;margin:8px 0"><code>$1</code></pre>')
+      .replace(/`([^`]+)`/g, '<code style="background:#1a1a2e;padding:2px 5px;border-radius:3px;font-size:12px">$1</code>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:#7c3aed;text-decoration:underline">$1</a>')
+      .replace(/^• /gm, '‣ ')
+      .replace(/\n/g, '<br>');
   }
 
   async function submitSupportQuestion() {
@@ -756,7 +767,7 @@
     const greetWords = ['hello', 'hi', 'hey', 'yo', 'sup', 'howdy', 'hola', 'good morning', 'good evening'];
     const isGreeting = greetWords.some(g => qLower.startsWith(g));
     if (isGreeting) {
-      responseEl.textContent = "Hey there! 👋 I'm Nori. Ask me anything about Project Nobi — how memory works, mining, privacy, or anything else!";
+      responseEl.innerHTML = md("Hey there! 👋 I'm Nori. Ask me anything about Project Nobi — how memory works, mining, privacy, or anything else!");
       responseEl.className = 'support-response';
       input.value = '';
       input.disabled = false;
@@ -771,7 +782,7 @@
     });
 
     if (localMatch) {
-      responseEl.textContent = localMatch.answer;
+      responseEl.innerHTML = md(localMatch.answer);
       responseEl.className = 'support-response';
       input.value = '';
       input.disabled = false;
@@ -793,7 +804,7 @@
 
       if (data.type === 'faq') {
         const preview = data.answer.length > 400 ? data.answer.slice(0, 400) + '…' : data.answer;
-        responseEl.textContent = preview;
+        responseEl.innerHTML = md(preview);
         responseEl.className = 'support-response';
       } else {
         // No FAQ match — ask Nori directly via the chat API
@@ -810,7 +821,7 @@
           const chatData = await chatRes.json();
           if (chatData.response) {
             const preview = chatData.response.length > 500 ? chatData.response.slice(0, 500) + '…' : chatData.response;
-            responseEl.textContent = preview;
+            responseEl.innerHTML = md(preview);
             responseEl.className = 'support-response';
           } else {
             responseEl.textContent = "Hmm, I'm having trouble right now. Try the full chat at app.projectnobi.ai/chat!";
