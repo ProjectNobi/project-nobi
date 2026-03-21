@@ -185,9 +185,33 @@ The community model significantly simplifies legal requirements compared to a su
 | Resource | Need | Source |
 |----------|------|--------|
 | Development time | ~480 hours | James + Slumpz + T68Bot |
-| Infrastructure (testnet) | ~$50-100/month | Founder-sponsored servers |
+| Infrastructure (current) | ~$200/month (7 servers) | Founder-sponsored |
+| Server breakdown | Hetzner dedicated (~$55/mo) + 5× Contabo VPS (~$12-20/mo each) + 1× Contabo high-mem (~$30/mo) | See details below |
+| Domain (projectnobi.ai) | ~$20/year | Founder |
+| SSL certificates | Free (Let's Encrypt) | — |
+| LLM API (Chutes + OpenRouter backup) | ~$20-50/month | Founder (exploring enterprise plan with Chutes) |
 | Subnet registration TAO | Fluctuating (est. hundreds of TAO) | Founder + community |
 | Security review | Community audit (free) + expert if funded | Open source + potential grant |
+| **Phase 1 total** | **~$250-300/month + registration TAO** | **Founder-sponsored** |
+
+<details>
+<summary>📊 Detailed Server Costs (current fleet)</summary>
+
+| Server | Provider | Specs | Role | Cost/month |
+|--------|----------|-------|------|------------|
+| Hetzner1 (primary) | Hetzner | Dedicated | Validator, miners, bots, OpenClaw | ~$55 |
+| Server2 | Contabo | 12CPU, 48GB, 484GB | Compute, remote miner | ~$18 |
+| Server3 | Contabo | 8CPU, 24GB, 193GB | Remote miner | ~$12 |
+| Server4 | Contabo | 12CPU, 48GB, 242GB | Subtensor lite node | ~$18 |
+| Server5 | Contabo | 12CPU, 48GB, 242GB | API + webapp + miner | ~$18 |
+| Server6 | Contabo | 8CPU, 24GB, 193GB | Compute | ~$12 |
+| AnonServer | Contabo | 18CPU, 94GB, 338GB | Validator (SN0) | ~$30 |
+| **Total servers** | | | | **~$163/month** |
+| Domain | | projectnobi.ai | | ~$2/month |
+| LLM API | Chutes + OpenRouter | | Backup inference | ~$20-50/month |
+| **Grand total** | | | | **~$185-215/month** |
+
+</details>
 
 ### Risks and Mitigations
 
@@ -262,9 +286,14 @@ The community model significantly simplifies legal requirements compared to a su
 | Resource | Need | Source |
 |----------|------|--------|
 | Subnet registration TAO | Hundreds of TAO | Founder + community |
-| Infrastructure (mainnet) | ~$200-500/month | Emissions + founder sponsorship |
+| Infrastructure (mainnet) | ~$300-400/month | Emissions + founder sponsorship |
+| Server fleet (7 servers) | ~$165/month | Existing fleet continues |
+| LLM API (scaled usage) | ~$50-100/month | Chutes enterprise plan or emissions |
+| CDN / monitoring tools | ~$20-50/month | As needed |
+| Domain + SSL | ~$20/year | Founder |
 | Development | Ongoing | Team |
 | Community management | Part-time | Founder + community volunteers |
+| **Phase 2 total** | **~$300-400/month + registration TAO** | **Emissions + founder** |
 
 ### Risks and Mitigations
 
@@ -342,9 +371,13 @@ The community model significantly simplifies legal requirements compared to a su
 | Resource | Need | Source |
 |----------|------|--------|
 | Mobile development | Significant | Team + community contributors |
-| Infrastructure scaling | ~$500-2,000/month | Emissions |
+| Infrastructure scaling | ~$500-1,000/month | Emissions |
+| Server fleet (est. 10-15 servers) | ~$300-500/month | Additional servers for scale |
+| LLM API (10K+ users) | ~$100-300/month | Chutes enterprise or self-hosted |
+| App Store fees (Apple + Google) | ~$125/year one-time + 15% if any in-app | Founder |
 | Community management | Growing | Volunteer moderators + founder |
 | Plugin review/security | Ongoing | Community security reviewers |
+| **Phase 3 total** | **~$500-1,000/month** | **Emissions + community** |
 
 ### Risks and Mitigations
 
@@ -492,17 +525,22 @@ This is economically similar to how Wikipedia operates: the product is free, and
 
 ### Financial Sustainability Analysis
 
-**What it costs to run Nobi:**
+**What it costs to run Nobi (based on actual current infrastructure):**
 
-| Component | Monthly Cost (at scale) | Funded By |
-|-----------|----------------------|-----------|
-| Validator infrastructure | $100-500 | Validator dividends (self-funding) |
-| Bot/web/app hosting | $100-300 | Minimal — covered by emissions or founder |
-| Miner inference | $0 (miner-borne) | Miner rewards from emissions |
-| Development | Community + founder time | Volunteer + personal commitment |
-| Domain/CDN/misc | $20-50 | Founder |
+| Component | Current (testnet) | At Scale (mainnet) | Funded By |
+|-----------|-------------------|-------------------|-----------|
+| Server fleet (7 servers) | ~$165/month | ~$300-500/month (10-15 servers) | Founder → emissions |
+| Hetzner dedicated (primary) | ~$55/month | ~$55-110/month | Founder → emissions |
+| Contabo VPS fleet (5-10) | ~$60-110/month | ~$120-250/month | Founder → emissions |
+| High-memory server (validator) | ~$30/month | ~$30-60/month | Founder → emissions |
+| LLM API (Chutes + backup) | ~$20-50/month | ~$100-300/month | Founder → emissions |
+| Miner inference | $0 (miner-borne) | $0 (miner-borne) | Miner rewards from emissions |
+| Domain + SSL | ~$20/year | ~$20/year | Founder |
+| App Store fees | N/A | ~$125/year | Founder |
+| Development | Founder + team time | Community + team | Volunteer |
+| **Total** | **~$200-250/month** | **~$500-1,000/month** | **Founder → emissions** |
 
-**Total monthly infrastructure cost:** ~$200-800
+**Total monthly infrastructure cost:** ~$200-250/month currently, scaling to ~$500-1,000/month at 10K+ users.
 
 **Emissions at even modest subnet weight:** Significantly exceeds infrastructure costs, with surplus going to miners (quality) and burned (TAO holders benefit).
 
