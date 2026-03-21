@@ -814,7 +814,35 @@ class CompanionBot:
             return response
 
         except Exception as e:
-            logger.error(f"LLM error: {e}")
+            logger.error(f"LLM error (primary): {e}")
+
+            # Dynamic fallback to OpenRouter if primary (Chutes) fails
+            try:
+                openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
+                if openrouter_key:
+                    from openai import OpenAI as _OAI
+                    fallback_client = _OAI(
+                        base_url="https://openrouter.ai/api/v1",
+                        api_key=openrouter_key,
+                    )
+                    fallback_completion = fallback_client.chat.completions.create(
+                        model="anthropic/claude-3.5-haiku",
+                        messages=messages,
+                        max_tokens=self._get_max_tokens(user_id),
+                        temperature=0.7,
+                        timeout=30,
+                    )
+                    response = fallback_completion.choices[0].message.content
+                    if response and response.strip():
+                        logger.info(f"[Routing] OpenRouter fallback succeeded for user {user_id}")
+                        try:
+                            self.memory.save_conversation_turn(user_id, "assistant", response)
+                        except Exception:
+                            pass
+                        return response
+            except Exception as fallback_err:
+                logger.error(f"LLM error (OpenRouter fallback): {fallback_err}")
+
             fallbacks = [
                 "Hmm, my brain did a thing 😅 Mind trying again?",
                 "Sorry — got a little lost there. One more time?",
