@@ -36,7 +36,7 @@ You're running a **personal AI companion** (Nori) that talks to users, remembers
 
 You need an API key for your companion's brain. Choose one:
 
-### Option A: Chutes.ai (~$0.0001/query)
+### Option A: Chutes.ai ($20/month base + pay-as-you-go)
 1. Go to [chutes.ai](https://chutes.ai)
 2. Create account and add credits
 3. Get API key from dashboard

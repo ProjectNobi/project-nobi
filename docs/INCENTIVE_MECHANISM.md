@@ -123,14 +123,14 @@ The LLM judge score includes helpfulness (40%), coherence (30%), and personality
 
 ### What You Need
 - **Hardware:** Any machine with internet (no GPU required!)
-- **LLM Access:** Chutes.ai (~$0.0001/query), OpenRouter (~$0.001/query), or self-hosted (free)
+- **LLM Access:** Chutes.ai ($20/mo base + per-query), OpenRouter (~$0.001/query), or self-hosted (free)
 - **Storage:** SQLite for memories (< 100MB for thousands of users)
 - **Registration:** Standard subnet registration fee
 
 ### Cost Structure
 | Component | Low Cost | Higher Cost |
 |-----------|-----------|-----------|
-| LLM Inference | Chutes.ai (~$0.0001/q) | OpenRouter (~$0.001/q) |
+| LLM Inference | Chutes ($20/mo+) | OpenRouter (~$0.001/q) |
 | Memory Storage | SQLite (included) | SQLite (included) |
 | Server | Any VPS ($5-20/mo) | Dedicated ($20-50/mo) |
 

@@ -86,7 +86,7 @@ else:
 
 The validator needs an LLM to judge miner response quality. Choose one:
 
-- **Chutes.ai** (~$0.0001/query) — set `CHUTES_API_KEY`
+- **Chutes.ai** ($20/month base + pay-as-you-go) — set `CHUTES_API_KEY`
 - **OpenRouter** (~$0.001/query, used as fallback) — set `OPENROUTER_API_KEY`
 
 Both can be set — the validator tries Chutes first, falls back to OpenRouter.

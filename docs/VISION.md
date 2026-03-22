@@ -74,7 +74,7 @@ No single server. No single company. No single country. If one miner goes offlin
 
 ### Cost Efficiency Through Competition
 
-When hundreds of miners compete to serve you, costs drop. LLM inference costs have already fallen 99% in two years. Miner competition on Bittensor accelerates this further. A miner's operational cost is $5-50/month — and they're incentivized by TAO emissions to serve you well.
+When hundreds of miners compete to serve you, costs drop. LLM inference costs have already fallen 99% in two years. Miner competition on Bittensor accelerates this further. A miner's operational cost is $30-70/month (current stage, varies by phase) — and they're incentivized by TAO emissions to serve you well.
 
 This is how Nobi can be free for users. The infrastructure is funded by the network itself, not by extracting subscription fees from humans.
 
@@ -198,7 +198,7 @@ Contribute. The entire codebase is open source. Build better memory systems. Imp
 
 ### If You Run Infrastructure
 
-Become a miner or validator. Earn TAO by providing quality companion experiences. The barrier is low — no GPU required, operational costs of $5-50/month. Quality is what matters, and quality is what earns.
+Become a miner or validator. Earn TAO by providing quality companion experiences. The barrier is low — no GPU required, operational costs starting around $50-90/month (VPS + API). Quality is what matters, and quality is what earns.
 
 ### If You Believe in This
 
