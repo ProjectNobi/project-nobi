@@ -428,7 +428,27 @@
 
     <!-- MISSION -->
 
-            <div class="faq-cta">
+            <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          You're handling sensitive personal data. Where's the security audit? What about breaches?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>You're right — handling personal memories IS sensitive data. We take this seriously:</p>
+          <p>• <strong>AES-128 encryption</strong> on all stored memories — today, in testnet<br>
+          • <strong>User controls:</strong> <code>/memories</code> to view, <code>/export</code> to download, <code>/forget</code> to delete everything<br>
+          • <strong>Open source:</strong> anyone can audit our code right now on GitHub<br>
+          • <strong>No central database:</strong> memories are distributed across independent miners</p>
+          <p>We're honest about where we are: this is <strong>testnet</strong>. We don't claim production-grade security yet. That's exactly what testnet is for — finding and fixing issues before real scale.</p>
+          <p>Our roadmap includes professional GDPR compliance review at mainnet, third-party security audits when scale justifies cost, and on-device privacy (data never leaves your device) in later phases.</p>
+          <p>A security breach at OpenAI or Google harms billions because they promised perfection. A testnet project that's honest about being in development? We're earning trust by being transparent, not by making promises we can't keep yet.</p>
+          <p><strong>The real protection is decentralisation itself.</strong> There's no single database to hack. No single company to subpoena. No CEO who can decide to sell your data. The architecture IS the security — and it gets stronger as more miners join.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="faq-cta">
       <h3>Still have questions?</h3>
       <p>Chat with Nori directly or join our community.</p>
       <a href="https://t.me/ProjectNobiBot" class="btn btn-primary" target="_blank" rel="noopener">Try Nori →</a>
