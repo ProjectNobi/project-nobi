@@ -147,7 +147,7 @@
         </div>
         <div class="faq-answer">
           <p>Yes, they could. Deep pockets are stronger than deep faith in Bittensor today. That's the reality.</p>
-          <p>But consider the alternatives. The "damage" of Nobi failing: one team loses months of work and personal investment. The code is open source — it lives on. Someone can fork it and try again.</p>
+          <p>But consider the alternatives. If Nobi fails: the team loses months of work and personal investment, and we'd need to ensure all user data is handled responsibly during any wind-down. That's why we're on testnet — proving everything works BEFORE real-world scale. The code is open source and lives on regardless. Someone can fork it and try again.</p>
           <p>The <strong>damage of NOT trying</strong>: Bittensor stays a closed ecosystem of developers, miners, and speculators. TAO stays a niche token nobody outside crypto has heard of. And the question "what is Bittensor actually FOR?" never gets answered for normal humans.</p>
           <p>Every transformative project started at worse odds. Linux vs Microsoft. Wikipedia vs Britannica. Bitcoin vs banks. They survived because the people building them didn't stop when the odds looked bad.</p>
           <p>We're building with full awareness we might fail. Our personal money. Our time. Our reputation. We're not asking anyone else to take that risk — we already took it.</p>
@@ -443,6 +443,25 @@
           <p>Our roadmap includes professional GDPR compliance review at mainnet, third-party security audits when scale justifies cost, and on-device privacy (data never leaves your device) in later phases.</p>
           <p>A security breach at OpenAI or Google harms billions because they promised perfection. A testnet project that's honest about being in development? We're earning trust by being transparent, not by making promises we can't keep yet.</p>
           <p><strong>The real protection is decentralisation itself.</strong> There's no single database to hack. No single company to subpoena. No CEO who can decide to sell your data. The architecture IS the security — and it gets stronger as more miners join.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Is on-device privacy really possible with decentralised architecture?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p><strong>Yes — and it's already proven at scale.</strong> Google's Federated Learning does exactly this: models train ON the user's device, only encrypted updates leave, raw data never does. Google uses this for Gboard predictions serving billions of users.</p>
+          <p>For Nobi, this would mean:</p>
+          <p>• Nori's memory extraction runs on your phone or browser<br>
+          • Only encrypted memory summaries get sent to miners<br>
+          • Miners never see your raw conversations<br>
+          • Memory matching happens client-side</p>
+          <p>It IS harder for decentralised architecture than centralised — but not impossible. The key insight: miners don't need your raw data to serve good responses. They need encrypted memory embeddings plus your current message.</p>
+          <p>This is planned for our mainnet phases — not yet live. We're transparent about the current state (server-side encryption) while working toward the strongest possible privacy guarantees.</p>
         </div>
       </div>
     </div>
