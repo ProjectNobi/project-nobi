@@ -39,7 +39,7 @@ This analysis examines the symbiotic relationship between Project Nobi (SN272) a
 | Total models hosted | 665 | /chutes/utilization API |
 | Active models | 67 | /chutes/utilization API |
 | Average GPU utilization | 2.7% fleet-wide | /chutes/utilization API |
-| Top revenue model | GLM-5-TEE ($1.88/GPU/day) | jondurbin data |
+| Top revenue model | GLM-5-TEE ($1.88/GPU/day) | Chutes team data |
 | Pricing | $20/mo base + per-query | Public pricing |
 | Features | Auto-routing, TEE, 40+ LLMs | Tested |
 | Clients | Developer API, MCP plugins | Public |
@@ -57,9 +57,9 @@ This analysis examines the symbiotic relationship between Project Nobi (SN272) a
 ### AI Companion Market (External)
 | Product | Users | Revenue | Model |
 |---------|-------|---------|-------|
-| Character.AI | 20M+ MAU (reported) | Undisclosed | Free + subscription |
-| Replika | ~2M MAU (reported) | ~$100M ARR (reported) | Freemium |
-| ChatGPT | 300M+ weekly (reported) | ~$2B+ ARR | $20/mo subscription |
+| Character.AI | 20M+ MAU (publicly reported, unverified) | Undisclosed | Free + subscription |
+| Replika | ~2M MAU (estimated) | ~$100M ARR (industry estimate, unverified) | Freemium |
+| ChatGPT | 300M+ weekly (OpenAI claimed, Jan 2025) | ~$2B+ ARR | $20/mo subscription |
 | **Project Nobi** | **8 (testnet)** | **$0 (by design)** | **Free forever** |
 
 *Note: External user/revenue figures are publicly reported estimates, not verified.*
@@ -83,7 +83,7 @@ Developer API usage is bursty — projects start and stop, hackathons spike then
 | 100,000 DAU | 5,000,000 | 1.5B | ~$20,000 |
 | 1,000,000 DAU | 50,000,000 | 15B | ~$200,000 |
 
-*Assumptions: 50 messages/user/day average (conservative for companion apps — Character.AI reports 50-200+), ~300 tokens per message pair, Chutes pricing at ~$0.15/M input + $0.60/M output tokens.*
+*Assumptions: 50 messages/user/day average (conservative for companion apps — Character.AI reports 50-200+), ~300 tokens per message pair, estimated Chutes pricing (actual rates may vary — verify with Chutes team).*
 
 **Utilization impact:** Chutes' fleet-wide utilization is 2.7%. Nobi traffic distributed across time zones would smooth utilization curves, improving revenue per GPU without additional hardware investment.
 
@@ -277,7 +277,7 @@ With Nobi × Chutes integrated:
 
 ### 5.4 Bittensor Philosophy Alignment
 
-**Unconst's vision (paraphrased from @const_reborn):**
+**Bittensor founder's vision (paraphrased):**
 > "Bittensor will be run by agents. They will feed mining, resist exploits, manage fleets, build subnets."
 
 Nobi × Chutes embodies this:
@@ -303,7 +303,7 @@ Nobi × Chutes embodies this:
 - **Free model at scale is unproven in crypto.** Wikipedia works for knowledge; whether it works for AI companionship is an open question.
 
 ### What's Certain
-- Nobi WILL generate Chutes revenue at any meaningful user scale
+- Nobi would generate Chutes revenue at any meaningful user scale
 - Chutes' infrastructure IS what enables Nobi's free model
 - The combination IS the strongest adoption narrative Bittensor has
 - Starting with Tier 1 collaboration (API agreement + co-marketing) is risk-free for both
@@ -313,7 +313,7 @@ Nobi × Chutes embodies this:
 ## Recommendations
 
 ### Immediate (This Week)
-1. Reach out to jondurbin/cxmplex proposing Tier 1 collaboration
+1. Reach out to the Chutes team proposing Tier 1 collaboration
 2. Add "Powered by Chutes" to Nobi bot and webapp
 3. Route all Nobi inference through TEE models exclusively
 
