@@ -41,7 +41,6 @@ This analysis examines the symbiotic relationship between Project Nobi (SN272) a
 | Average GPU utilization | 2.7% fleet-wide | /chutes/utilization API |
 | Top revenue model | GLM-5-TEE ($1.88/GPU/day) | jondurbin data |
 | Pricing | $20/mo base + per-query | Public pricing |
-| Key team | jondurbin, cxmplex | Public |
 | Features | Auto-routing, TEE, 40+ LLMs | Tested |
 | Clients | Developer API, MCP plugins | Public |
 
