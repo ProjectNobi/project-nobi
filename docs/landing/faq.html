@@ -104,6 +104,120 @@
 
     <!-- SUSTAINABILITY & FUNDING -->
     <div class="faq-section">
+      <h2>🌍 Mission & Vision</h2>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          What's the long-term vision?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p><strong>Digital companionship as accessible as Wikipedia, as resilient as Bitcoin, as personal as a diary.</strong></p>
+          <p>An AI companion for every human that no company can take away, censor, or monetise against your interests. Free forever. Community-funded. Open source. Privacy-first.</p>
+          <p>Read the full vision at <a href="https://projectnobi.ai/vision.html" style="color:#10b981;">projectnobi.ai/vision</a>.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          What's the risk? Could this fail?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p><strong>Yes, honestly.</strong> If the community doesn't stake, emissions stay low, miners leave, and quality drops. That's the real risk. It's the same risk every open-source project faces — will people care enough to support it?</p>
+          <p>We're betting they will, because privacy-preserving AI companionship is something people actually want and can't get from corporations. But we're transparent: this is a conviction bet, not a guaranteed outcome.</p>
+          <p>What we can control: building the best possible product. What the community controls: whether they believe in it enough to support it.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="faq-section">
+      <h2>🔒 Privacy & Security</h2>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          How is my data protected?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>Your memories are encrypted with <strong>AES-128 encryption</strong> before being stored. They're distributed across independent miners on the Bittensor network — no single company owns or controls your data.</p>
+          <p>You have full control: use <code>/memories</code> to see what Nori knows, <code>/export</code> to download everything, <code>/forget</code> to delete it all permanently. Your data, your choice.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Can miners read my conversations?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>Miners store encrypted memory blobs — the content is encrypted before it reaches them. However, this is <strong>server-side encryption</strong>, not end-to-end encryption. During processing, miners do see conversation content to generate responses.</p>
+          <p>On-device privacy (where raw data never leaves your device) is on our <strong>roadmap for mainnet</strong> — it's not yet live. We're honest about current limitations while working toward stronger privacy guarantees.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MISSION -->
+    <div class="faq-section">
+      <h2>🤖 Product & Differentiation</h2>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          How is Nobi different from ChatGPT or other AI assistants?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>Three structural differences — not just features:</p>
+          <p><strong>Ownership:</strong> ChatGPT can delete your history, change policies, or shut down. Nobi memories are encrypted on a decentralised network — no single entity controls them.</p>
+          <p><strong>Privacy:</strong> OpenAI may train on your conversations. Nobi memories are AES-128 encrypted, stored across independent miners. Your data, your control.</p>
+          <p><strong>Persistence:</strong> ChatGPT doesn't truly know you across sessions. Nobi builds a persistent knowledge graph — your name, preferences, relationships, emotional patterns — that compounds over months and years.</p>
+          <p>The pitch isn't "better ChatGPT." It's: <strong>"Your AI companion that no company can take away from you."</strong></p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          What does "mass adoption for Bittensor" actually mean?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p><strong>Millions of regular people using Bittensor-powered AI without knowing it's Bittensor.</strong> Just like you use the internet without knowing about TCP/IP.</p>
+          <p>Today, roughly 50,000 people know what Bittensor is — all technical. Nobi's goal is 1 million+ regular people chatting with an AI companion on Telegram or Discord, getting a great experience, and never needing to know about subnets, TAO, or miners.</p>
+          <p>Their usage creates demand for the network. More users → more miners needed → more TAO staked → TAO becomes more valuable. Every person chatting with Nori is proof that Bittensor works at consumer scale.</p>
+          <p>Think of Android — billions use it, 99.99% have no idea it's Linux underneath. But their usage makes the entire Linux ecosystem more valuable.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Is there a market for this outside the Bittensor community?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p><strong>Absolutely.</strong> The market is everyone who wants an AI companion but doesn't trust corporations with their personal data:</p>
+          <p>• Privacy-conscious users (growing rapidly post-GDPR, post-Cambridge Analytica)<br>
+          • People in countries where corporate AI is censored or unavailable<br>
+          • Users burned by AI companies changing terms (Replika removing features, Character.AI restricting content)<br>
+          • Anyone who wants genuine AI memory persistence without corporate lock-in</p>
+          <p>The Bittensor part is invisible to end users. They just see a bot that remembers them. The decentralisation is the <em>how</em>, not the <em>what</em>.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Is Nobi just a consumer app or an actual subnet?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>Both — and that's the point. Every subnet is infrastructure for something. SN1 is infrastructure for text generation. SN19 for image generation. <strong>Nobi is infrastructure for personal AI companionship.</strong></p>
+          <p>The subnet provides the decentralised, censorship-resistant, privacy-preserving backbone with custom quality scoring. The bot and app are the user-facing interface. One doesn't work without the other.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIVACY & SECURITY -->
+    <div class="faq-section">
       <h2>💰 Sustainability & Funding</h2>
 
       <div class="faq-item">
@@ -180,121 +294,8 @@
     </div>
 
     <!-- PRODUCT & DIFFERENTIATION -->
-    <div class="faq-section">
-      <h2>🤖 Product & Differentiation</h2>
 
-      <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">
-          How is Nobi different from ChatGPT or other AI assistants?
-          <span class="arrow">▼</span>
-        </div>
-        <div class="faq-answer">
-          <p>Three structural differences — not just features:</p>
-          <p><strong>Ownership:</strong> ChatGPT can delete your history, change policies, or shut down. Nobi memories are encrypted on a decentralised network — no single entity controls them.</p>
-          <p><strong>Privacy:</strong> OpenAI may train on your conversations. Nobi memories are AES-128 encrypted, stored across independent miners. Your data, your control.</p>
-          <p><strong>Persistence:</strong> ChatGPT doesn't truly know you across sessions. Nobi builds a persistent knowledge graph — your name, preferences, relationships, emotional patterns — that compounds over months and years.</p>
-          <p>The pitch isn't "better ChatGPT." It's: <strong>"Your AI companion that no company can take away from you."</strong></p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">
-          What does "mass adoption for Bittensor" actually mean?
-          <span class="arrow">▼</span>
-        </div>
-        <div class="faq-answer">
-          <p><strong>Millions of regular people using Bittensor-powered AI without knowing it's Bittensor.</strong> Just like you use the internet without knowing about TCP/IP.</p>
-          <p>Today, roughly 50,000 people know what Bittensor is — all technical. Nobi's goal is 1 million+ regular people chatting with an AI companion on Telegram or Discord, getting a great experience, and never needing to know about subnets, TAO, or miners.</p>
-          <p>Their usage creates demand for the network. More users → more miners needed → more TAO staked → TAO becomes more valuable. Every person chatting with Nori is proof that Bittensor works at consumer scale.</p>
-          <p>Think of Android — billions use it, 99.99% have no idea it's Linux underneath. But their usage makes the entire Linux ecosystem more valuable.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">
-          Is there a market for this outside the Bittensor community?
-          <span class="arrow">▼</span>
-        </div>
-        <div class="faq-answer">
-          <p><strong>Absolutely.</strong> The market is everyone who wants an AI companion but doesn't trust corporations with their personal data:</p>
-          <p>• Privacy-conscious users (growing rapidly post-GDPR, post-Cambridge Analytica)<br>
-          • People in countries where corporate AI is censored or unavailable<br>
-          • Users burned by AI companies changing terms (Replika removing features, Character.AI restricting content)<br>
-          • Anyone who wants genuine AI memory persistence without corporate lock-in</p>
-          <p>The Bittensor part is invisible to end users. They just see a bot that remembers them. The decentralisation is the <em>how</em>, not the <em>what</em>.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">
-          Is Nobi just a consumer app or an actual subnet?
-          <span class="arrow">▼</span>
-        </div>
-        <div class="faq-answer">
-          <p>Both — and that's the point. Every subnet is infrastructure for something. SN1 is infrastructure for text generation. SN19 for image generation. <strong>Nobi is infrastructure for personal AI companionship.</strong></p>
-          <p>The subnet provides the decentralised, censorship-resistant, privacy-preserving backbone with custom quality scoring. The bot and app are the user-facing interface. One doesn't work without the other.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- PRIVACY & SECURITY -->
-    <div class="faq-section">
-      <h2>🔒 Privacy & Security</h2>
-
-      <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">
-          How is my data protected?
-          <span class="arrow">▼</span>
-        </div>
-        <div class="faq-answer">
-          <p>Your memories are encrypted with <strong>AES-128 encryption</strong> before being stored. They're distributed across independent miners on the Bittensor network — no single company owns or controls your data.</p>
-          <p>You have full control: use <code>/memories</code> to see what Nori knows, <code>/export</code> to download everything, <code>/forget</code> to delete it all permanently. Your data, your choice.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">
-          Can miners read my conversations?
-          <span class="arrow">▼</span>
-        </div>
-        <div class="faq-answer">
-          <p>Miners store encrypted memory blobs — the content is encrypted before it reaches them. However, this is <strong>server-side encryption</strong>, not end-to-end encryption. During processing, miners do see conversation content to generate responses.</p>
-          <p>On-device privacy (where raw data never leaves your device) is on our <strong>roadmap for mainnet</strong> — it's not yet live. We're honest about current limitations while working toward stronger privacy guarantees.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- MISSION -->
-    <div class="faq-section">
-      <h2>🌍 Mission & Vision</h2>
-
-      <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">
-          What's the long-term vision?
-          <span class="arrow">▼</span>
-        </div>
-        <div class="faq-answer">
-          <p><strong>Digital companionship as accessible as Wikipedia, as resilient as Bitcoin, as personal as a diary.</strong></p>
-          <p>An AI companion for every human that no company can take away, censor, or monetise against your interests. Free forever. Community-funded. Open source. Privacy-first.</p>
-          <p>Read the full vision at <a href="https://projectnobi.ai/vision.html" style="color:#10b981;">projectnobi.ai/vision</a>.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">
-          What's the risk? Could this fail?
-          <span class="arrow">▼</span>
-        </div>
-        <div class="faq-answer">
-          <p><strong>Yes, honestly.</strong> If the community doesn't stake, emissions stay low, miners leave, and quality drops. That's the real risk. It's the same risk every open-source project faces — will people care enough to support it?</p>
-          <p>We're betting they will, because privacy-preserving AI companionship is something people actually want and can't get from corporations. But we're transparent: this is a conviction bet, not a guaranteed outcome.</p>
-          <p>What we can control: building the best possible product. What the community controls: whether they believe in it enough to support it.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- CTA -->
-    <div class="faq-cta">
+        <div class="faq-cta">
       <h3>Still have questions?</h3>
       <p>Chat with Nori directly or join our community.</p>
       <a href="https://t.me/ProjectNobiBot" class="btn btn-primary" target="_blank" rel="noopener">Try Nori →</a>
