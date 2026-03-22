@@ -678,6 +678,39 @@ class MemoryManager:
             else:
                 entry["content"] = self._decrypt(user_id, row["content"])
             results.append(entry)
+
+        # Fallback: if encrypted content caused 0 SQL matches but user has memories,
+        # fetch ALL user memories, decrypt, and do keyword matching in Python.
+        if not results and query and self.encryption_enabled:
+            try:
+                all_rows = conn.execute(
+                    """SELECT * FROM memories WHERE user_id = ?
+                       AND (expires_at IS NULL OR expires_at > ?)
+                       ORDER BY importance DESC, created_at DESC
+                       LIMIT 50""",
+                    [user_id, now],
+                ).fetchall()
+                if all_rows:
+                    keywords = [w.lower() for w in query.split() if len(w) > 2]
+                    scored = []
+                    for row in all_rows:
+                        decrypted = self._decrypt(user_id, row["content"])
+                        decrypted_lower = decrypted.lower()
+                        score = sum(1 for kw in keywords if kw in decrypted_lower)
+                        scored.append((score, row["importance"], row, decrypted))
+                    scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+                    for score, imp, row, decrypted in scored[:limit]:
+                        results.append({
+                            "id": row["id"],
+                            "type": row["memory_type"],
+                            "content": decrypted,
+                            "importance": row["importance"],
+                            "tags": json.loads(row["tags"]),
+                            "created_at": row["created_at"],
+                            "expires_at": row["expires_at"],
+                        })
+            except Exception as e:
+                logger.debug(f"[Recall] Decrypted fallback failed: {e}")
         return results
 
     def get_user_memory_count(self, user_id: str) -> int:
