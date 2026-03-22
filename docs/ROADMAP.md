@@ -155,7 +155,7 @@ The community model significantly simplifies legal requirements compared to a su
 - ❌ Payment processing entity
 - ❌ Financial services registration
 - ❌ Revenue tax structure
-- ❌ Expensive lawyer review for subscription terms (~£2,000-5,000 GDPR audit can wait until real scale)
+- ❌ Professional GDPR compliance review (deferred until scale justifies cost)
 
 #### 1.6 Community Building
 

@@ -100,7 +100,7 @@ class Miner(BaseMinerNeuron):
             getattr(self.config.neuron, "openrouter_api_key", "")
             or os.environ.get("OPENROUTER_API_KEY", "")
         )
-        self.model = getattr(self.config.neuron, "model", "") or "deepseek-ai/DeepSeek-V3-0324"
+        self.model = getattr(self.config.neuron, "model", "") or "deepseek-ai/DeepSeek-V3.1-TEE"
 
         if chutes_key and OpenAI is not None:
             self.client = OpenAI(
@@ -295,36 +295,44 @@ class Miner(BaseMinerNeuron):
 
         messages.append({"role": "user", "content": message})
 
-        # Step 4: Generate response
-        try:
-            completion = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                max_tokens=512,
-                temperature=0.7,
-                timeout=25,
-            )
-            response = completion.choices[0].message.content
+        # Step 4: Generate response — fast timeout with model fallback
+        _MINER_MODELS = [self.model, "chutesai/Mistral-Small-3.2-24B-Instruct-2506"]
+        response = None
+        for _model in _MINER_MODELS:
+            try:
+                completion = self.client.chat.completions.create(
+                    model=_model,
+                    messages=messages,
+                    max_tokens=512,
+                    temperature=0.7,
+                    timeout=12,
+                )
+                response = completion.choices[0].message.content
+                if response and response.strip():
+                    break
+                response = None
+            except Exception as _e:
+                bt.logging.debug(f"Model {_model} failed: {_e}")
+                continue
 
-            # Save assistant response to conversation history
-            if user_id:
-                try:
-                    self.memory.save_conversation_turn(user_id, "assistant", response)
-                except Exception as e:
-                    bt.logging.warning(f"Saving response to memory failed: {e}")
-
-            # Phase B: Update adapter based on conversation
-            if user_id:
-                try:
-                    self.adapter_manager.update_adapter_from_conversation(user_id, message, response)
-                except Exception as e:
-                    bt.logging.debug(f"Adapter update failed (non-fatal): {e}")
-
-            return response, memory_entries
-
-        except Exception as e:
-            bt.logging.error(f"LLM API error: {e}")
+        if not response:
             return self._fallback_response(message), memory_entries
+
+        # Save assistant response to conversation history
+        if user_id:
+            try:
+                self.memory.save_conversation_turn(user_id, "assistant", response)
+            except Exception as e:
+                bt.logging.warning(f"Saving response to memory failed: {e}")
+
+        # Phase B: Update adapter based on conversation
+        if user_id:
+            try:
+                self.adapter_manager.update_adapter_from_conversation(user_id, message, response)
+            except Exception as e:
+                bt.logging.debug(f"Adapter update failed (non-fatal): {e}")
+
+        return response, memory_entries
 
     def _fallback_response(self, message: str) -> str:
         return (

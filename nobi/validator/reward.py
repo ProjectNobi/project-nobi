@@ -125,7 +125,7 @@ def reward(
 def _llm_judge(query: str, response: str, api_key: str = "") -> float:
     """Score using LLM-as-judge. Chutes → OpenRouter → heuristic fallback."""
     chutes_key = os.environ.get("CHUTES_API_KEY", "")
-    chutes_model = os.environ.get("CHUTES_JUDGE_MODEL", "deepseek-ai/DeepSeek-V3-0324")
+    chutes_model = os.environ.get("CHUTES_JUDGE_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
 
     for base_url, key, model in [
         ("https://llm.chutes.ai/v1", chutes_key, chutes_model),
@@ -335,7 +335,7 @@ def _score_memory_integration(
 
     # Try LLM-based integration scoring
     chutes_key = os.environ.get("CHUTES_API_KEY", "")
-    chutes_model = os.environ.get("CHUTES_JUDGE_MODEL", "deepseek-ai/DeepSeek-V3-0324")
+    chutes_model = os.environ.get("CHUTES_JUDGE_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
 
     if chutes_key and OpenAI is not None:
         try:
