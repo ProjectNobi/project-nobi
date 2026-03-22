@@ -69,9 +69,10 @@ OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE")
 # Smart fallback chain — tries models in order until one responds
 CHUTES_FALLBACK_MODELS = [
-    "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",  # Best quality
-    "deepseek-ai/DeepSeek-V3.1-TEE",             # Fast when available
-    "chutesai/Mistral-Small-3.2-24B-Instruct-2506",  # Fastest, reliable
+    "deepseek-ai/DeepSeek-V3.1-TEE",                  # Primary — best quality
+    "deepseek-ai/DeepSeek-V3",                         # Fast fallback — 4.5s
+    "openai/gpt-oss-120b-TEE",                         # Strong quality — 6s
+    "chutesai/Mistral-Small-3.2-24B-Instruct-2506",   # Fastest reliable — 3s
 ]
 
 # Task 5: Subnet routing config
@@ -758,7 +759,7 @@ class CompanionBot:
         response = None
         used_model = None
         # Progressively shorter timeouts — if top models are slow, skip fast
-        _model_timeouts = [10, 8, 6]
+        _model_timeouts = [10, 8, 8, 6]
         for i, fallback_model in enumerate(CHUTES_FALLBACK_MODELS):
             try:
                 _timeout = _model_timeouts[i] if i < len(_model_timeouts) else 8
