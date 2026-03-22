@@ -76,8 +76,12 @@ class Miner(BaseMinerNeuron):
 
         # Initialize encryption, memory manager, adapter manager, and language detector
         ensure_master_secret()
-        self.memory = MemoryManager(db_path="~/.nobi/memories.db")
-        self.adapter_manager = UserAdapterManager(db_path="~/.nobi/memories.db")
+        # Use per-hotkey DB to avoid SQLite locking between multiple miners
+        _hotkey_name = self.config.wallet.hotkey or "default"
+        _db_path = os.path.expanduser(f"~/.nobi/memories_{_hotkey_name}.db")
+        bt.logging.info(f"Using memory DB: {_db_path}")
+        self.memory = MemoryManager(db_path=_db_path)
+        self.adapter_manager = UserAdapterManager(db_path=_db_path)
         self.lang_detector = LanguageDetector()
         bt.logging.info(f"Memory manager initialized: {self.memory.stats()}")
 

@@ -367,7 +367,7 @@ class CompanionBot:
                 base_url="https://openrouter.ai/api/v1",
                 api_key=OPENROUTER_KEY,
             )
-            self.model = "anthropic/claude-3.5-haiku"
+            self.model = "anthropic/claude-3.5-haiku-20241022"
             logger.info(f"LLM: OpenRouter ({self.model})")
         else:
             logger.warning("No LLM API key configured!")
@@ -869,7 +869,7 @@ class CompanionBot:
                         api_key=openrouter_key,
                     )
                     fallback_completion = fallback_client.chat.completions.create(
-                        model="anthropic/claude-3.5-haiku",
+                        model="anthropic/claude-3.5-haiku-20241022",
                         messages=messages,
                         max_tokens=self._get_max_tokens(user_id),
                         temperature=0.7,

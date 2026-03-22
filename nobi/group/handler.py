@@ -371,7 +371,7 @@ class GroupHandler:
                         api_key=openrouter_key,
                     )
                     fallback_completion = fallback_client.chat.completions.create(
-                        model="anthropic/claude-3.5-haiku",
+                        model="anthropic/claude-3.5-haiku-20241022",
                         messages=messages,
                         max_tokens=256,
                         temperature=0.7,

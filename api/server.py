@@ -386,7 +386,7 @@ async def startup():
             base_url="https://openrouter.ai/api/v1",
             api_key=OPENROUTER_KEY,
         )
-        llm_model = "anthropic/claude-3.5-haiku"
+        llm_model = "anthropic/claude-3.5-haiku-20241022"
         logger.info(f"LLM: OpenRouter ({llm_model})")
     else:
         logger.warning("No LLM API key configured!")

@@ -86,7 +86,7 @@ def add_miner_args(cls, parser):
     )
     parser.add_argument(
         "--neuron.model", type=str,
-        help="Model to use via OpenRouter.", default="anthropic/claude-3.5-haiku",
+        help="Model to use via OpenRouter.", default="deepseek-ai/DeepSeek-V3.1-TEE",
     )
     parser.add_argument(
         "--neuron.specialization", type=str,

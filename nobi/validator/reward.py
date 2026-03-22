@@ -129,7 +129,7 @@ def _llm_judge(query: str, response: str, api_key: str = "") -> float:
 
     for base_url, key, model in [
         ("https://llm.chutes.ai/v1", chutes_key, chutes_model),
-        ("https://openrouter.ai/api/v1", api_key, "anthropic/claude-3.5-haiku"),
+        ("https://openrouter.ai/api/v1", api_key, "anthropic/claude-3.5-haiku-20241022"),
     ]:
         if not key or OpenAI is None:
             continue
