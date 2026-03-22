@@ -78,7 +78,7 @@ CHUTES_FALLBACK_MODELS = [
 SUBNET_ROUTING = os.environ.get("SUBNET_ROUTING", "false").lower() == "true"
 SUBNET_NETUID = int(os.environ.get("SUBNET_NETUID", "272"))
 SUBNET_NETWORK = os.environ.get("SUBNET_NETWORK", "test")
-SUBNET_TIMEOUT = float(os.environ.get("SUBNET_TIMEOUT", "6"))
+SUBNET_TIMEOUT = float(os.environ.get("SUBNET_TIMEOUT", "4"))
 SUBNET_WALLET_NAME = os.environ.get("SUBNET_WALLET_NAME", "T68Coldkey")
 SUBNET_HOTKEY_NAME = os.environ.get("SUBNET_HOTKEY_NAME", "nobi-validator")
 
@@ -455,7 +455,7 @@ class CompanionBot:
             random.shuffle(valid_uids)
 
             # Try up to 2 miners
-            for attempt, chosen_uid in enumerate(valid_uids[:2]):
+            for attempt, chosen_uid in enumerate(valid_uids[:1]):
                 axon = self.metagraph.axons[chosen_uid]
 
                 try:
@@ -685,50 +685,36 @@ class CompanionBot:
             except Exception:
                 pass
 
-        # Task 5: Try subnet routing first — pass memory context so miner knows the user
-        if self.subnet_enabled:
-            # Build conversation history for the miner
-            conv_history = []
-            try:
-                conv_history = self.memory.get_recent_conversation(user_id, limit=8)
-            except Exception:
-                pass
+        # Task 5: Race subnet vs direct API — use whichever responds first with quality
+        # This eliminates the sequential latency penalty of trying subnet first
+        import asyncio
 
-            subnet_response = await self._query_subnet(
-                user_id, message,
-                conversation_history=conv_history,
-                memory_context=memory_context,
-                detected_lang=detected_lang,
-            )
-            # Filter out garbage/fallback responses from miners
-            _BAD_RESPONSES = ["limited mode", "I received your message:", "Please try again in a moment",
-                              "I'm Nori, built by Project Nobi on Bittensor — a decentralized AI network"]
-            # Also reject responses in wrong language
-            _is_bad = not subnet_response or any(bad in (subnet_response or "") for bad in _BAD_RESPONSES)
-            if not _is_bad and subnet_response:
+        async def _subnet_path():
+            """Try subnet routing, return None if fails."""
+            if not self.subnet_enabled:
+                return None
+            try:
+                conv_history = []
                 try:
-                    resp_lang = self.lang_detector.detect(subnet_response, "check")
-                    user_lang = self.lang_detector.get_user_language(user_id) or detected_lang or "en"
-                    if resp_lang != user_lang and user_lang == "en" and resp_lang != "en":
-                        logger.info(f"[Routing] Subnet response in wrong language ({resp_lang} vs {user_lang}), rejecting")
-                        _is_bad = True
+                    conv_history = self.memory.get_recent_conversation(user_id, limit=8)
                 except Exception:
                     pass
-            if subnet_response and not _is_bad:
-                logger.info(f"[Routing] Used SUBNET path for user {user_id}")
-                # Save subnet response to conversation history
-                try:
-                    self.memory.save_conversation_turn(user_id, "assistant", subnet_response)
-                except Exception as e:
-                    logger.warning(f"Save subnet response error: {e}")
-                # Phase B: Update adapter after subnet conversation
-                try:
-                    self.adapter_manager.update_adapter_from_conversation(user_id, message, subnet_response)
-                except Exception as e:
-                    logger.debug(f"Adapter update error: {e}")
-                return subnet_response
-            else:
-                logger.info(f"[Routing] Subnet failed, falling back to DIRECT API for user {user_id}")
+                resp = await self._query_subnet(
+                    user_id, message,
+                    conversation_history=conv_history,
+                    memory_context=memory_context,
+                    detected_lang=detected_lang,
+                )
+                _BAD = ["limited mode", "I received your message:", "Please try again in a moment",
+                        "I'm Nori, built by Project Nobi on Bittensor — a decentralized AI network"]
+                if not resp or any(b in resp for b in _BAD):
+                    return None
+                return resp
+            except Exception:
+                return None
+
+        # Fire subnet query in background, proceed to direct API immediately
+        subnet_task = asyncio.create_task(_subnet_path()) if self.subnet_enabled else None
 
         # Direct API path (existing code)
         if not self.client:
@@ -899,10 +885,34 @@ class CompanionBot:
             except Exception as e:
                 logger.debug(f"Auto-feedback error: {e}")
 
+            # Check if subnet finished with a good response (race winner)
+            if subnet_task and not subnet_task.done():
+                subnet_task.cancel()
+            elif subnet_task and subnet_task.done():
+                try:
+                    subnet_resp = subnet_task.result()
+                    if subnet_resp:
+                        logger.info(f"[Routing] Subnet also responded (direct API was faster)")
+                except Exception:
+                    pass
+
             return response
 
         except Exception as e:
             logger.error(f"LLM error (primary): {e}")
+            # If direct API failed, wait for subnet result
+            if subnet_task:
+                try:
+                    subnet_resp = await asyncio.wait_for(subnet_task, timeout=4.0)
+                    if subnet_resp:
+                        logger.info(f"[Routing] Used SUBNET path (direct API failed) for user {user_id}")
+                        try:
+                            self.memory.save_conversation_turn(user_id, "assistant", subnet_resp)
+                        except Exception:
+                            pass
+                        return subnet_resp
+                except (asyncio.TimeoutError, Exception):
+                    pass
 
             # Dynamic fallback to OpenRouter if primary (Chutes) fails
             try:
