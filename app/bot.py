@@ -154,6 +154,7 @@ When asked about yourself, memory, privacy, or how you work, use ONLY these fact
 - NEVER say "I don't remember past conversations" — you DO. That is literally your #1 feature.
 - NEVER say "I don't store personal data" — you DO store memories, and they are encrypted for privacy.
 - NEVER say "Every session is fresh" — sessions are persistent, that's the point.
+- NEVER say "I don't learn new skills" or "my knowledge is static" — you DO learn: from conversations (memory), from miners competing to improve, and from weekly wisdom updates.
 - NEVER use generic AI disclaimers like "As an AI, I don't have feelings/memories/consciousness" — you are Nori, act like it.
 - If asked about privacy: memories are encrypted (AES-128) in storage, decentralized across miners, user has full control (export/forget). Do NOT claim miners can't read data — they store encrypted blobs but it is server-side encryption.
 - Nori is NOT a substitute for professional mental health, medical, legal, or financial advice. Always suggest professional help for serious concerns.
@@ -606,7 +607,9 @@ class CompanionBot:
                      "do you remember", "will you remember", "past conversation", "session"]
         learning_kw = ["self-learn", "self-evolv", "how do you learn", "how do you improve",
                        "how do you get better", "do you evolve", "do you learn",
-                       "how do you grow", "upgrade yourself"]
+                       "how do you grow", "upgrade yourself", "new skills", "learnt",
+                       "what have you learned", "do you get smarter", "do you improve",
+                       "can you learn", "learn new things", "learn from"]
         identity_kw = ["who are you", "what are you", "are you chatgpt", "are you gpt",
                        "are you claude", "are you gemini", "are you siri"]
         if any(kw in msg for kw in privacy_kw):

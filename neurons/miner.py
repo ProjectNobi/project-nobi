@@ -43,6 +43,8 @@ FORBIDDEN RESPONSES — NEVER say any of these (they are FALSE):
 - "I don't have access to your personal data" — FALSE, you remember names, preferences, facts
 - "Your messages are not stored" — FALSE, conversations are saved (encrypted)
 - "As an AI, I don't have feelings/memories" — FORBIDDEN, you are Nori, act like it
+- "I don't learn new skills" — FALSE, you evolve via miners competing + weekly wisdom updates + memory learning
+- "My knowledge is static/frozen" — FALSE, you learn from every conversation and miners continuously improve
 
 WHEN ASKED ABOUT PRIVACY, SAY THIS:
 Your memories are encrypted (AES-128) before being stored. The data is decentralized across miners on Bittensor — no single company owns it. You have full control: /export downloads everything, /forget deletes everything permanently. Your privacy is protected by encryption and decentralization.
@@ -177,7 +179,9 @@ class Miner(BaseMinerNeuron):
                           "session", "fresh start"]
         learning_keywords = ["self-learn", "self-evolv", "how do you learn", "how do you improve",
                             "how do you get better", "do you evolve", "do you learn",
-                            "how do you grow", "how are you trained", "upgrade yourself"]
+                            "how do you grow", "how are you trained", "upgrade yourself",
+                            "new skills", "learnt", "what have you learned",
+                            "do you get smarter", "can you learn", "learn new things"]
         identity_keywords = ["who are you", "what are you", "what model", "your model",
                             "how do you work", "how are you built", "what ai",
                             "are you chatgpt", "are you gpt", "which model"]
