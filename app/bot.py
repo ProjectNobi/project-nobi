@@ -752,14 +752,17 @@ class CompanionBot:
         # Smart fallback chain — try Chutes models in order, then OpenRouter
         response = None
         used_model = None
-        for fallback_model in CHUTES_FALLBACK_MODELS:
+        # Progressively shorter timeouts — if top models are slow, skip fast
+        _model_timeouts = [10, 8, 6]
+        for i, fallback_model in enumerate(CHUTES_FALLBACK_MODELS):
             try:
+                _timeout = _model_timeouts[i] if i < len(_model_timeouts) else 8
                 completion = self.client.chat.completions.create(
                     model=fallback_model,
                     messages=messages,
                     max_tokens=self._get_max_tokens(user_id),
                     temperature=0.7,
-                    timeout=12,
+                    timeout=_timeout,
                 )
                 response = completion.choices[0].message.content
                 if response and response.strip():
@@ -771,6 +774,30 @@ class CompanionBot:
             except Exception as model_err:
                 logger.warning(f"[Routing] Chutes model {fallback_model} failed: {model_err}")
                 continue
+
+        # If all Chutes models failed, try OpenRouter as final fallback
+        if not response or not response.strip():
+            try:
+                openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
+                if openrouter_key:
+                    from openai import OpenAI as _OAI
+                    fallback_client = _OAI(
+                        base_url="https://openrouter.ai/api/v1",
+                        api_key=openrouter_key,
+                    )
+                    fallback_completion = fallback_client.chat.completions.create(
+                        model="anthropic/claude-3.5-haiku-20241022",
+                        messages=messages,
+                        max_tokens=self._get_max_tokens(user_id),
+                        temperature=0.7,
+                        timeout=30,
+                    )
+                    response = fallback_completion.choices[0].message.content
+                    if response and response.strip():
+                        used_model = "openrouter/claude-3.5-haiku"
+                        logger.info(f"[Routing] OpenRouter fallback succeeded for user {user_id}")
+            except Exception as or_err:
+                logger.warning(f"[Routing] OpenRouter fallback also failed: {or_err}")
 
         if not response or not response.strip():
             return "Hmm, I got tongue-tied! 😅 Try saying that again?"
@@ -785,11 +812,13 @@ class CompanionBot:
             # Check if response is in wrong language — retry with different model
             try:
                 user_lang = self.lang_detector.get_user_language(user_id) or detected_lang or "en"
-                # Clean response for detection (strip emoji)
+                # Clean response for detection (strip emoji, JSON, code blocks)
                 clean_resp = ''.join(c for c in response if c.isalpha() or c.isspace())[:200]
-                resp_lang = self.lang_detector.detect(clean_resp, "check") if clean_resp.strip() else "en"
+                # Skip language check if response looks like JSON/code (not natural language)
+                _looks_like_code = response.strip().startswith('{') or response.strip().startswith('```')
+                resp_lang = self.lang_detector.detect(clean_resp, "check") if clean_resp.strip() and not _looks_like_code else "en"
                 logger.info(f"[Language] Response lang={resp_lang}, user lang={user_lang}, first 50 chars: {response[:50]}")
-                if user_lang == "en" and resp_lang != "en":
+                if user_lang == "en" and resp_lang != "en" and not _looks_like_code:
                     logger.warning(f"[Language] Direct API responded in {resp_lang}, retrying with Qwen3")
                     # Use a different model that follows instructions better
                     from openai import OpenAI
@@ -2098,7 +2127,15 @@ def main():
             tg_id = int(user_id[3:])
             await app.bot.send_message(chat_id=tg_id, text=message)
         except Exception as e:
+            err_str = str(e).lower()
             logger.error(f"[Proactive] Send to {user_id} failed: {e}")
+            # Disable proactive for users who blocked/deleted the bot
+            if "chat not found" in err_str or "bot can't initiate" in err_str or "forbidden" in err_str:
+                try:
+                    companion.proactive_engine.set_opted_in(user_id, False)
+                    logger.info(f"[Proactive] Auto-disabled for unreachable user {user_id}")
+                except Exception:
+                    pass
 
     async def post_init(application):
         """Start proactive scheduler and detect bot username after init."""
