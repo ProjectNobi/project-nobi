@@ -78,11 +78,14 @@ class MemoryManager:
         self._init_db()
         # Initialize LLM entity extractor (optional)
         self.llm_extractor = None
-        if _LLM_EXTRACTOR_AVAILABLE:
+        _disable_llm = os.environ.get("NOBI_DISABLE_LLM_EXTRACTOR", "").lower() in ("1", "true", "yes")
+        if _LLM_EXTRACTOR_AVAILABLE and not _disable_llm:
             try:
                 self.llm_extractor = LLMEntityExtractor()
             except Exception as e:
                 logger.warning(f"[LLM Extractor] Failed to initialize: {e}")
+        elif _disable_llm:
+            logger.info("[LLM Extractor] Disabled via NOBI_DISABLE_LLM_EXTRACTOR")
 
         # Initialize relationship graph (shares the same SQLite DB)
         if _GRAPH_AVAILABLE:

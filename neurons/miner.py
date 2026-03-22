@@ -310,7 +310,9 @@ class Miner(BaseMinerNeuron):
         messages.append({"role": "user", "content": message})
 
         # Step 4: Generate response — fast timeout with model fallback
-        _MINER_MODELS = [self.model, "chutesai/Mistral-Small-3.2-24B-Instruct-2506"]
+        # Use Chutes auto-routing: comma-separated models with :latency picks fastest
+        _auto_model = f"{self.model},chutesai/Mistral-Small-3.2-24B-Instruct-2506:latency"
+        _MINER_MODELS = [_auto_model, self.model]
         response = None
         for _model in _MINER_MODELS:
             try:
