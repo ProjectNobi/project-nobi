@@ -160,8 +160,8 @@ class Miner(BaseMinerNeuron):
         """If the user asks about privacy/memory/identity, return a hardcoded accurate response."""
         msg = message.lower()
 
-        privacy_keywords = ["privacy", "private", "secure", "protect", "data", "store my",
-                           "save my", "keep my", "track", "spy", "safe"]
+        privacy_keywords = ["privacy", "private", "secure", "protect my data", "protect my privacy",
+                           "data safe", "store my", "save my", "keep my data", "track me", "spy", "data privacy"]
         memory_keywords = ["remember me", "remember things", "memory", "forget me",
                           "do you remember", "will you remember", "past conversations",
                           "session", "fresh start"]

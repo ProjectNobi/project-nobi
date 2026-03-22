@@ -584,8 +584,8 @@ class CompanionBot:
 
     def _check_bot_identity(self, message: str, lang_code: str = "en") -> str | None:
         msg = message.lower()
-        privacy_kw = ["privacy", "private", "secure", "protect my", "data", "store my",
-                      "save my", "keep my", "track", "safe"]
+        privacy_kw = ["privacy", "private", "protect my data", "protect my privacy",
+                      "data safe", "store my", "save my", "keep my data", "track me", "data privacy"]
         memory_kw = ["remember me", "remember things", "memory", "forget me",
                      "do you remember", "will you remember", "past conversation", "session"]
         learning_kw = ["self-learn", "self-evolv", "how do you learn", "how do you improve",
