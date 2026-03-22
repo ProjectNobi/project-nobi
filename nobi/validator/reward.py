@@ -237,23 +237,33 @@ def _score_memory_recall(
 
 
 def _score_memory_recall_semantic(
-    response: str, keywords: List[str], threshold: float = 0.5
+    response: str, keywords: List[str], threshold: float = 0.3
 ) -> float:
     """
-    Semantic memory recall scoring using embedding similarity.
-
-    For each keyword, computes cosine similarity with the response.
-    A keyword is considered "recalled" if similarity exceeds the threshold.
+    Hybrid memory recall scoring: exact keyword match FIRST, then semantic for misses.
+    Single-word vs full-sentence embeddings have low cosine similarity (~0.3-0.45),
+    so we check exact matches first and only use embeddings for paraphrases.
     """
+    import re as _re
     engine = get_engine()
+    response_lower = response.lower()
+
+    matches = 0
+    total_sim = 0.0
 
     response_vec = engine.embed(response)
     keyword_vecs = engine.embed_batch(keywords)
 
-    matches = 0
-    total_sim = 0.0
-    for kw_vec in keyword_vecs:
-        sim = engine.cosine_similarity(response_vec, kw_vec)
+    for i, kw in enumerate(keywords):
+        kw_lower = kw.lower()
+        # Step 1: Exact keyword match (fast, reliable)
+        if kw_lower in response_lower:
+            matches += 1
+            total_sim += 1.0
+            continue
+
+        # Step 2: Semantic similarity for paraphrases
+        sim = engine.cosine_similarity(response_vec, keyword_vecs[i])
         total_sim += max(0.0, sim)
         if sim >= threshold:
             matches += 1
@@ -262,7 +272,6 @@ def _score_memory_recall_semantic(
     avg_sim = total_sim / len(keywords)
 
     # Blend discrete recall rate (60%) with continuous avg similarity (40%)
-    # This rewards partial matches and near-misses
     blended = 0.6 * recall_rate + 0.4 * avg_sim
 
     if blended >= 0.7:
