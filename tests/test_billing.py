@@ -290,7 +290,8 @@ class TestLimits:
         assert billing.check_feature("user1", "proactive_messages") is True
 
     def test_check_feature_group_mode_free(self, billing):
-        assert billing.check_feature("user1", "group_mode") is False
+        # All features available in free-forever model
+        assert billing.check_feature("user1", "group_mode") is True
 
     def test_check_feature_group_mode_pro(self, billing):
         billing.create_customer("user1")
@@ -337,7 +338,7 @@ class TestTierConfig:
         assert t["image_per_day"] == 30
         assert t["proactive_messages"] is True
         assert t["priority_response"] is False
-        assert t["group_mode"] is False
+        assert t["group_mode"] is True  # All features free in community model
 
     def test_plus_tier_values(self):
         t = TIERS["plus"]
@@ -345,14 +346,14 @@ class TestTierConfig:
         assert t["memory_slots"] == 900
         assert t["proactive_messages"] is True
         assert t["group_mode"] is True
-        assert t["price"] == 4.99
+        assert t["price"] == 0  # Free forever
 
     def test_pro_tier_values(self):
         t = TIERS["pro"]
         assert t["messages_per_day"] == 2700
         assert t["memory_slots"] == 2700
         assert t["priority_response"] is True
-        assert t["price"] == 9.99
+        assert t["price"] == 0  # Free forever
 
     def test_action_limit_map(self):
         assert "message" in ACTION_LIMIT_MAP

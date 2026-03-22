@@ -228,7 +228,7 @@ class TestLegalPages:
         path = os.path.join(DOCS_DIR, "terms.html")
         with open(path) as f:
             content = f.read().lower()
-        for topic in ["subscription", "liability", "termination", "ai"]:
+        for topic in ["liability", "termination", "ai"]:
             assert topic in content, f"Terms should cover: {topic}"
 
 
