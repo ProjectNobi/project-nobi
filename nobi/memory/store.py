@@ -741,10 +741,11 @@ class MemoryManager:
 
         # Name detection (regex for accuracy — avoids "I'm feeling" false positives)
         name_patterns = [
-            r"(?:my name is|call me)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b",
+            r"(?:my name is|call me)\s+(\w{2,30})\b",
+            r"(?:I'm|i'm)\s+([A-Z]\w+)\b",
         ]
         for pattern in name_patterns:
-            match = re.search(pattern, message)
+            match = re.search(pattern, message, re.IGNORECASE)
             if match:
                 name = match.group(1).strip()
                 # Skip common false positives

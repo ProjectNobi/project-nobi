@@ -798,7 +798,7 @@ class CompanionBot:
                         api_key=os.environ.get("CHUTES_API_KEY", ""),
                     )
                     retry_msgs = [
-                        {"role": "system", "content": "You are Nori, a warm friendly AI companion. Respond ONLY in English."},
+                        {"role": "system", "content": "You are Nori, a warm friendly AI companion. Respond in the same language the user is using."},
                         {"role": "user", "content": message}
                     ]
                     retry = retry_client.chat.completions.create(
