@@ -68,11 +68,21 @@ CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE")
 # Smart fallback chain — tries models in order until one responds
+# Chutes auto-routing: comma-separated models with :latency picks lowest TTFT automatically
+# Handles 429s internally — no manual fallback needed
+CHUTES_AUTO_MODEL = (
+    "deepseek-ai/DeepSeek-V3.1-TEE,"
+    "deepseek-ai/DeepSeek-V3,"
+    "openai/gpt-oss-120b-TEE,"
+    "chutesai/Mistral-Small-3.2-24B-Instruct-2506"
+    ":latency"
+)
+# Legacy fallback list (used only if auto-routing fails entirely)
 CHUTES_FALLBACK_MODELS = [
-    "deepseek-ai/DeepSeek-V3.1-TEE",                  # Primary — best quality
-    "deepseek-ai/DeepSeek-V3",                         # Fast fallback — 4.5s
-    "openai/gpt-oss-120b-TEE",                         # Strong quality — 6s
-    "chutesai/Mistral-Small-3.2-24B-Instruct-2506",   # Fastest reliable — 3s
+    "deepseek-ai/DeepSeek-V3.1-TEE",
+    "deepseek-ai/DeepSeek-V3",
+    "openai/gpt-oss-120b-TEE",
+    "chutesai/Mistral-Small-3.2-24B-Instruct-2506",
 ]
 
 # Task 5: Subnet routing config
@@ -379,7 +389,7 @@ class CompanionBot:
                 base_url="https://llm.chutes.ai/v1",
                 api_key=CHUTES_KEY,
             )
-            logger.info(f"LLM: Chutes fallback chain: {' → '.join(CHUTES_FALLBACK_MODELS)} → OpenRouter")
+            logger.info(f"LLM: Chutes auto-route ({CHUTES_AUTO_MODEL}) → legacy fallback → OpenRouter")
         elif OPENROUTER_KEY and OpenAI:
             self.client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
@@ -755,31 +765,46 @@ class CompanionBot:
         messages.extend(history)
         messages.append({"role": "user", "content": message})
 
-        # Smart fallback chain — try Chutes models in order, then OpenRouter
+        # Chutes auto-routing: sends model list, Chutes picks lowest latency + handles 429s
         response = None
         used_model = None
-        # Progressively shorter timeouts — if top models are slow, skip fast
-        _model_timeouts = [10, 8, 8, 6]
-        for i, fallback_model in enumerate(CHUTES_FALLBACK_MODELS):
-            try:
-                _timeout = _model_timeouts[i] if i < len(_model_timeouts) else 8
-                completion = self.client.chat.completions.create(
-                    model=fallback_model,
-                    messages=messages,
-                    max_tokens=self._get_max_tokens(user_id),
-                    temperature=0.7,
-                    timeout=_timeout,
-                )
-                response = completion.choices[0].message.content
-                if response and response.strip():
-                    used_model = fallback_model
-                    logger.info(f"[Routing] Chutes model {fallback_model} succeeded for user {user_id}")
-                    break
-                else:
+        try:
+            completion = self.client.chat.completions.create(
+                model=CHUTES_AUTO_MODEL,
+                messages=messages,
+                max_tokens=self._get_max_tokens(user_id),
+                temperature=0.7,
+                timeout=15,
+            )
+            response = completion.choices[0].message.content
+            if response and response.strip():
+                used_model = getattr(completion, 'model', CHUTES_AUTO_MODEL)
+                logger.info(f"[Routing] Chutes auto-route → {used_model} for user {user_id}")
+            else:
+                response = None
+        except Exception as auto_err:
+            logger.warning(f"[Routing] Chutes auto-route failed: {auto_err}")
+
+        # Legacy fallback: try models one by one if auto-routing failed entirely
+        if not response:
+            for fallback_model in CHUTES_FALLBACK_MODELS:
+                try:
+                    completion = self.client.chat.completions.create(
+                        model=fallback_model,
+                        messages=messages,
+                        max_tokens=self._get_max_tokens(user_id),
+                        temperature=0.7,
+                        timeout=10,
+                    )
+                    response = completion.choices[0].message.content
+                    if response and response.strip():
+                        used_model = fallback_model
+                        logger.info(f"[Routing] Chutes fallback {fallback_model} succeeded for user {user_id}")
+                        break
                     response = None
-            except Exception as model_err:
-                logger.warning(f"[Routing] Chutes model {fallback_model} failed: {model_err}")
-                continue
+                except Exception as model_err:
+                    logger.warning(f"[Routing] Chutes fallback {fallback_model} failed: {model_err}")
+                    continue
 
         # If all Chutes models failed, try OpenRouter as final fallback
         if not response or not response.strip():
