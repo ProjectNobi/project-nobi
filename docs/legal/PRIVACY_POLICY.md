@@ -133,7 +133,7 @@ We share your data only in the following limited circumstances:
 | Recipient | Purpose | Safeguards |
 |---|---|---|
 | **Stripe** | Payment processing | Stripe Privacy Policy; PCI-DSS compliant; data processing agreement in place |
-| **Bittensor miners** | AI response generation | Encrypted data only; no PII transmitted; pseudonymous identifiers |
+| **Bittensor miners** | AI response generation | Miners process conversation content during response generation; stored data encrypted at rest (AES-128); pseudonymous identifiers |
 | **Cloud infrastructure providers** | Hosting and storage | Data processing agreements; encrypted data |
 | **Legal authorities** | Compliance with legal obligations | Only when required by law, court order, or to protect safety |
 

@@ -109,7 +109,7 @@
     <h3>5.1 Decentralised Storage (Bittensor Network)</h3>
     <p>Nori operates on the Bittensor decentralised AI network. Messages may be processed by network participants ("miners") to generate AI responses. Data transmitted to miners is:</p>
     <ul>
-        <li>Encrypted (AES-128) in transit</li>
+        <li>Encrypted in transit (TLS 1.3) and at rest (AES-128)</li>
         <li>Stripped of personal identity (no name, email, or account details)</li>
         <li>Transmitted using pseudonymous identifiers only</li>
     </ul>
@@ -119,7 +119,7 @@
     <table>
         <tr><th>Recipient</th><th>Purpose</th><th>Safeguards</th></tr>
         
-        <tr><td>Bittensor miners</td><td>AI response generation</td><td>Encrypted data only; no PII transmitted</td></tr>
+        <tr><td>Bittensor miners</td><td>AI response generation</td><td>Miners process conversation content during response generation; stored data encrypted at rest (AES-128)</td></tr>
         <tr><td>Cloud infrastructure</td><td>Hosting and storage</td><td>Data processing agreements; encrypted data</td></tr>
         <tr><td>Legal authorities</td><td>Legal compliance</td><td>Only when required by law or court order</td></tr>
     </table>
@@ -181,7 +181,7 @@
     <p>We do <strong>not</strong> use advertising or tracking cookies. We respect the "Do Not Track" (DNT) browser signal.</p>
 
     <h2>11. International Data Transfers</h2>
-    <p>Project Nobi is based in the United Kingdom. For EEA users, transfers to the UK are covered by the UK Adequacy Decision. Data transferred to Bittensor miners globally is always encrypted (AES-128) with no personally identifiable information included.</p>
+    <p>Project Nobi is based in the United Kingdom. For EEA users, transfers to the UK are covered by the UK Adequacy Decision. Data transferred to Bittensor miners globally is encrypted in transit (TLS 1.3) and at rest (AES-128). Miners process conversation content during response generation — end-to-end TEE encryption is code-complete and deploying to production.</p>
 
     <h2>12. Data Breach Procedures</h2>
     <p>In the event of a personal data breach:</p>
