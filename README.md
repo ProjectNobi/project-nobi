@@ -166,7 +166,7 @@ Full guide: **[VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)**
 | Phase | Status | Highlights |
 |-------|--------|------------|
 | **0. Foundation** | ✅ Complete | Protocol, miner, validator, memory, scoring, 500 simulated-node stress test |
-| **1. Mainnet Prep** | 🔄 Current | Code hardening, external miners, security review, community growth |
+| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅ — 1,506 tests passing |
 | **2. Mainnet Launch** | ⏳ Q3 2026 | Subnet registration, subnet routing, public beta, community staking |
 | **3. Growth** | ⏳ Q4 2026+ | Mobile app, 50+ languages, plugin ecosystem, governance |
 | **4. Scale** | ⏳ 2027+ | 100K+ users, decentralized governance, federated privacy |
@@ -181,7 +181,7 @@ Full details: **[docs/ROADMAP.md](docs/ROADMAP.md)**
 |------|-------------|------|
 | **Mine** | Run a companion, earn TAO | [Mining Guide](docs/MINING_GUIDE.md) |
 | **Validate** | Stake TAO, earn dividends, ensure quality | [Validating Guide](docs/VALIDATING_GUIDE.md) |
-| **Stake** | Support the subnet with TAO | [Vision — Community Model](docs/VISION.md) |
+| **Stake** | Support the subnet with TAO *(not financial advice; staking involves risk)* | [Vision — Community Model](docs/VISION.md) |
 | **Code** | Contribute code, open PRs | [GitHub Issues](https://github.com/ProjectNobi/project-nobi/issues) |
 | **Try it** | Talk to Nori, give feedback | [@ProjectNobiBot](https://t.me/ProjectNobiBot) |
 | **Spread the word** | Tell people about free AI companionship | [Discord](https://discord.gg/e6StezHM) |

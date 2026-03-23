@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-23T14:28:21.037544+00:00",
+  "timestamp": "2026-03-23T15:00:30.653078+00:00",
   "mode": "mini",
   "scenarios": [
     "A",
@@ -10,7 +10,7 @@
     "F",
     "G"
   ],
-  "total_duration_s": 10.720176527975127,
+  "total_duration_s": 10.759250534931198,
   "results": [
     {
       "name": "Concurrent Chat Load",
@@ -20,15 +20,15 @@
         "success_count": 100,
         "error_count": 0,
         "success_rate_pct": 100.0,
-        "p50_latency_ms": 79.1,
-        "p95_latency_ms": 191.5,
-        "p99_latency_ms": 198.9,
+        "p50_latency_ms": 81.7,
+        "p95_latency_ms": 188.1,
+        "p99_latency_ms": 193.4,
         "error_types": {},
-        "throughput_rps": 217.9,
-        "duration_s": 0.46
+        "throughput_rps": 200.9,
+        "duration_s": 0.5
       },
       "failures": [],
-      "duration_s": 0.45896306610666215
+      "duration_s": 0.49764217785559595
     },
     {
       "name": "Memory System Under Load",
@@ -38,39 +38,39 @@
         "memories_per_user": 10,
         "total_stored": 1000,
         "total_recall_ops": 500,
-        "store_rate_ops_sec": 179.9,
-        "recall_rate_ops_sec": 90.0,
-        "store_p50_ms": 5.35,
-        "store_p95_ms": 29.1,
-        "recall_p50_ms": 15.1,
-        "recall_p95_ms": 55.07,
+        "store_rate_ops_sec": 179.3,
+        "recall_rate_ops_sec": 89.7,
+        "store_p50_ms": 5.47,
+        "store_p95_ms": 28.04,
+        "recall_p50_ms": 15.28,
+        "recall_p95_ms": 55.12,
         "lock_contention_pct": 0.0,
         "worker_errors": 0,
-        "duration_s": 5.56
+        "duration_s": 5.58
       },
       "failures": [],
-      "duration_s": 5.558624610072002
+      "duration_s": 5.576568138087168
     },
     {
       "name": "Encryption Under Load",
       "passed": true,
       "metrics": {
         "aes_gcm_ops": 192,
-        "aes_throughput_ops_sec": 4465.0,
-        "aes_enc_p50_us": 1245.4,
-        "aes_enc_p95_us": 3527.6,
-        "aes_dec_p50_us": 1003.5,
-        "aes_dec_p95_us": 3449.7,
+        "aes_throughput_ops_sec": 4458.0,
+        "aes_enc_p50_us": 1446.2,
+        "aes_enc_p95_us": 3449.8,
+        "aes_dec_p50_us": 1426.0,
+        "aes_dec_p95_us": 2963.5,
         "fernet_ops": 100,
-        "fernet_p50_ms": 32.3,
-        "fernet_p95_ms": 42.81,
+        "fernet_p50_ms": 32.92,
+        "fernet_p95_ms": 34.82,
         "hpke_miners": 32,
-        "hpke_p50_ms": 0.42,
-        "hpke_p95_ms": 0.45,
-        "duration_s": 3.4
+        "hpke_p50_ms": 0.31,
+        "hpke_p95_ms": 0.38,
+        "duration_s": 3.39
       },
       "failures": [],
-      "duration_s": 3.402715534903109
+      "duration_s": 3.387736020842567
     },
     {
       "name": "Rate Limiting Under Load",
@@ -86,7 +86,7 @@
         "duration_s": 0.0
       },
       "failures": [],
-      "duration_s": 0.00021852203644812107
+      "duration_s": 0.0003527039662003517
     },
     {
       "name": "Memory Graph Growth",
@@ -94,20 +94,20 @@
       "metrics": {
         "total_memories": 1000,
         "total_users": 100,
-        "insert_rate_ops_sec": 54302.0,
+        "insert_rate_ops_sec": 48104.0,
         "insert_p50_ms": 0.001,
         "insert_p95_ms": 0.001,
         "query_p50_ms": 0.06,
-        "query_p95_ms": 0.1,
+        "query_p95_ms": 0.11,
         "query_trend": "stable",
-        "rss_start_mb": 117.8,
-        "rss_end_mb": 118.1,
+        "rss_start_mb": 117.3,
+        "rss_end_mb": 117.7,
         "rss_growth_pct": 0.3,
         "checkpoints": 20,
         "duration_s": 0.02
       },
       "failures": [],
-      "duration_s": 0.01841563987545669
+      "duration_s": 0.020788246067240834
     },
     {
       "name": "Validator Scoring at 256 Scale",
@@ -116,34 +116,34 @@
         "miners": 32,
         "rounds": 5,
         "total_scored": 160,
-        "scoring_throughput_miners_sec": 12308.0,
-        "round_p50_ms": 2.6,
-        "round_p95_ms": 2.6,
-        "weight_calc_p50_ms": 0.0,
-        "total_duration_s": 0.013
+        "scoring_throughput_miners_sec": 9771.0,
+        "round_p50_ms": 3.1,
+        "round_p95_ms": 3.5,
+        "weight_calc_p50_ms": 0.01,
+        "total_duration_s": 0.016
       },
       "failures": [],
-      "duration_s": 0.012999628903344274
+      "duration_s": 0.01637490699067712
     },
     {
       "name": "Full Pipeline Integration",
       "passed": true,
       "metrics": {
         "users": 50,
-        "pipeline_runs": 274,
+        "pipeline_runs": 280,
         "errors": 0,
-        "e2e_p50_ms": 34.6,
+        "e2e_p50_ms": 34.2,
         "e2e_p95_ms": 67.0,
-        "e2e_p99_ms": 84.6,
-        "store_p50_ms": 12.5,
-        "recall_p50_ms": 13.5,
-        "respond_p50_ms": 5.7,
+        "e2e_p99_ms": 77.8,
+        "store_p50_ms": 11.9,
+        "recall_p50_ms": 13.4,
+        "respond_p50_ms": 6.5,
         "score_p50_ms": 0.02,
-        "pipeline_throughput": 216.6,
-        "duration_s": 1.27
+        "pipeline_throughput": 222.8,
+        "duration_s": 1.26
       },
       "failures": [],
-      "duration_s": 1.265135769965127
+      "duration_s": 1.2566871140152216
     }
   ],
   "benchmarks": {

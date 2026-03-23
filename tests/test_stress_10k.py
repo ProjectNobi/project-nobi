@@ -21,8 +21,18 @@ _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _PROJECT_ROOT)
 
 # Ensure env vars set before importing stress test (avoids heavy model loads)
+# NOTE: set at module level so the stress test module imports without loading heavy models,
+# but we restore them in the autouse fixture so other test modules are not affected.
 os.environ["NOBI_DISABLE_LLM_EXTRACTOR"] = "1"
 os.environ["NOBI_DISABLE_EMBEDDINGS"] = "1"
+
+
+@pytest.fixture(autouse=True, scope="module")
+def _restore_env_after_stress_tests():
+    """Restore env vars after this module's tests so they don't affect other test files."""
+    yield
+    os.environ.pop("NOBI_DISABLE_EMBEDDINGS", None)
+    os.environ.pop("NOBI_DISABLE_LLM_EXTRACTOR", None)
 
 
 # ─── Import tests ─────────────────────────────────────────────
