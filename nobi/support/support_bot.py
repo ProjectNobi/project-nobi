@@ -431,6 +431,24 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
             "Miners have a direct economic incentive to handle sensitive topics responsibly."
         ),
     },
+    {
+        "id": "legal_structure",
+        "topic": "What is your legal structure? Do you have legal counsel?",
+        "keywords": ["legal", "lawyer", "counsel", "entity", "company", "CIC", "liability", "structure", "registered"],
+        "answer": (
+            "We're currently operating as individuals building on testnet. "
+            "No entity is registered yet, and we don't have dedicated legal counsel "
+            "for AI product liability. We're transparent about this.\n\n"
+            "We're evaluating entity registration in either England & Wales "
+            "(Community Interest Company) or the Republic of Ireland "
+            "(Company Limited by Guarantee) — both have advantages for a "
+            "community-funded AI project handling personal data. Ireland offers "
+            "EU GDPR/AI Act compliance; the UK offers established CIC structures.\n\n"
+            "Final decision will be made with legal counsel before mainnet. "
+            "Our commitment: the entity will be non-profit, community-governed, "
+            "with no equity, no investors, and 100% of owner emissions burned on-chain."
+        ),
+    },
 ]
 
 # ─── SupportHandler ─────────────────────────────────────────
