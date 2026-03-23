@@ -200,8 +200,12 @@ export async function sendEncryptedChat(
   // Phase 4: If the server returned an encrypted response blob, decrypt it
   if (data.encrypted_response && keySet) {
     try {
-      const { decrypt } = await import("./client-crypto");
-      const decryptedResponse = await decrypt(data.encrypted_response, keySet);
+      const { decryptWithDeviceKey } = await import("./client-crypto");
+      // Server returns encrypted_response as an EncryptedPayload JSON object
+      const encryptedPayload = typeof data.encrypted_response === "string"
+        ? JSON.parse(data.encrypted_response)
+        : data.encrypted_response;
+      const decryptedResponse = await decryptWithDeviceKey(encryptedPayload);
       return {
         response: decryptedResponse,
         memories_used: data.memories_used,
