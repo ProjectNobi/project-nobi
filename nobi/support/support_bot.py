@@ -450,6 +450,29 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         ),
     },
     {
+        "id": "why_not_ads",
+        "topic": "Why not just add ads, affiliate links, or monetize user data?",
+        "keywords": ["ads", "advertising", "affiliate", "monetize", "data harvesting", "betterhelp", "revenue model", "sell data"],
+        "answer": (
+            "Because we'd lose the one thing that makes Nobi different: "
+            "'your AI companion that no company can monetize or exploit.'\n\n"
+            "That's not idealism — it's strategy. The AI companion market is dominated "
+            "by companies that monetize users. Our competitive advantage is that we don't.\n\n"
+            "The butterfly effect:\n"
+            "→ Person discovers Nori — just wants an AI friend\n"
+            "→ Nori works great — they tell friends\n"
+            "→ Curious user asks 'what powers this?' — discovers Bittensor\n"
+            "→ Some buy TAO, some become miners — network grows\n"
+            "→ Media covers 'the free AI no company owns' — cycle accelerates\n\n"
+            "One product. Millions of entry points to Bittensor. "
+            "That's what stakers are betting on — adoption, not revenue.\n\n"
+            "Wikipedia: 1.7B monthly visitors, ~$170M/year donations, 23 years, zero ads.\n"
+            "Signal: 100M+ users, foundation-funded.\n"
+            "Linux: 90%+ of cloud infrastructure, community-funded.\n\n"
+            "These aren't charities — they're some of the most valuable projects in the world."
+        ),
+    },
+    {
         "id": "alpha_value",
         "topic": "No revenue means no value. Why would anyone stake on Nobi?",
         "keywords": ["revenue", "stake", "alpha", "value", "monetize", "money", "profit", "survive", "sustainable", "economics"],
