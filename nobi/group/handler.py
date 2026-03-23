@@ -316,7 +316,7 @@ class GroupHandler:
         try:
             self.memory.save_conversation_turn(group_user_id, "user", message)
             # Extract memories to the real user_id (memories are universal)
-            self.memory.extract_memories_from_message(user_id, message, "")
+            self.memory.extract_memories_from_message(group_user_id, message, "")
         except Exception as e:
             logger.warning(f"[Group] Memory save error: {e}")
 
