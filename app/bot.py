@@ -552,6 +552,20 @@ class CompanionBot:
             "I remember things about you, learn your preferences, and your data is encrypted at rest for privacy. "
             "Basically — I'm your personal AI friend who actually remembers you 😊"
         ),
+        "federated": (
+            "Great question! Federated privacy in Nori means your personal data stays under YOUR control. "
+            "Here's how it works in practice:\n\n"
+            "1. Browser-side extraction: When you use the web app with privacy mode on, "
+            "your conversations are processed locally in your browser. Memories (facts, preferences, emotions) "
+            "are extracted right on your device — the raw text never leaves.\n\n"
+            "2. Encrypted sync: Only encrypted memory embeddings are sent to miners. "
+            "They can store and use them to help me respond, but they can't read the raw content.\n\n"
+            "3. TEE protection: Miners that run in Trusted Execution Environments (secure enclaves) "
+            "can only process your data inside a protected space — even the miner operator can't see it.\n\n"
+            "This is different from traditional 'federated learning' where models train on your device. "
+            "Our approach is simpler: your data stays on your device, and only encrypted signals go out. "
+            "Your data, your device, your control 🔒"
+        ),
     }
 
     def _translate_identity_response(self, key: str, lang_code: str) -> str:
@@ -618,6 +632,11 @@ class CompanionBot:
                        "can you learn", "learn new things", "learn from"]
         identity_kw = ["who are you", "what are you", "are you chatgpt", "are you gpt",
                        "are you claude", "are you gemini", "are you siri"]
+        federated_kw = ["federated", "federated learning", "federated privacy",
+                        "on-device privacy", "on device privacy", "data stay on device",
+                        "data leave my device", "local processing", "browser extraction"]
+        if any(kw in msg for kw in federated_kw):
+            return self._translate_identity_response("federated", lang_code)
         if any(kw in msg for kw in privacy_kw):
             return self._translate_identity_response("privacy", lang_code)
         if any(kw in msg for kw in memory_kw):

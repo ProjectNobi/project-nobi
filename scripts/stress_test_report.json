@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-23T16:29:16.835974+00:00",
+  "timestamp": "2026-03-23T17:28:36.924243+00:00",
   "mode": "full",
   "scenarios": [
     "A",
@@ -10,27 +10,27 @@
     "F",
     "G"
   ],
-  "total_duration_s": 1383.772931186948,
+  "total_duration_s": 1171.584794949973,
   "results": [
     {
       "name": "Concurrent Chat Load",
       "passed": true,
       "metrics": {
         "total_users": 10000,
-        "success_count": 9994,
-        "error_count": 6,
-        "success_rate_pct": 99.94,
-        "p50_latency_ms": 102.8,
-        "p95_latency_ms": 190.7,
-        "p99_latency_ms": 198.7,
+        "success_count": 9992,
+        "error_count": 8,
+        "success_rate_pct": 99.92,
+        "p50_latency_ms": 102.3,
+        "p95_latency_ms": 191.4,
+        "p99_latency_ms": 198.8,
         "error_types": {
-          "timeout": 6
+          "timeout": 8
         },
-        "throughput_rps": 4366.6,
-        "duration_s": 2.29
+        "throughput_rps": 4416.9,
+        "duration_s": 2.26
       },
       "failures": [],
-      "duration_s": 2.290102113969624
+      "duration_s": 2.264045818010345
     },
     {
       "name": "Memory System Under Load",
@@ -40,76 +40,78 @@
         "memories_per_user": 75,
         "total_stored": 750000,
         "total_recall_ops": 50000,
-        "store_rate_ops_sec": 585.4,
-        "recall_rate_ops_sec": 39.0,
-        "store_p50_ms": 6.44,
-        "store_p95_ms": 20.5,
-        "recall_p50_ms": 42.5,
-        "recall_p95_ms": 75.94,
+        "store_rate_ops_sec": 700.1,
+        "recall_rate_ops_sec": 46.7,
+        "store_p50_ms": 5.84,
+        "store_p95_ms": 18.07,
+        "recall_p50_ms": 42.01,
+        "recall_p95_ms": 70.74,
         "lock_contention_pct": 0.0,
         "worker_errors": 0,
-        "duration_s": 1281.16
+        "duration_s": 1071.27
       },
       "failures": [],
-      "duration_s": 1281.1646511999425
+      "duration_s": 1071.2700362550095
     },
     {
       "name": "Encryption Under Load",
       "passed": true,
       "metrics": {
         "aes_gcm_ops": 2000,
-        "aes_throughput_ops_sec": 4525.0,
-        "aes_enc_p50_us": 1400.2,
-        "aes_enc_p95_us": 3800.0,
-        "aes_dec_p50_us": 1325.5,
-        "aes_dec_p95_us": 3958.2,
+        "aes_throughput_ops_sec": 4812.0,
+        "aes_enc_p50_us": 1330.7,
+        "aes_enc_p95_us": 3719.2,
+        "aes_dec_p50_us": 1351.5,
+        "aes_dec_p95_us": 3503.1,
         "fernet_ops": 1000,
-        "fernet_p50_ms": 32.73,
-        "fernet_p95_ms": 45.37,
+        "fernet_p50_ms": 31.99,
+        "fernet_p95_ms": 34.9,
         "hpke_miners": 256,
-        "hpke_p50_ms": 0.31,
-        "hpke_p95_ms": 0.38,
-        "duration_s": 35.06
+        "hpke_p50_ms": 0.3,
+        "hpke_p95_ms": 0.51,
+        "duration_s": 32.97
       },
       "failures": [],
-      "duration_s": 35.0589540398214
+      "duration_s": 32.96675573894754
     },
     {
       "name": "Rate Limiting Under Load",
       "passed": true,
       "metrics": {
         "total_requests": 2000,
-        "accepts": 1344,
-        "rejects": 656,
-        "reject_rate_pct": 32.8,
+        "accepts": 1333,
+        "rejects": 667,
+        "reject_rate_pct": 33.35,
         "false_positives": 0,
         "false_negatives": 0,
         "accuracy_pct": 100.0,
         "duration_s": 0.004
       },
       "failures": [],
-      "duration_s": 0.003534264164045453
+      "duration_s": 0.003571168053895235
     },
     {
       "name": "Memory Graph Growth",
-      "passed": true,
+      "passed": false,
       "metrics": {
         "total_memories": 100000,
         "total_users": 10000,
-        "insert_rate_ops_sec": 101705.0,
+        "insert_rate_ops_sec": 108331.0,
         "insert_p50_ms": 0.001,
         "insert_p95_ms": 0.001,
-        "query_p50_ms": 0.15,
-        "query_p95_ms": 0.19,
+        "query_p50_ms": 0.12,
+        "query_p95_ms": 0.15,
         "query_trend": "stable",
-        "rss_start_mb": 199.7,
-        "rss_end_mb": 219.1,
-        "rss_growth_pct": 9.8,
+        "rss_start_mb": 202.6,
+        "rss_end_mb": 224.3,
+        "rss_growth_pct": 10.7,
         "checkpoints": 20,
-        "duration_s": 0.98
+        "duration_s": 0.92
       },
-      "failures": [],
-      "duration_s": 0.983231320977211
+      "failures": [
+        "RSS growth 10.7% > 10.0%"
+      ],
+      "duration_s": 0.9230940009001642
     },
     {
       "name": "Validator Scoring at 256 Scale",
@@ -118,34 +120,34 @@
         "miners": 256,
         "rounds": 5,
         "total_scored": 1280,
-        "scoring_throughput_miners_sec": 2280.2,
-        "round_p50_ms": 109.9,
-        "round_p95_ms": 119.2,
+        "scoring_throughput_miners_sec": 2196.1,
+        "round_p50_ms": 106.9,
+        "round_p95_ms": 143.8,
         "weight_calc_p50_ms": 0.04,
-        "total_duration_s": 0.561
+        "total_duration_s": 0.583
       },
       "failures": [],
-      "duration_s": 0.5613487500231713
+      "duration_s": 0.582852577092126
     },
     {
       "name": "Full Pipeline Integration",
       "passed": true,
       "metrics": {
         "users": 1000,
-        "pipeline_runs": 5467,
+        "pipeline_runs": 5576,
         "errors": 0,
-        "e2e_p50_ms": 74.2,
-        "e2e_p95_ms": 226.6,
-        "e2e_p99_ms": 434.6,
-        "store_p50_ms": 27.2,
-        "recall_p50_ms": 18.6,
-        "respond_p50_ms": 6.9,
+        "e2e_p50_ms": 73.1,
+        "e2e_p95_ms": 219.8,
+        "e2e_p99_ms": 422.3,
+        "store_p50_ms": 26.0,
+        "recall_p50_ms": 19.5,
+        "respond_p50_ms": 6.8,
         "score_p50_ms": 0.02,
-        "pipeline_throughput": 86.5,
-        "duration_s": 63.21
+        "pipeline_throughput": 88.4,
+        "duration_s": 63.06
       },
       "failures": [],
-      "duration_s": 63.209341660141945
+      "duration_s": 63.06471968698315
     }
   ],
   "benchmarks": {
