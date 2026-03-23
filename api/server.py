@@ -1899,12 +1899,7 @@ async def gdpr_pia():
         raise HTTPException(status_code=500, detail="Failed to generate PIA report")
 
 
-# ─── Run ─────────────────────────────────────────────────────
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=API_PORT)
-
+# ─── TTS for Web App ────────────────────────────────────────
 
 # ─── TTS for Web App ────────────────────────────────────────
 
@@ -1992,3 +1987,10 @@ async def chat_with_image(request: Request):
     except Exception as e:
         logger.error(f"Image chat error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process image")
+
+
+# ─── Run ─────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=API_PORT)
