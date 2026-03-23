@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import PrivacyToggle from "./PrivacyToggle";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home", icon: "🏠" },
@@ -54,6 +55,7 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
+            <PrivacyToggle compact />
             <ThemeToggle />
           </div>
         </div>

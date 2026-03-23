@@ -3,6 +3,8 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  /** True when this user message was sent via the encrypted (on-device privacy) flow */
+  privacyMode?: boolean;
 }
 
 export interface Memory {

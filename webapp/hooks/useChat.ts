@@ -5,6 +5,13 @@ import { v4 as uuidv4 } from "uuid";
 import { api } from "@/lib/api";
 import { STORAGE_KEYS } from "@/lib/constants";
 import type { Message } from "@/lib/types";
+import {
+  loadPrivacySettings,
+  isPrivacyModeSupported,
+  processMessagePrivately,
+  sendEncryptedChat,
+  saveLocalMemories,
+} from "@/lib/memory-sync";
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -35,11 +42,17 @@ export function useChat() {
       if (!content.trim() || isLoading) return;
 
       const userId = getUserId();
+
+      // Check if privacy mode is active
+      const privacySettings = loadPrivacySettings();
+      const privacyActive = privacySettings.enabled && isPrivacyModeSupported();
+
       const userMessage: Message = {
         id: uuidv4(),
         role: "user",
         content: content.trim(),
         timestamp: new Date(),
+        privacyMode: privacyActive,
       };
 
       setMessages((prev) => [...prev, userMessage]);
@@ -47,7 +60,29 @@ export function useChat() {
       setError(null);
 
       try {
-        const response = await api.chat(content.trim(), userId);
+        let response: { response: string; memories_used: string[] };
+
+        if (privacyActive) {
+          // ── Privacy mode: extract + encrypt on-device, send to /api/v1/chat/encrypted ──
+          const conversationHistory = messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          }));
+          const { request, extraction } = await processMessagePrivately(
+            content.trim(),
+            userId,
+            conversationHistory,
+            privacySettings
+          );
+          // Persist extracted memories locally (they never leave unencrypted)
+          if (extraction.memories.length > 0) {
+            saveLocalMemories(extraction.memories);
+          }
+          response = await sendEncryptedChat(request);
+        } else {
+          // ── Standard mode: normal server-side chat ──
+          response = await api.chat(content.trim(), userId);
+        }
         const assistantMessage: Message = {
           id: uuidv4(),
           role: "assistant",

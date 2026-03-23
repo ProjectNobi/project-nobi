@@ -47,15 +47,25 @@ export default function ChatBubble({ message }: ChatBubbleProps) {
             <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
         )}
-        <p
-          className={`text-[10px] mt-1.5 ${
-            isUser
-              ? "text-nori-200"
-              : "text-gray-400 dark:text-gray-500"
-          }`}
-        >
-          {time}
-        </p>
+        <div className={`flex items-center gap-1 mt-1.5 ${isUser ? "justify-end" : "justify-start"}`}>
+          {isUser && message.privacyMode && (
+            <span
+              className="text-[10px] text-nori-200"
+              title="Sent with on-device privacy — encrypted locally"
+            >
+              🔒
+            </span>
+          )}
+          <p
+            className={`text-[10px] ${
+              isUser
+                ? "text-nori-200"
+                : "text-gray-400 dark:text-gray-500"
+            }`}
+          >
+            {time}
+          </p>
+        </div>
       </div>
     </div>
   );
