@@ -1,0 +1,179 @@
+{
+  "timestamp": "2026-03-23T14:28:21.037544+00:00",
+  "mode": "mini",
+  "scenarios": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G"
+  ],
+  "total_duration_s": 10.720176527975127,
+  "results": [
+    {
+      "name": "Concurrent Chat Load",
+      "passed": true,
+      "metrics": {
+        "total_users": 100,
+        "success_count": 100,
+        "error_count": 0,
+        "success_rate_pct": 100.0,
+        "p50_latency_ms": 79.1,
+        "p95_latency_ms": 191.5,
+        "p99_latency_ms": 198.9,
+        "error_types": {},
+        "throughput_rps": 217.9,
+        "duration_s": 0.46
+      },
+      "failures": [],
+      "duration_s": 0.45896306610666215
+    },
+    {
+      "name": "Memory System Under Load",
+      "passed": true,
+      "metrics": {
+        "total_users": 100,
+        "memories_per_user": 10,
+        "total_stored": 1000,
+        "total_recall_ops": 500,
+        "store_rate_ops_sec": 179.9,
+        "recall_rate_ops_sec": 90.0,
+        "store_p50_ms": 5.35,
+        "store_p95_ms": 29.1,
+        "recall_p50_ms": 15.1,
+        "recall_p95_ms": 55.07,
+        "lock_contention_pct": 0.0,
+        "worker_errors": 0,
+        "duration_s": 5.56
+      },
+      "failures": [],
+      "duration_s": 5.558624610072002
+    },
+    {
+      "name": "Encryption Under Load",
+      "passed": true,
+      "metrics": {
+        "aes_gcm_ops": 192,
+        "aes_throughput_ops_sec": 4465.0,
+        "aes_enc_p50_us": 1245.4,
+        "aes_enc_p95_us": 3527.6,
+        "aes_dec_p50_us": 1003.5,
+        "aes_dec_p95_us": 3449.7,
+        "fernet_ops": 100,
+        "fernet_p50_ms": 32.3,
+        "fernet_p95_ms": 42.81,
+        "hpke_miners": 32,
+        "hpke_p50_ms": 0.42,
+        "hpke_p95_ms": 0.45,
+        "duration_s": 3.4
+      },
+      "failures": [],
+      "duration_s": 3.402715534903109
+    },
+    {
+      "name": "Rate Limiting Under Load",
+      "passed": true,
+      "metrics": {
+        "total_requests": 100,
+        "accepts": 100,
+        "rejects": 0,
+        "reject_rate_pct": 0.0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "accuracy_pct": 100.0,
+        "duration_s": 0.0
+      },
+      "failures": [],
+      "duration_s": 0.00021852203644812107
+    },
+    {
+      "name": "Memory Graph Growth",
+      "passed": true,
+      "metrics": {
+        "total_memories": 1000,
+        "total_users": 100,
+        "insert_rate_ops_sec": 54302.0,
+        "insert_p50_ms": 0.001,
+        "insert_p95_ms": 0.001,
+        "query_p50_ms": 0.06,
+        "query_p95_ms": 0.1,
+        "query_trend": "stable",
+        "rss_start_mb": 117.8,
+        "rss_end_mb": 118.1,
+        "rss_growth_pct": 0.3,
+        "checkpoints": 20,
+        "duration_s": 0.02
+      },
+      "failures": [],
+      "duration_s": 0.01841563987545669
+    },
+    {
+      "name": "Validator Scoring at 256 Scale",
+      "passed": true,
+      "metrics": {
+        "miners": 32,
+        "rounds": 5,
+        "total_scored": 160,
+        "scoring_throughput_miners_sec": 12308.0,
+        "round_p50_ms": 2.6,
+        "round_p95_ms": 2.6,
+        "weight_calc_p50_ms": 0.0,
+        "total_duration_s": 0.013
+      },
+      "failures": [],
+      "duration_s": 0.012999628903344274
+    },
+    {
+      "name": "Full Pipeline Integration",
+      "passed": true,
+      "metrics": {
+        "users": 50,
+        "pipeline_runs": 274,
+        "errors": 0,
+        "e2e_p50_ms": 34.6,
+        "e2e_p95_ms": 67.0,
+        "e2e_p99_ms": 84.6,
+        "store_p50_ms": 12.5,
+        "recall_p50_ms": 13.5,
+        "respond_p50_ms": 5.7,
+        "score_p50_ms": 0.02,
+        "pipeline_throughput": 216.6,
+        "duration_s": 1.27
+      },
+      "failures": [],
+      "duration_s": 1.265135769965127
+    }
+  ],
+  "benchmarks": {
+    "chat_success_rate_pct": [
+      99.0,
+      ">="
+    ],
+    "memory_store_p95_ms": [
+      150.0,
+      "<="
+    ],
+    "memory_recall_p95_ms": [
+      150.0,
+      "<="
+    ],
+    "encryption_throughput_ops": [
+      1000.0,
+      ">="
+    ],
+    "rate_limiter_accuracy_pct": [
+      99.9,
+      ">="
+    ],
+    "scoring_256_total_s": [
+      5.0,
+      "<="
+    ],
+    "rss_growth_pct": [
+      10.0,
+      "<="
+    ]
+  }
+}

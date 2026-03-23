@@ -1579,6 +1579,146 @@ async def v1_health():
     return await health()
 
 
+# ─── Burn Transparency API ──────────────────────────────────
+
+def _get_burn_tracker():
+    """Lazy-load the BurnTracker (no import overhead at startup)."""
+    try:
+        from nobi.burn.tracker import BurnTracker
+        return BurnTracker()
+    except Exception as e:
+        logger.warning(f"BurnTracker unavailable: {e}")
+        return None
+
+
+@app.get("/api/v1/burns")
+async def get_burns(
+    network: str = "testnet",
+    netuid: int = 272,
+    limit: Optional[int] = None,
+):
+    """
+    Public endpoint — returns the full burn history.
+
+    Anyone can call this to verify that Project Nobi is burning
+    100% of its owner take emissions as promised.
+
+    Query params:
+        network: 'testnet' or 'mainnet' (default: testnet)
+        netuid: Subnet ID (default: 272)
+        limit: Max records to return (default: all)
+    """
+    tracker = _get_burn_tracker()
+    if tracker is None:
+        return {
+            "total_burned_alpha": 0.0,
+            "burn_count": 0,
+            "burns": [],
+            "message": "Burn history not yet available",
+        }
+    try:
+        history = tracker.get_burn_history(network=network, netuid=netuid, limit=limit)
+        total = tracker.get_total_burned(network=network, netuid=netuid)
+        return {
+            "total_burned_alpha": total,
+            "burn_count": len(history),
+            "burns": history,
+            "commitment": "100% of owner take (18% of subnet emissions) is burned",
+            "network": network,
+            "netuid": netuid,
+        }
+    except Exception as e:
+        logger.error(f"Burns endpoint error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve burn history")
+
+
+@app.get("/api/v1/burns/total")
+async def get_burns_total(
+    network: str = "testnet",
+    netuid: int = 272,
+):
+    """
+    Public endpoint — returns the total ALPHA burned.
+
+    This is the quick-check endpoint for anyone verifying
+    Project Nobi's burn commitment.
+
+    Query params:
+        network: 'testnet' or 'mainnet' (default: testnet)
+        netuid: Subnet ID (default: 272)
+    """
+    tracker = _get_burn_tracker()
+    if tracker is None:
+        return {
+            "total_burned_alpha": 0.0,
+            "burn_count": 0,
+            "latest_burn": None,
+        }
+    try:
+        total = tracker.get_total_burned(network=network, netuid=netuid)
+        count = tracker.get_burn_count(network=network, netuid=netuid)
+        latest = tracker.get_latest_burn(network=network, netuid=netuid)
+        return {
+            "total_burned_alpha": total,
+            "burn_count": count,
+            "latest_burn": latest,
+            "commitment": "100% of owner take (18% of subnet emissions) is burned",
+            "network": network,
+            "netuid": netuid,
+        }
+    except Exception as e:
+        logger.error(f"Burns total endpoint error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve total burned")
+
+
+@app.get("/api/v1/burns/verify")
+async def get_burns_verify(
+    start_block: int = 0,
+    end_block: Optional[int] = None,
+    network: str = "testnet",
+    netuid: int = 272,
+):
+    """
+    Public endpoint — lightweight burn summary for independent verification.
+
+    For full on-chain verification, use the BurnVerifier class directly.
+    This endpoint returns the internal records summary.
+
+    Query params:
+        start_block: Starting block (default: 0)
+        end_block: Ending block (default: current)
+        network: 'testnet' or 'mainnet'
+        netuid: Subnet ID (default: 272)
+    """
+    tracker = _get_burn_tracker()
+    if tracker is None:
+        return {"error": "Burn tracker unavailable"}
+    try:
+        history = tracker.get_burn_history(network=network, netuid=netuid)
+        if start_block > 0 or end_block is not None:
+            eb = end_block or float("inf")
+            history = [
+                r for r in history
+                if start_block <= r.get("block", 0) <= eb
+            ]
+        total = sum(r.get("amount_alpha", 0.0) for r in history)
+        return {
+            "network": network,
+            "netuid": netuid,
+            "block_range": {"start": start_block, "end": end_block},
+            "burn_count": len(history),
+            "total_alpha_burned": total,
+            "burns": history,
+            "note": (
+                "These are internal records. For on-chain verification, "
+                "use BurnVerifier.verify_range() or query the subtensor directly."
+            ),
+        }
+    except Exception as e:
+        logger.error(f"Burns verify endpoint error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve verification data")
+
+
 # ─── Run ─────────────────────────────────────────────────────
 
 if __name__ == "__main__":
