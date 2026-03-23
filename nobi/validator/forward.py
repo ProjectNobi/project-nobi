@@ -202,29 +202,78 @@ async def forward(self):
 
 
 async def _query_single_miner(dendrite, axon, synapse, timeout):
-    """Query a single miner and measure its individual latency."""
+    """
+    Query a single miner and measure its individual latency.
+
+    Returns: (response_text, latency, tee_pubkey)
+      - response_text: plaintext response (decrypted if encrypted_response is set)
+      - latency: elapsed seconds
+      - tee_pubkey: miner's advertised TEE public key (or "")
+
+    Phase 4: If the miner returns encrypted_response, decrypt it using the session
+    key from the outbound synapse's key_id. Falls back to the plaintext response
+    field if decryption fails or encrypted_response is not set.
+    """
     t_start = time.monotonic()
     try:
         responses = await dendrite(
             axons=[axon],
             synapse=synapse,
-            deserialize=False,  # Get raw synapse to read tee_pubkey
+            deserialize=False,  # Get raw synapse to read tee_pubkey + encrypted_response
             timeout=timeout,
         )
         latency = time.monotonic() - t_start
         raw = responses[0] if responses else None
 
-        # Phase 2: Cache the miner's TEE public key if advertised
-        if raw is not None:
-            tee_pubkey = getattr(raw, "tee_pubkey", "")
-            if tee_pubkey:
-                # We don't have UID here, caller handles caching
-                # Return tee_pubkey alongside response so caller can cache it
-                response = raw.response if isinstance(getattr(raw, "response", None), str) else ""
-                return response, latency, tee_pubkey
+        if raw is None:
+            return "", latency, ""
 
-        response = raw.response if raw and isinstance(getattr(raw, "response", None), str) else ""
-        return response, latency, ""
+        tee_pubkey = getattr(raw, "tee_pubkey", "") or ""
+
+        # Phase 4: Prefer decrypted encrypted_response over plaintext response
+        encrypted_response = getattr(raw, "encrypted_response", "") or ""
+        response = getattr(raw, "response", "") or ""
+
+        if encrypted_response and synapse is not None and getattr(synapse, "encrypted", False):
+            # Decrypt the encrypted response using the session key
+            try:
+                from nobi.privacy.tee_encryption import (
+                    decrypt_message,
+                    unwrap_session_key,
+                    decode_key,
+                )
+                import base64
+
+                # Recover session key from outbound synapse
+                _key_id = getattr(synapse, "key_id", "")
+                # Determine whether to HPKE-unwrap or decode directly
+                # Phase 1 key_id: 44 chars; Phase 2 (HPKE): 124 chars
+                if len(_key_id) == 124:
+                    # Phase 2: we can't unwrap without private key — but validators
+                    # don't hold miner private keys. Use the session key embedded in
+                    # the synapse if available, otherwise fall back to plaintext.
+                    # For Phase 1 (plaintext key_id), we CAN decrypt directly.
+                    bt.logging.debug(
+                        "[TEE] Phase 2 synapse — validator cannot unwrap HPKE blob; "
+                        "falling back to plaintext response"
+                    )
+                else:
+                    # Phase 1: decode session key directly
+                    session_key = decode_key(_key_id)
+                    nonce_b64, cipher_b64 = encrypted_response.split(".", 1)
+                    response = decrypt_message(nonce_b64, cipher_b64, session_key)
+                    del session_key
+                    bt.logging.debug(
+                        f"[TEE] Decrypted miner response ({len(response)} chars)"
+                    )
+            except Exception as e:
+                bt.logging.warning(
+                    f"[TEE] Failed to decrypt miner encrypted_response: {e}; "
+                    "falling back to plaintext"
+                )
+                # Fall back to whatever plaintext response was set
+
+        return response, latency, tee_pubkey
     except Exception as e:
         latency = time.monotonic() - t_start
         bt.logging.debug(f"Miner query failed: {e}")

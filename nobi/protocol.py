@@ -58,6 +58,32 @@ class CompanionRequest(bt.Synapse):
     # This field is set by the miner, not the validator.
     tee_pubkey: str = ""                   # Miner's X25519 TEE public key (base64url, 44 chars)
 
+    # === Phase 7: TEE Capability Advertisement (miner → validator) ===
+    # Miners that run inside a Trusted Execution Environment advertise their
+    # TEE type and provide a signed attestation report.  Validators verify
+    # the report and set tee_verified=True, making the miner eligible for
+    # a scoring bonus (see reward.py: TEE_BONUS).
+    #
+    # Workflow:
+    #   1. Miner sets tee_type and tee_attestation in its response.
+    #   2. Validator calls TEEAttestationVerifier.verify_from_base64().
+    #   3. If verification passes, validator records tee_verified=True in the
+    #      cached synapse / miner score state.
+    #
+    # Supported tee_type values:
+    #   "amd-sev-snp"  — AMD EPYC with SEV-SNP (recommended, proven on SN4/Targon)
+    #   "nvidia-cc"    — NVIDIA H100/A100 Confidential Computing mode
+    #   ""  or "none"  — No TEE (backward compatible; no bonus, no penalty)
+    tee_type: str = ""                     # TEE hardware type (set by miner)
+    tee_attestation: str = ""              # Base64-encoded attestation report (set by miner)
+    tee_verified: bool = False             # Set to True by validator after successful verification
+
+    # === Phase 4: TEE Encrypted Response (miner → validator / API → browser) ===
+    # When the miner processes an encrypted synapse, it encrypts its response too.
+    # The validator decrypts this field to get plaintext for scoring.
+    # Non-TEE miners leave this empty — backward compatible.
+    encrypted_response: str = ""           # base64url: "<nonce>.<ciphertext+tag>" (AES-256-GCM)
+
     def deserialize(self) -> str:
         """Returns the response string."""
         return self.response

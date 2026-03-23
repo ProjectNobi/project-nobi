@@ -50,6 +50,48 @@ def _get_tuner() -> "ScoringTuner":
     return _tuner_instance
 
 
+# ─── TEE Scoring Bonus ───────────────────────────────────────────────────────
+# Miners running inside a verified TEE enclave earn a bonus on top of their
+# base score.  This incentivises miners to invest in TEE hardware (AMD SEV-SNP
+# or NVIDIA CC) which provides stronger privacy guarantees for users.
+#
+# Bonus is applied AFTER base quality/reliability scoring so it cannot rescue
+# low-quality responses — a miner must first produce a good response and then
+# the TEE bonus multiplies up from there.
+#
+# AMD SEV-SNP fully-chain-verified (VCEK ECDSA validated): +10%
+# AMD SEV-SNP structurally valid  (MVP, chain not yet verified): +5%
+# NVIDIA CC structurally valid:  +5%
+# No TEE / unverified:  no change
+#
+# Example: quality score 0.80 with AMD SEV-SNP chain verified → 0.80 × 1.10 = 0.88
+
+TEE_BONUS_CHAIN_VERIFIED = 0.10   # Full VCEK chain verification
+TEE_BONUS_STRUCTURAL = 0.05       # Structural validity only (MVP default)
+TEE_MAX_FINAL_SCORE = 1.0         # Bonuses cannot push score above 1.0
+
+
+def apply_tee_bonus(base_score: float, tee_verified: bool, chain_verified: bool = False) -> float:
+    """
+    Apply a TEE hardware bonus to a base miner score.
+
+    Args:
+        base_score:     Score before TEE bonus (0.0 – 1.0).
+        tee_verified:   Whether the validator confirmed this miner runs in a TEE
+                        (attestation report structurally valid).
+        chain_verified: Whether the full VCEK certificate chain was verified
+                        (requires AMD KDS network access — not available in MVP).
+
+    Returns:
+        Adjusted score, capped at TEE_MAX_FINAL_SCORE.
+    """
+    if not tee_verified:
+        return base_score
+
+    bonus = TEE_BONUS_CHAIN_VERIFIED if chain_verified else TEE_BONUS_STRUCTURAL
+    return min(TEE_MAX_FINAL_SCORE, base_score * (1.0 + bonus))
+
+
 JUDGE_PROMPT = """You are an AI response quality judge. Rate the following AI companion response on a scale of 0.0 to 1.0.
 
 User's question: {query}
@@ -71,6 +113,8 @@ def reward(
     test_type: str = "single",
     memory_keywords: List[str] = None,
     latency: float = 0.0,
+    tee_verified: bool = False,
+    tee_chain_verified: bool = False,
 ) -> float:
     """
     Score a miner's response.
@@ -81,6 +125,10 @@ def reward(
 
     Memory integration (Phase 2): checks if miner naturally weaves memories into
     responses vs just keyword-matching. Uses LLM judge when available.
+
+    Phase 7 TEE Bonus:
+    - tee_verified=True:  +5% bonus on final score (structural attestation)
+    - tee_chain_verified=True: +10% bonus (full VCEK chain — not yet in MVP)
     """
     if not response or not isinstance(response, str) or len(response.strip()) == 0:
         return 0.0
@@ -121,9 +169,13 @@ def reward(
         if _TUNING_AVAILABLE:
             final = normalize_length_score(response, final)
 
+        # Phase 7: TEE bonus — applied after base scoring
+        final = apply_tee_bonus(final, tee_verified, tee_chain_verified)
+
         bt.logging.debug(
             f"Score: quality={quality_score:.2f} integration={memory_integration_score:.2f} "
-            f"recall={memory_recall_score:.2f} reliability={reliability_score:.2f} → final={final:.2f}"
+            f"recall={memory_recall_score:.2f} reliability={reliability_score:.2f} "
+            f"tee_bonus={'yes' if tee_verified else 'no'} → final={final:.2f}"
         )
         return final
 
@@ -133,6 +185,9 @@ def reward(
     # Apply length normalization if tuning available
     if _TUNING_AVAILABLE:
         final = normalize_length_score(response, final)
+
+    # Phase 7: TEE bonus — applied after base scoring
+    final = apply_tee_bonus(final, tee_verified, tee_chain_verified)
 
     return final
 
@@ -544,8 +599,18 @@ def get_rewards(
     test_type: str = "single",
     memory_keywords: List[str] = None,
     latencies: List[float] = None,
+    tee_verified_flags: Optional[List[bool]] = None,
+    tee_chain_verified_flags: Optional[List[bool]] = None,
 ) -> np.ndarray:
-    """Returns an array of rewards for the given query and responses."""
+    """
+    Returns an array of rewards for the given query and responses.
+
+    Args:
+        tee_verified_flags: Per-miner TEE structural verification flags.
+            If provided, must be same length as responses.
+        tee_chain_verified_flags: Per-miner full VCEK chain verification flags.
+            Only relevant when tee_verified_flags is provided.
+    """
     api_key = (
         getattr(self.config.neuron, "openrouter_api_key", "")
         or os.environ.get("OPENROUTER_API_KEY", "")
@@ -554,6 +619,12 @@ def get_rewards(
     if latencies is None:
         latencies = [0.0] * len(responses)
 
+    if tee_verified_flags is None:
+        tee_verified_flags = [False] * len(responses)
+
+    if tee_chain_verified_flags is None:
+        tee_chain_verified_flags = [False] * len(responses)
+
     # Compute base rewards
     rewards = np.array([
         reward(
@@ -561,8 +632,12 @@ def get_rewards(
             test_type=test_type,
             memory_keywords=memory_keywords,
             latency=lat,
+            tee_verified=tee_ok,
+            tee_chain_verified=chain_ok,
         )
-        for response, lat in zip(responses, latencies)
+        for response, lat, tee_ok, chain_ok in zip(
+            responses, latencies, tee_verified_flags, tee_chain_verified_flags
+        )
     ])
 
     # Apply diversity penalties (anti-gaming: penalize identical responses)

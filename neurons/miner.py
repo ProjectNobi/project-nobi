@@ -409,15 +409,35 @@ class Miner(BaseMinerNeuron):
     async def forward(self, synapse: CompanionRequest) -> CompanionRequest:
         """Process an incoming CompanionRequest and generate a response."""
         # Phase 5/6: TEE Encryption — decrypt if payload is encrypted
+        _session_key = None  # Track session key for encrypting response (Phase 4)
         if getattr(synapse, "encrypted", False):
             try:
-                from nobi.privacy.tee_encryption import decrypt_payload
+                from nobi.privacy.tee_encryption import (
+                    decrypt_payload,
+                    unwrap_session_key,
+                    decode_key,
+                    KEY_SIZE_BYTES,
+                )
                 # Phase 2: use miner's TEE private key for HPKE unwrapping if available
                 _miner_privkey = (
                     self.key_manager.get_private_key()
                     if self.key_manager is not None
                     else None
                 )
+                # Extract raw session key bytes for response encryption (Phase 4)
+                # We need to get the session key BEFORE decrypt_payload clears it
+                try:
+                    import base64
+                    if _miner_privkey is not None:
+                        # Phase 2: unwrap HPKE blob
+                        _session_key = unwrap_session_key(synapse.key_id, _miner_privkey)
+                    else:
+                        # Phase 1: decode plaintext key
+                        _session_key = decode_key(synapse.key_id)
+                except Exception as _ke:
+                    bt.logging.warning(f"Could not extract session key for response encryption: {_ke}")
+                    _session_key = None
+
                 plaintext_message, plaintext_context = decrypt_payload(
                     encrypted_message=synapse.encrypted_message,
                     encrypted_context=synapse.encrypted_context,
@@ -480,9 +500,24 @@ class Miner(BaseMinerNeuron):
             for m in memory_entries
         ] if memory_entries else None
 
+        # Phase 4: Encrypt the response with the session key if we have one
+        if _session_key is not None and response:
+            try:
+                from nobi.privacy.tee_encryption import encrypt_message
+                resp_nonce, resp_cipher = encrypt_message(response, _session_key)
+                synapse.encrypted_response = f"{resp_nonce}.{resp_cipher}"
+                del _session_key  # Clear from memory immediately
+                bt.logging.info(f"TEE response encrypted ({len(response)} chars plaintext)")
+            except Exception as e:
+                bt.logging.warning(f"TEE response encryption failed (non-fatal): {e}")
+                synapse.encrypted_response = ""
+        else:
+            synapse.encrypted_response = ""
+
         bt.logging.info(f"Generated response ({len(response)} chars), "
                        f"specialization={self.specialization}, "
-                       f"memories used: {len(memory_entries) if memory_entries else 0}")
+                       f"memories used: {len(memory_entries) if memory_entries else 0}, "
+                       f"encrypted_response={bool(synapse.encrypted_response)}")
         return synapse
 
     async def forward_memory_store(self, synapse: MemoryStore) -> MemoryStore:

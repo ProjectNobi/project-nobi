@@ -154,17 +154,35 @@ export async function processMessagePrivately(
   return { request, extraction, keySet };
 }
 
+// ─── Encrypted Chat Response ──────────────────────────────────────────────────
+
+export interface EncryptedChatResponse {
+  /** Plaintext response from Nori */
+  response: string;
+  /** Memories used in context */
+  memories_used: string[];
+  /** Optional encrypted response blob (Phase 4: TEE path) */
+  encrypted_response?: EncryptedPayload;
+}
+
 // ─── Send encrypted chat request ──────────────────────────────────────────────
 
 /**
- * Send an encrypted chat request to the server.
- * The server cannot read the message or memories — it passes them to the miner TEE.
+ * Send an encrypted chat request to the server and decrypt the response.
+ *
+ * Phase 4 TEE Passthrough flow:
+ *   1. Browser encrypts message + memories → sends to /api/v1/chat/encrypted
+ *   2. Server calls TEE LLM, may re-encrypt response
+ *   3. If `encrypted_response` is present in server reply, decrypt it client-side
+ *   4. Return decrypted (or plaintext) response to caller
  *
  * @param request - Encrypted payload from processMessagePrivately()
- * @returns Server response text (unencrypted — response from assistant)
+ * @param keySet - Key set used to encrypt the request (for response decryption)
+ * @returns Server response text (decrypted if encrypted_response was returned)
  */
 export async function sendEncryptedChat(
-  request: EncryptedChatRequest
+  request: EncryptedChatRequest,
+  keySet?: CryptoKeySet
 ): Promise<{ response: string; memories_used: string[] }> {
   const res = await fetch(`${API_BASE_URL}/api/v1/chat/encrypted`, {
     method: "POST",
@@ -177,7 +195,29 @@ export async function sendEncryptedChat(
     throw new Error(err.detail || `HTTP ${res.status}`);
   }
 
-  return res.json();
+  const data = (await res.json()) as EncryptedChatResponse;
+
+  // Phase 4: If the server returned an encrypted response blob, decrypt it
+  if (data.encrypted_response && keySet) {
+    try {
+      const { decrypt } = await import("./client-crypto");
+      const decryptedResponse = await decrypt(data.encrypted_response, keySet);
+      return {
+        response: decryptedResponse,
+        memories_used: data.memories_used,
+      };
+    } catch (e) {
+      console.warn(
+        "[Privacy] Failed to decrypt encrypted_response, using plaintext fallback:",
+        e
+      );
+    }
+  }
+
+  return {
+    response: data.response,
+    memories_used: data.memories_used,
+  };
 }
 
 // ─── Sync extracted memories to server (encrypted) ────────────────────────────

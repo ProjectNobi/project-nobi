@@ -293,6 +293,202 @@ pm2 restart nobi-auto-updater # Resume
 pm2 delete nobi-auto-updater  # Remove
 ```
 
+---
+
+## 🔒 Running a TEE Miner (Optional — Earn a Scoring Bonus)
+
+Running inside a **Trusted Execution Environment (TEE)** gives users stronger privacy guarantees: not even the miner operator can read user conversations. Validators verify TEE attestation reports and grant a **+5–10% scoring bonus** to verified TEE miners.
+
+**Currently only 15-25% of miners have TEE hardware** — early movers capture more of the subnet's incentive budget.
+
+---
+
+### What is a TEE?
+
+A TEE is a hardware-isolated execution environment with three key properties:
+1. **Isolation** — code runs in an encrypted memory region the host OS/hypervisor can't read
+2. **Attestation** — hardware produces a signed report proving *what* code is running
+3. **Sealed storage** — keys are bound to the enclave measurement, lost if code changes
+
+Supported TEE types on Project Nobi:
+| TEE Type | Hardware | Bonus |
+|---|---|---|
+| AMD SEV-SNP | AMD EPYC Milan/Genoa (3rd/4th gen) | +5% (structural) / +10% (chain-verified) |
+| NVIDIA CC | NVIDIA H100 / A100 (CC mode) | +5% (structural) |
+
+> **AMD SEV-SNP is recommended.** It's already proven on Bittensor — Targon (SN4) runs AMD SEV-SNP in production. Cloud options: Azure DCasv5, AWS m6a.* with SEV-SNP, Google C3 (upcoming).
+
+---
+
+### AMD SEV-SNP Setup
+
+#### Step 1: Verify Your Hardware
+
+Check if your CPU supports SEV-SNP:
+
+```bash
+# Check kernel SEV-SNP support
+dmesg | grep -i sev
+# Expected: "SEV-SNP supported"
+
+# Check CPU model (must be AMD EPYC Milan/Genoa or Ryzen 7000+)
+grep -m1 "model name" /proc/cpuinfo
+
+# Check MSR support
+sudo rdmsr 0xC0010131 2>/dev/null && echo "SEV-SNP enabled" || echo "Not available"
+```
+
+If running on a VM/cloud instance:
+```bash
+# Check for /dev/sev-guest (required for attestation)
+ls -la /dev/sev-guest
+# Must exist and be readable by your miner process
+```
+
+#### Step 2: Use the Automated Setup Script
+
+```bash
+bash scripts/setup_tee_miner.sh
+```
+
+This script:
+- Detects AMD SEV-SNP or NVIDIA CC capability
+- Verifies `/dev/sev-guest` is accessible
+- Generates a TEE attestation report
+- Configures your miner to advertise TEE capability
+- Runs a verification test
+
+#### Step 3: Manual AMD SEV-SNP Setup
+
+If you prefer manual setup:
+
+```bash
+# 1. Install sev-guest tools
+sudo apt-get install -y sevctl
+
+# 2. Verify attestation works
+sudo sevctl report > /tmp/attestation_test.bin
+ls -la /tmp/attestation_test.bin  # Should be 1184 bytes
+
+# 3. Set environment variable to enable TEE advertisement
+export NOBI_TEE_TYPE=amd-sev-snp
+
+# 4. Start your miner (TEE fields auto-populated)
+pm2 start neurons/miner.py --interpreter python3 -- \
+    --wallet.name YOUR_WALLET \
+    --wallet.hotkey YOUR_HOTKEY \
+    --netuid 36 \
+    --subtensor.network finney
+```
+
+#### Step 4: Verify Your TEE is Working
+
+```bash
+# Check miner logs for TEE attestation
+pm2 logs YOUR_MINER_NAME | grep -i tee
+
+# Expected output:
+# [TEE] AMD SNP report structurally valid
+# [TEE] tee_type=amd-sev-snp tee_verified=True
+
+# Check attestation report directly
+python3 -c "
+from nobi.privacy.tee_attestation import TEEAttestationVerifier, generate_mock_snp_report
+v = TEEAttestationVerifier()
+# With real hardware, read from /dev/sev-guest instead
+report = open('/tmp/attestation_test.bin', 'rb').read()
+result = v.verify_amd_sev_snp(report)
+print(result)
+"
+```
+
+---
+
+### NVIDIA Confidential Computing Setup
+
+> Requires: NVIDIA H100 or A100 with CC firmware enabled
+
+#### Step 1: Enable Confidential Computing Mode
+
+```bash
+# Check current CC mode
+nvidia-smi --query-gpu=cc_mode.current --format=csv,noheader
+
+# Enable CC mode (requires reboot)
+sudo nvidia-smi --conf-compute-mode=CC_MODE_DEVTOOLS
+
+# Verify after reboot
+nvidia-smi --query-gpu=cc_mode.current --format=csv,noheader
+# Expected: "devtools" or "on"
+```
+
+#### Step 2: Install NVIDIA CC SDK
+
+```bash
+# Install attestation SDK
+pip install nv-attestation-sdk
+
+# Or build from source:
+# https://github.com/NVIDIA/nvtrust/tree/main/guest_tools/attestation_sdk
+```
+
+#### Step 3: Enable in Miner Config
+
+```bash
+export NOBI_TEE_TYPE=nvidia-cc
+# Start your miner as normal
+```
+
+---
+
+### Hardware Requirements and Costs
+
+#### AMD SEV-SNP
+
+| Provider | Instance | vCPU | RAM | Est. Cost/Month | SEV-SNP |
+|---|---|---|---|---|---|
+| Azure | DCasv5-series | 4–96 | 16–384 GB | $80–$500 | ✅ Built-in |
+| AWS | m6a.* (test: c6a.large) | 2–192 | 4–384 GB | $50–$400 | ✅ Built-in |
+| Hetzner | Dedicated AMD EPYC | 16+ | 64+ GB | €80–€200 | ✅ Baremetal |
+| On-premise | AMD EPYC 7003+ | any | any | hardware cost | ✅ Baremetal |
+
+> Note: SEV-SNP requires BIOS/firmware support. VMs need the hypervisor to pass through SEV-SNP capabilities (Azure DCasv5 does this; check your cloud provider's docs).
+
+#### NVIDIA Confidential Computing
+
+| Provider | Instance | GPU | Est. Cost/Month | CC Support |
+|---|---|---|---|---|
+| Azure | NDH100v5 | H100 80GB | ~$3,000+ | ✅ |
+| AWS | p5.48xlarge | 8× H100 | ~$15,000+ | ✅ |
+| CoreWeave | CW-H100-SXM | H100 80GB | ~$2,500+ | ✅ |
+
+> NVIDIA CC is significantly more expensive. AMD SEV-SNP is the practical choice for most miners.
+
+---
+
+### Expected Scoring Impact
+
+Without TEE (baseline):
+```
+quality_score=0.80 → final=0.80
+```
+
+With AMD SEV-SNP (structural, MVP):
+```
+quality_score=0.80 → base=0.80 → +5% TEE bonus → final=0.84
+```
+
+With AMD SEV-SNP (full chain verification, future):
+```
+quality_score=0.80 → base=0.80 → +10% TEE bonus → final=0.88
+```
+
+Over a 24-hour period with 100 queries/day at average score 0.80:
+- Without TEE: cumulative score contribution = 80.0
+- With TEE (+5%): cumulative score contribution = 84.0 (+5% more emissions)
+
+---
+
 ## Questions?
 
 - **GitHub:** [project-nobi](https://github.com/ProjectNobi/project-nobi)
