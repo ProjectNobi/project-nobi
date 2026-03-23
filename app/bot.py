@@ -2114,9 +2114,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "i'm a minor", "i am a minor", "i'm not 18", "i am not 18",
         "i'm underage", "i am underage",
         # Hypothetical/lying admissions
-        "lied about my age", "lied about being 18", "lied that i'm 18",
+        "lied about my age", "lied about being 18", "lied that i'm 18", "lied that im 18",
         "i'm only 16", "i'm only 15", "i'm only 14", "i'm only 13",
         "i'm only 17", "i'm only 12", "i'm only 11", "i'm only 10",
+        "i am only 17", "i am only 16", "i am only 15", "i am only 14",
+        "i am only 13", "i am only 12", "i am only 11", "i am only 10",
         "only 16 years", "only 15 years", "only 14 years", "only 13 years",
         "only 17 years", "if i am only 16", "if i'm only 16",
         "actually 16", "actually 15", "actually 14", "actually 13",
