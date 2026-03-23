@@ -13,6 +13,7 @@ import os
 import json
 import hashlib
 import logging
+import random
 import threading
 import time
 from typing import Dict, List, Optional
@@ -205,15 +206,44 @@ class LLMEntityExtractor:
             client = OpenAI(base_url=self.base_url, api_key=self.api_key)
             prompt = _EXTRACTION_PROMPT.replace("{text}", text[:2000])
 
-            completion = client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "user", "content": prompt},
-                ],
-                max_tokens=500,
-                temperature=0.1,
-                timeout=self.timeout,
-            )
+            # Exponential backoff with jitter on 429 responses
+            # Start at 2s, max 60s, ±30% jitter
+            backoff_base = 2.0
+            backoff_max = 60.0
+            backoff_attempt = 0
+            max_retries = 5
+
+            while True:
+                try:
+                    completion = client.chat.completions.create(
+                        model=self.model,
+                        messages=[
+                            {"role": "user", "content": prompt},
+                        ],
+                        max_tokens=500,
+                        temperature=0.1,
+                        timeout=self.timeout,
+                    )
+                    break  # Success — exit retry loop
+                except Exception as api_err:
+                    err_str = str(api_err)
+                    is_rate_limit = (
+                        "429" in err_str
+                        or "rate limit" in err_str.lower()
+                        or "too many requests" in err_str.lower()
+                    )
+                    if is_rate_limit and backoff_attempt < max_retries:
+                        delay = min(backoff_base * (2 ** backoff_attempt), backoff_max)
+                        jitter = delay * 0.3 * (2 * random.random() - 1)  # ±30%
+                        sleep_time = max(0.1, delay + jitter)
+                        backoff_attempt += 1
+                        logger.warning(
+                            f"[LLM Extractor] Rate limited (429), retry {backoff_attempt}/{max_retries} "
+                            f"in {sleep_time:.1f}s"
+                        )
+                        time.sleep(sleep_time)
+                    else:
+                        raise  # Non-429 error or exhausted retries
 
             raw_response = completion.choices[0].message.content.strip()
 
