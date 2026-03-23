@@ -52,7 +52,7 @@ export default function PrivacyToggle({ onChange, compact = false }: PrivacyTogg
       <div className="relative inline-flex items-center">
         <button
           onClick={toggle}
-          onMouseEnter={() => setShowTooltip(true)}
+          onMouseEnter={() => { if (window.matchMedia('(hover: hover)').matches) setShowTooltip(true); }}
           onMouseLeave={() => setShowTooltip(false)}
           disabled={!supported}
           className={`
