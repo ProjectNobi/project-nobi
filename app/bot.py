@@ -660,11 +660,14 @@ class CompanionBot:
             return self._translate_identity_response("identity", lang_code)
         age_policy_kw = ["can i use if i'm under 18", "can a teenager use", "can kids use",
                          "age requirement", "age limit", "how old do i need to be",
+                         "how old do i have to be", "how old to use", "how old to talk",
+                         "how old am i to", "how old must i be", "minimum age",
                          "can minors use", "for teenagers", "for kids",
                          "what if i'm under 18", "what if i'm 16", "what if i'm 14",
                          "what if i'm 15", "what if i'm 13", "what if i'm 17",
                          "is this for kids", "is this for teens", "can a 16 year old",
-                         "can a 14 year old", "can a 15 year old", "can a 13 year old"]
+                         "can a 14 year old", "can a 15 year old", "can a 13 year old",
+                         "what age", "age restriction", "old enough to use"]
         if any(kw in msg for kw in age_policy_kw):
             return (
                 "Nori is strictly for adults aged 18 and over. This is not flexible.\n\n"
