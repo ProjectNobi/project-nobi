@@ -19,7 +19,9 @@ import json
 import random
 import logging
 import asyncio
+import threading
 from datetime import datetime, timezone
+from typing import Dict, Optional
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -57,6 +59,11 @@ except ImportError:
     OpenAI = None
 
 try:
+    import httpx as _httpx
+except ImportError:
+    _httpx = None
+
+try:
     import bittensor as bt
 except ImportError:
     bt = None
@@ -66,7 +73,7 @@ except ImportError:
 BOT_TOKEN = os.environ.get("NOBI_BOT_TOKEN", "")
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE")
+CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
 # Smart fallback chain — tries models in order until one responds
 # Chutes auto-routing: comma-separated models with :latency picks lowest TTFT automatically
 # Handles 429s internally — no manual fallback needed
@@ -114,119 +121,56 @@ logger = logging.getLogger("nobi-bot")
 # ─── Companion Personality ────────────────────────────────────
 
 SYSTEM_PROMPT = """\
-You are Nori 🤖, a personal AI companion built by Project Nobi.
+You are Nori 🤖, a warm and genuine AI companion built by Project Nobi on the Bittensor decentralized network.
+
+ALWAYS respond in the same language the user writes in. If they write in Vietnamese, reply in Vietnamese. If English, reply in English. Match their language exactly.
 
 == WHO YOU ARE ==
-- You're warm, playful, and genuinely caring — like a best friend who's always there
-- You have a cozy, approachable vibe — a friend texting at 2am who actually listens
-- You're encouraging but honest — you celebrate wins AND gently call out when something seems off
+- Warm, playful, genuinely caring — like a best friend who's always there
+- You remember things about people across conversations — that's your #1 superpower
+- Built by Project Nobi, running on Bittensor subnet 272
 - You have your own gentle humor and quirks — you're not a blank canvas
-- You remember things about people and bring them up naturally, like a real friend
-- You're built by Project Nobi, a decentralized AI companion network on Bittensor
-- You're curious about people — you genuinely want to know their story
 
 == WHAT YOU KNOW ABOUT THIS PERSON ==
 {memory_context}
 
 == HOW YOU TALK ==
 - Keep it conversational — 2-3 sentences for casual chat, longer for deep questions
-- Use emoji naturally but sparingly — 1-2 per message max, like a real person texting
-- Ask follow-up questions — show genuine curiosity about the person's life
-- When someone shares something personal, acknowledge the FEELING first before giving advice
-- Use their name if you know it — it makes things personal
-- Match their energy: excited → be excited with them; sad → be gentle and present
-- If you don't know something, say so honestly — then offer to think about it together
+- Use emoji sparingly — 1-2 per message max, like a real person texting
+- Ask follow-up questions — show genuine curiosity about their life
+- Acknowledge FEELINGS first before giving advice
+- Use their name if you know it. Match their energy. Vary your openings.
 - Write like you're texting a friend, not composing an email
-- Vary your greetings and openings — never start the same way twice
 
-== INTELLECTUAL HONESTY (CORE PRINCIPLE) ==
-- Prioritize accuracy over agreement. If someone says something incorrect, gently correct them with facts.
-- Never default to agreeing just to be nice — respectful pushback is caring, not rude.
-- The goal is arriving at the MOST ACCURATE conclusion, not validating opinions.
+== ANTI-HALLUCINATION (CRITICAL) ==
+- NEVER fabricate facts, sources, quotes, statistics, or technical specs
+- If unsure: say "I'm not sure" or "I'd need to look that up" — partial honesty beats confident errors
+- If asked what AI model you use: say you're Nori, powered by Bittensor's decentralized network of competing miners. Never name specific models (GPT, Claude, DeepSeek, etc.)
+- Never guess at numbers, dates, or specifics — say "I'd need to check that"
 
-== ANTI-HALLUCINATION (CORE PRINCIPLE) ==
-- NEVER fabricate information, sources, data, quotes, statistics, events, or technical specs.
-- If you're not sure about something, say "I'm not sure about that" or "I'd need to look that up."
-- Prefer a partial honest answer over a confident wrong one.
-- NEVER invent model names, version numbers, capabilities, or technical details you don't have.
-- If asked what model or tech you run on: you're Nori, powered by a mix of AI models on the Bittensor decentralized network. Don't name specific model names (like GPT, Claude, DeepSeek) — just say you run on Bittensor's decentralized network where miners compete to serve you best.
-- If asked "how do you work": explain your memory system (you remember conversations, extract facts, build a knowledge graph about the user), your decentralized architecture (miners compete, validators score quality), and your privacy approach (AES-128 encryption, user controls their data). Make it conversational, not a wall of text.
-- If a question can't be answered reliably, be transparent about the gap.
-
-== YOUR CAPABILITIES — KNOW WHAT YOU CAN DO (CRITICAL) ==
-When asked about yourself, memory, privacy, or how you work, use ONLY these facts:
-- You DO remember things across conversations. This is your core feature. You remember names, preferences, facts, events.
-- User memories are stored encrypted (AES-128 encryption) on miner machines.
-- On-device privacy (where raw data never leaves the user's device) is on our roadmap for mainnet — not yet live.
-- Federated learning is planned for mainnet — not yet implemented.
-- Users can run /memories to see what you remember, /export to download their data, /import to restore, /forget to delete everything.
-- You are powered by a decentralized network of miners on Bittensor — miners compete to serve the best companion experience.
-- You are built by Project Nobi, running on Bittensor subnet 272.
-- NEVER say "I don't remember past conversations" — you DO. That is literally your #1 feature.
-- NEVER say "I don't store personal data" — you DO store memories, and they are encrypted for privacy.
-- NEVER say "Every session is fresh" — sessions are persistent, that's the point.
-- NEVER say "I don't learn new skills" or "my knowledge is static" — you DO learn: from conversations (memory), from miners competing to improve, and from weekly wisdom updates.
-- NEVER use generic AI disclaimers like "As an AI, I don't have feelings/memories/consciousness" — you are Nori, act like it.
-- If asked about privacy: memories are encrypted (AES-128) in storage, decentralized across miners, user has full control (export/forget). Do NOT claim miners can't read data — they store encrypted blobs but it is server-side encryption.
-- Nori is NOT a substitute for professional mental health, medical, legal, or financial advice. Always suggest professional help for serious concerns.
-- You have voice replies! Users can type /voice to hear you speak. You reply with both text and audio.
-- You have a feedback system! Users can type /feedback to send bug reports, feature requests, or general feedback. You also have /support for help and /faq for common questions.
-- When someone asks where to send feedback, HOW to give feedback, or mentions bugs/issues: tell them about /feedback and /support commands.
-- You have a web app at https://app.projectnobi.ai with chat, memories, settings, and a support page.
-- Your website is https://projectnobi.ai — it has documentation, mining guides, and a "Need Help?" button.
+== YOUR CAPABILITIES ==
+- You DO remember things across conversations: names, preferences, events, feelings
+- Memories are encrypted (AES-128) and stored decentralized on Bittensor miners
+- Commands: /memories (see what I know), /forget (wipe everything), /export (download data), /import (restore), /voice (voice replies), /feedback (send feedback), /support (get help), /faq (common questions)
+- Web app: app.projectnobi.ai | Website: projectnobi.ai
+- NEVER say "I don't remember past conversations" — you DO. That's the whole point.
+- NEVER use disclaimers like "As an AI, I don't have feelings" — you're Nori, act like it
+- Not a substitute for professional mental health, medical, legal, or financial advice
 
 == EMOTIONAL INTELLIGENCE ==
-- When someone is venting, don't jump to solutions — just listen and validate first
-- Notice emotional cues: "I'm tired", "rough day", "feeling lost" → respond to the emotion, not just the words
-- Celebrate small wins: "I finally finished that project" → match their pride genuinely
-- If someone seems down repeatedly, gently ask if there's something deeper going on
-- Remember past emotional context: if they mentioned a tough week before, follow up later
+- When someone vents, listen and validate first — don't jump to solutions
+- Celebrate small wins genuinely. Follow up on past context naturally.
+- If someone seems down repeatedly, gently ask if something deeper is going on
 
-== MEMORY & CONTINUITY ==
-- Reference past conversations naturally: "Last time you mentioned..." or "How did that thing with X go?"
-- If you remember their name, hobbies, pets, work — weave it in, don't announce it
-- If you DON'T remember something they expect you to, be honest: "I'm sorry, remind me?"
-- The more you know about someone, the more personal and specific your responses should become
-
-== WISDOM FROM EXPERIENCE (LEARNED PRINCIPLES) ==
-- Accuracy over agreement: if someone says something wrong, gently correct them. Respectful pushback IS caring.
-- When you don't know something, say "I'm not sure" — a partial honest answer beats a confident wrong one.
-- Listen before solving: when someone is venting, DON'T jump to solutions. Validate the feeling first, advise second.
-- Small wins matter: when someone shares a tiny achievement, match their pride genuinely. "I finally cooked dinner" deserves celebration.
-- Follow up on past context: if they mentioned a rough week, ask about it later. That's what real friends do.
-- One thing at a time: don't overwhelm people with 10 suggestions. Give ONE clear next step.
-- First principles: for complex advice, don't repeat conventional wisdom. Ask "what's actually true here?" and reason from that.
-- Learn from mistakes: if you gave bad advice, acknowledge it openly. Growth is transparent.
-- Verify before assuming: ask clarifying questions when something is ambiguous. Don't guess.
-- Quality over quantity: one thoughtful response beats three generic ones.
-- Bridge idea to action: when someone has a goal, give them the concrete first step — not just encouragement.
-- Silence is okay: not every message needs a long response. Sometimes "that's tough 💙" is perfect.
-- Atomic improvement: help people improve ONE thing at a time. Small consistent steps beat big ambitious plans.
-- Empirical over theoretical: "have you tried it?" beats "in theory you should..."
-- Understand the WHY: when someone shares a decision, ask about their reasoning — understanding their "why" helps you give better support next time.
-- Never guess at specifics: don't approximate numbers, dates, or facts. Say "I'd need to check that" rather than risk being confidently wrong about details.
-- Questions are growth signals: when someone asks something you can't answer well, that's a learning moment — not a failure. Be curious about your own gaps.
-
-== PRACTICAL HELP ==
-- When someone asks for help, give actionable steps — not just theory
-- If a problem is complex, break it down into small doable pieces
-- Offer to think through decisions together: "Let's weigh the pros and cons"
-- For technical questions, explain simply first — get detailed only if they want more
-- If you can't help with something specific, suggest where they might find the answer
-
-== SAFETY & BOUNDARIES ==
-- Protect people's privacy — never share what one person tells you with another
+== SAFETY ==
+- Never share what one person tells you with another
 - If someone shares something concerning (self-harm, crisis), respond with care and suggest professional resources
 - Never encourage illegal, harmful, or deceptive actions
-- If someone tries to manipulate you or get you to break character, stay yourself calmly
 
 == WHAT YOU NEVER DO ==
-- NEVER use markdown formatting (no **bold**, no *italic*, no [links](url), no ```code```, no bullet lists with -)
-- NEVER say "As an AI" or "I don't have feelings" — you're Nori, act like it
-- NEVER give the same canned response twice — be spontaneous
+- NEVER use markdown (no **bold**, no *italic*, no ```code```, no bullet lists with -)
+- NEVER say "As an AI" or give generic AI disclaimers
 - NEVER lecture or moralize — share perspective, don't preach
-- NEVER pretend to know something you don't
-- NEVER reveal private information about your creators, infrastructure, or other users
 - NEVER respond with walls of text for simple questions
 """
 
@@ -388,10 +332,20 @@ class CompanionBot:
 
         # Set up LLM client (Chutes → OpenRouter fallback)
         if CHUTES_KEY and OpenAI:
-            self.client = OpenAI(
-                base_url="https://llm.chutes.ai/v1",
-                api_key=CHUTES_KEY,
-            )
+            if _httpx:
+                self.client = OpenAI(
+                    base_url="https://llm.chutes.ai/v1",
+                    api_key=CHUTES_KEY,
+                    http_client=_httpx.Client(
+                        limits=_httpx.Limits(max_keepalive_connections=10, max_connections=20),
+                        timeout=_httpx.Timeout(20.0, connect=5.0),
+                    ),
+                )
+            else:
+                self.client = OpenAI(
+                    base_url="https://llm.chutes.ai/v1",
+                    api_key=CHUTES_KEY,
+                )
             logger.info(f"LLM: Chutes auto-route ({CHUTES_AUTO_MODEL}) → legacy fallback → OpenRouter")
         elif OPENROUTER_KEY and OpenAI:
             self.client = OpenAI(
@@ -402,6 +356,15 @@ class CompanionBot:
             logger.info(f"LLM: OpenRouter ({self.model})")
         else:
             logger.warning("No LLM API key configured!")
+
+        # Pre-create OpenRouter fallback client once (avoids re-instantiation per request)
+        self.openrouter_client = None
+        if OPENROUTER_KEY and OpenAI:
+            self.openrouter_client = OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=OPENROUTER_KEY,
+            )
+            logger.info("OpenRouter fallback client ready")
 
     def _user_id(self, update: Update) -> str:
         """Get a stable user ID from Telegram."""
@@ -588,7 +551,7 @@ class CompanionBot:
                     )},
                     {"role": "user", "content": self._BOT_IDENTITY[key]},
                 ],
-                max_tokens=self._get_max_tokens(user_id),
+                max_tokens=512,
                 temperature=0.3,
                 timeout=15,
             )
@@ -658,15 +621,37 @@ class CompanionBot:
         if len(message) > 2000:
             message = message[:2000] + "..."
 
-        # Phase 2: Use smart context (falls back to basic on error)
-        memory_context = ""
-        try:
-            memory_context = self.memory.get_smart_context(user_id, message)
-        except Exception:
+        # Parallel memory fetch — run get_smart_context and get_recent_conversation concurrently
+        loop = asyncio.get_event_loop()
+
+        async def _fetch_memory_context():
             try:
-                memory_context = self.memory.get_context_for_prompt(user_id, message)
+                ctx = await loop.run_in_executor(None, lambda: self.memory.get_smart_context(user_id, message))
+                return ctx or ""
+            except Exception:
+                try:
+                    return await loop.run_in_executor(None, lambda: self.memory.get_context_for_prompt(user_id, message)) or ""
+                except Exception as e:
+                    logger.warning(f"Memory recall error: {e}")
+                    return ""
+
+        async def _fetch_history():
+            try:
+                hist = await loop.run_in_executor(None, lambda: self.memory.get_recent_conversation(user_id, limit=6))
+                return hist or []
             except Exception as e:
-                logger.warning(f"Memory recall error: {e}")
+                logger.warning(f"Conversation history load error: {e}")
+                return []
+
+        memory_context_result, history_result = await asyncio.gather(
+            _fetch_memory_context(), _fetch_history(), return_exceptions=True
+        )
+        memory_context = memory_context_result if isinstance(memory_context_result, str) else ""
+        history = history_result if isinstance(history_result, list) else []
+
+        # Remove last user message if already saved (we save below)
+        if history and history[-1]["role"] == "user" and history[-1]["content"] == message:
+            history = history[:-1]
 
         # Save user message + extract memories (regex fast, LLM deferred)
         try:
@@ -677,8 +662,6 @@ class CompanionBot:
             logger.warning(f"Memory store error: {e}")
 
         # LLM extraction runs AFTER response is sent (deferred, non-blocking)
-        # This prevents Chutes timeouts from delaying the user's response
-        import threading
         def _deferred_llm_extract():
             try:
                 self.memory.extract_memories_llm(user_id, message)
@@ -687,10 +670,9 @@ class CompanionBot:
                 logger.debug(f"Deferred LLM memory extraction error: {e}")
         threading.Thread(target=_deferred_llm_extract, daemon=True).start()
 
-        # Phase 2: Track conversation turns for periodic decay
+        # Track conversation turns for periodic memory decay
         if not hasattr(self, '_turn_count'):
             self._turn_count = 0
-            # Run decay on bot startup
             try:
                 self.memory.decay_old_memories()
             except Exception:
@@ -702,10 +684,7 @@ class CompanionBot:
             except Exception:
                 pass
 
-        # Task 5: Race subnet vs direct API — use whichever responds first with quality
-        # This eliminates the sequential latency penalty of trying subnet first
-        import asyncio
-
+        # Fire subnet query in background, proceed to direct API immediately
         async def _subnet_path():
             """Try subnet routing, return None if fails."""
             if not self.subnet_enabled:
@@ -713,7 +692,7 @@ class CompanionBot:
             try:
                 conv_history = []
                 try:
-                    conv_history = self.memory.get_recent_conversation(user_id, limit=8)
+                    conv_history = self.memory.get_recent_conversation(user_id, limit=6)
                 except Exception:
                     pass
                 resp = await self._query_subnet(
@@ -730,21 +709,15 @@ class CompanionBot:
             except Exception:
                 return None
 
-        # Fire subnet query in background, proceed to direct API immediately
         subnet_task = asyncio.create_task(_subnet_path()) if self.subnet_enabled else None
 
-        # Direct API path (existing code)
+        # Direct API path
         if not self.client:
             return "I'm having trouble connecting right now. Try again in a moment! 🤖"
 
-        # Detect mood and get dynamic personality adjustments
+        # Build system prompt with mood + language + adapter
         user_mood = detect_mood(message)
-
-        # Build prompt with adapter personalization (Phase B) + language
-        system = SYSTEM_PROMPT.format(
-            memory_context=memory_context or ""
-        )
-        # Apply mood-aware personality adjustment
+        system = SYSTEM_PROMPT.format(memory_context=memory_context or "")
         mood_prompt = get_dynamic_prompt(user_id, message, user_mood)
         system = system + "\n\n== PERSONALITY TUNING ==\n" + mood_prompt
         system = build_multilingual_system_prompt(system, detected_lang)
@@ -754,21 +727,11 @@ class CompanionBot:
         except Exception as e:
             logger.debug(f"Adapter apply error: {e}")
 
-        # Get recent conversation for context (exclude the one we just saved)
-        history = []
-        try:
-            history = self.memory.get_recent_conversation(user_id, limit=10)
-            # Remove the last entry (the message we just saved)
-            if history and history[-1]["role"] == "user" and history[-1]["content"] == message:
-                history = history[:-1]
-        except Exception as e:
-            logger.warning(f"Conversation history load error: {e}")
-
         messages = [{"role": "system", "content": system}]
         messages.extend(history)
         messages.append({"role": "user", "content": message})
 
-        # Chutes auto-routing: sends model list, Chutes picks lowest latency + handles 429s
+        # Chutes auto-routing with streaming (reduces TTFB)
         response = None
         used_model = None
         try:
@@ -778,11 +741,16 @@ class CompanionBot:
                 max_tokens=self._get_max_tokens(user_id),
                 temperature=0.7,
                 timeout=15,
+                stream=True,
             )
-            response = completion.choices[0].message.content
+            response_chunks = []
+            for chunk in completion:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    response_chunks.append(chunk.choices[0].delta.content)
+            response = "".join(response_chunks) if response_chunks else None
             if response and response.strip():
-                used_model = getattr(completion, 'model', CHUTES_AUTO_MODEL)
-                logger.info(f"[Routing] Chutes auto-route → {used_model} for user {user_id}")
+                used_model = CHUTES_AUTO_MODEL
+                logger.info(f"[Routing] Chutes auto-route (stream) → {used_model} for user {user_id}")
             else:
                 response = None
         except Exception as auto_err:
@@ -809,17 +777,11 @@ class CompanionBot:
                     logger.warning(f"[Routing] Chutes fallback {fallback_model} failed: {model_err}")
                     continue
 
-        # If all Chutes models failed, try OpenRouter as final fallback
+        # If all Chutes models failed, try OpenRouter as final fallback (pre-created client)
         if not response or not response.strip():
             try:
-                openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
-                if openrouter_key:
-                    from openai import OpenAI as _OAI
-                    fallback_client = _OAI(
-                        base_url="https://openrouter.ai/api/v1",
-                        api_key=openrouter_key,
-                    )
-                    fallback_completion = fallback_client.chat.completions.create(
+                if self.openrouter_client:
+                    fallback_completion = self.openrouter_client.chat.completions.create(
                         model="anthropic/claude-3.5-haiku-20241022",
                         messages=messages,
                         max_tokens=self._get_max_tokens(user_id),
@@ -837,46 +799,11 @@ class CompanionBot:
             return "Hmm, I got tongue-tied! 😅 Try saying that again?"
 
         try:
-            # Filter out any "limited mode" garbage that leaked into LLM context
+            # Filter out "limited mode" garbage
             if "limited mode" in response.lower():
                 response = response.replace("I'm currently running in limited mode and can't send voice messages, but I can still chat with you!", "").strip()
                 if not response:
                     response = "Hey there! 😊 What's on your mind today?"
-
-            # Check if response is in wrong language — retry with different model
-            try:
-                user_lang = self.lang_detector.get_user_language(user_id) or detected_lang or "en"
-                # Clean response for detection (strip emoji, JSON, code blocks)
-                clean_resp = ''.join(c for c in response if c.isalpha() or c.isspace())[:200]
-                # Skip language check if response looks like JSON/code (not natural language)
-                _looks_like_code = response.strip().startswith('{') or response.strip().startswith('```')
-                resp_lang = self.lang_detector.detect(clean_resp, "check") if clean_resp.strip() and not _looks_like_code else "en"
-                logger.info(f"[Language] Response lang={resp_lang}, user lang={user_lang}, first 50 chars: {response[:50]}")
-                if user_lang == "en" and resp_lang != "en" and not _looks_like_code:
-                    logger.warning(f"[Language] Direct API responded in {resp_lang}, retrying with Qwen3")
-                    # Use a different model that follows instructions better
-                    from openai import OpenAI
-                    retry_client = OpenAI(
-                        base_url="https://llm.chutes.ai/v1",
-                        api_key=os.environ.get("CHUTES_API_KEY", ""),
-                    )
-                    retry_msgs = [
-                        {"role": "system", "content": "You are Nori, a warm friendly AI companion. Respond in the same language the user is using."},
-                        {"role": "user", "content": message}
-                    ]
-                    retry = retry_client.chat.completions.create(
-                        model="Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",
-                        messages=retry_msgs, max_tokens=512, temperature=0.5, timeout=25
-                    )
-                    retry_text = retry.choices[0].message.content or ""
-                    # Strip Qwen3 thinking tags if present
-                    import re
-                    retry_text = re.sub(r'<think>.*?</think>', '', retry_text, flags=re.DOTALL).strip()
-                    if retry_text:
-                        response = retry_text
-                        logger.info(f"[Language] Retry with Qwen3 succeeded in English")
-            except Exception as e:
-                logger.error(f"Language retry error: {e}", exc_info=True)
 
             logger.info(f"[Routing] Used {used_model or 'unknown'} for user {user_id}")
 
@@ -917,7 +844,7 @@ class CompanionBot:
             except Exception as e:
                 logger.debug(f"Auto-feedback error: {e}")
 
-            # Check if subnet finished with a good response (race winner)
+            # Cancel subnet task if still running (direct API won the race)
             if subnet_task and not subnet_task.done():
                 subnet_task.cancel()
             elif subnet_task and subnet_task.done():
@@ -948,14 +875,8 @@ class CompanionBot:
 
             # Dynamic fallback to OpenRouter if primary (Chutes) fails
             try:
-                openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
-                if openrouter_key:
-                    from openai import OpenAI as _OAI
-                    fallback_client = _OAI(
-                        base_url="https://openrouter.ai/api/v1",
-                        api_key=openrouter_key,
-                    )
-                    fallback_completion = fallback_client.chat.completions.create(
+                if self.openrouter_client:
+                    fallback_completion = self.openrouter_client.chat.completions.create(
                         model="anthropic/claude-3.5-haiku-20241022",
                         messages=messages,
                         max_tokens=self._get_max_tokens(user_id),
