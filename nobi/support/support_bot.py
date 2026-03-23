@@ -473,6 +473,26 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         ),
     },
     {
+        "id": "legal_data_decentralized",
+        "topic": "If it's decentralized, how do you handle legal data requests?",
+        "keywords": ["legal", "decentralized", "data request", "court", "dispute", "subpoena", "GDPR request", "compliance", "controller"],
+        "answer": (
+            "The AI layer (miners generating responses) is decentralized. "
+            "The legal/compliance layer is centralized — and always will be.\n\n"
+            "Your consent records, age verification, ToS acceptance, and audit trail "
+            "are stored on OUR infrastructure — not on miners. This data never touches "
+            "the Bittensor subnet.\n\n"
+            "This means:\n"
+            "• Legal requests: we can always pull your records, regardless of network size\n"
+            "• GDPR requests: handled directly by us — no miner cooperation needed\n"
+            "• Audit trail: every consent change logged with timestamps, append-only\n"
+            "• Dispute resolution: complete consent history via our legal API\n\n"
+            "GDPR requires a data controller. That's us. Decentralization is for AI quality. "
+            "Legal accountability is ours. We commit to always operating the bot/app layer "
+            "and at least one validator."
+        ),
+    },
+    {
         "id": "alpha_value",
         "topic": "No revenue means no value. Why would anyone stake on Nobi?",
         "keywords": ["revenue", "stake", "alpha", "value", "monetize", "money", "profit", "survive", "sustainable", "economics"],

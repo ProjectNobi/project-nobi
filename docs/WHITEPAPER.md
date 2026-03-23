@@ -201,6 +201,62 @@ Moving to full federated architecture is a significant engineering undertaking. 
 
 ---
 
+### 2.6 Data Architecture: Decentralized AI, Centralized Compliance
+
+A critical architectural principle: **decentralization applies to the AI inference layer, not the legal/compliance layer.**
+
+#### The Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│  CENTRALIZED (always ours)                          │
+│                                                      │
+│  Bot / Web App / Mobile App                          │
+│  ├── consent.db     (ToS acceptance, age records)    │
+│  ├── gdpr_audit.db  (immutable audit trail)          │
+│  ├── memories.db    (user data backup)               │
+│  └── billing.db     (usage records)                  │
+│                                                      │
+│  Legal/compliance data NEVER touches the subnet.     │
+│  GDPR data controller = Project Nobi (us).           │
+└─────────────────────┬───────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────┐
+│  DECENTRALIZED (Bittensor subnet)                    │
+│                                                      │
+│  Validators (ours + community)                       │
+│  ├── Score miners on quality, safety, memory recall  │
+│  └── Set weights on-chain                            │
+│                                                      │
+│  Miners (community-operated)                         │
+│  ├── Receive conversation content for response gen   │
+│  ├── Store encrypted memory blobs (AES-128 at rest)  │
+│  └── Compete for TAO emissions via quality scores    │
+└─────────────────────────────────────────────────────┘
+```
+
+#### Why This Matters for Legal Compliance
+
+GDPR requires a **data controller** — a legal entity responsible for user data. In a fully decentralized system with no controller, GDPR compliance is impossible. Our architecture solves this:
+
+- **Consent records** (ToS acceptance, age verification, policy versions, timestamps) are stored on our infrastructure and never sent to miners. They are always accessible for legal requests.
+- **Audit trail** is append-only and immutable — every consent change is logged with ISO 8601 timestamps.
+- **GDPR data subject requests** (access, erasure, portability, rectification, restriction) are handled by our `GDPRHandler` which queries our local databases. No miner cooperation required.
+- **Legal API endpoint** (`GET /api/v1/legal/consent-record/{user_id}`) provides complete consent history for dispute resolution.
+
+Even on mainnet with hundreds of community validators and miners, the legal/compliance layer stays centralized under our control. This is not a compromise on decentralization — it's a requirement for operating a lawful service. The **AI inference** is decentralized. The **legal accountability** is ours.
+
+#### Mainnet Commitment
+
+We commit to always operating:
+1. The bot/app layer (Telegram, Discord, web app, mobile) — where user data and consent records live
+2. At least one validator — for quality control and network presence
+
+This ensures legal data is always accessible, GDPR requests can always be fulfilled, and users always have a point of contact for data rights.
+
+---
+
 ## 3. Incentive Mechanism
 
 ### 3.1 Design Principles

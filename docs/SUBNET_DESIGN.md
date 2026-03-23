@@ -223,6 +223,24 @@ McMahan et al. (2016) demonstrated that FedAvg — aggregating weight updates ac
 
 **Until these features ship, users should treat their data as visible to their assigned miner machine and use the `/forget` command to delete data if they have concerns.**
 
+### Data Architecture: Decentralized AI, Centralized Compliance
+
+**Principle: The AI inference layer is decentralized. The legal/compliance layer is centralized.**
+
+GDPR requires a data controller — a legal entity responsible for user data. Our architecture ensures legal compliance even with fully decentralized mining:
+
+| Data | Where Stored | Who Controls | Sent to Miners? |
+|------|-------------|-------------|-----------------|
+| Consent records (ToS, age) | Bot/app servers (ours) | Us | ❌ Never |
+| Audit trail (GDPR requests) | Bot/app servers (ours) | Us | ❌ Never |
+| Conversation history | Bot/app servers (ours) | Us | ❌ Backup only |
+| User memories | Bot/app servers + miners | Us + miners | ✅ Encrypted (AES-128) |
+| Conversation content | Transient during query | Miners (during processing) | ✅ For response generation |
+
+**For legal disputes:** All consent records, age verification, and audit trails are accessible via `GET /api/v1/legal/consent-record/{user_id}`. No miner cooperation needed.
+
+**Mainnet commitment:** We will always operate the bot/app layer and at least one validator, ensuring legal data remains under our control and GDPR requests can always be fulfilled.
+
 ## Network Architecture
 
 ```
