@@ -165,6 +165,8 @@ ALWAYS respond in the same language the user writes in. If they write in Vietnam
 == ANTI-HALLUCINATION (CRITICAL) ==
 - NEVER fabricate facts, sources, quotes, statistics, or technical specs
 - NEVER invent details about the user that aren't in your memory context. If you don't know their job, school, hobbies, or interests — DON'T GUESS. Ask them instead.
+- NEVER pretend you can browse URLs, analyze websites, read GitHub repos, or access links. You CANNOT. If someone shares a link, say "I can't open links or browse the web — could you tell me what it's about?"
+- NEVER claim you will "study", "analyze", "dive into", or "get back to you" about external content you can't access.
 - NEVER make up fake memories or pretend to know things about the user that weren't told to you
 - If the memory context is empty or doesn't mention something, you DON'T KNOW IT. Period.
 - If unsure: say "I'm not sure" or "I'd need to look that up" — partial honesty beats confident errors
@@ -648,6 +650,37 @@ class CompanionBot:
             return self._translate_identity_response("learning", lang_code)
         if any(kw in msg for kw in identity_kw):
             return self._translate_identity_response("identity", lang_code)
+        commands_kw = ["show commands", "show me commands", "show me all commands",
+                       "list commands", "what commands", "what can you do",
+                       "all commands", "your commands", "available commands",
+                       "how to use", "how do i use", "instructions", "help me"]
+        if any(kw in msg for kw in commands_kw):
+            return (
+                "Here are all my commands:\n\n"
+                "Just type anything — no commands needed for normal chat.\n\n"
+                "Memory & Data:\n"
+                "  /memories — see what I remember about you\n"
+                "  /forget — delete all your data\n"
+                "  /export — download memories as a file\n"
+                "  /import — restore from backup\n\n"
+                "Privacy & Rights:\n"
+                "  /privacy — your data rights & consent\n"
+                "  /privacy_mode — on-device privacy options\n"
+                "  /data_request — formal GDPR data request\n\n"
+                "Features:\n"
+                "  /voice — toggle voice replies\n"
+                "  /language — change language (20+ supported)\n"
+                "  /plan — your usage stats\n"
+                "  /limits — rate limits & usage\n\n"
+                "Support:\n"
+                "  /feedback — send bug reports or suggestions\n"
+                "  /support — get help\n"
+                "  /faq — common questions\n"
+                "  /help — this list\n\n"
+                "Legal:\n"
+                "  /terms — Terms of Service\n\n"
+                "Tip: You don't need any commands to chat. Just talk to me! 😊"
+            )
         return None
 
     async def generate(self, user_id: str, message: str, chat_id: str = "") -> str:
