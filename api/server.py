@@ -1910,6 +1910,49 @@ async def gdpr_pia():
         raise HTTPException(status_code=500, detail="Failed to generate PIA report")
 
 
+@app.get("/api/v1/legal/consent-record/{user_id}")
+async def get_consent_record(user_id: str):
+    """
+    Legal consent record for a specific user — for dispute resolution.
+
+    Returns: full consent history with timestamps, policy versions,
+    acceptance method, and audit trail. Designed for legal review.
+    """
+    try:
+        from nobi.compliance.consent import ConsentManager
+        cm = ConsentManager()
+        status = cm.get_consent_status(user_id)
+        if not status:
+            raise HTTPException(status_code=404, detail="No consent record found for this user")
+
+        # Get audit trail
+        audit = []
+        try:
+            conn = cm._conn()
+            rows = conn.execute(
+                "SELECT action, old_state, new_state, changed_at, source "
+                "FROM consent_audit WHERE user_id = ? ORDER BY changed_at",
+                (user_id,),
+            ).fetchall()
+            audit = [dict(r) for r in rows]
+        except Exception:
+            pass
+
+        return {
+            "user_id": user_id,
+            "consent_status": status,
+            "audit_trail": audit,
+            "record_count": len(audit),
+            "note": "This record is generated for legal review purposes. "
+                    "All timestamps are UTC ISO 8601. Consent changes are append-only (immutable audit log).",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Legal consent record error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve consent record")
+
+
 # ─── TTS for Web App ────────────────────────────────────────
 
 # ─── TTS for Web App ────────────────────────────────────────

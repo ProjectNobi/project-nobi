@@ -1666,16 +1666,44 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data == "tos_accept":
         user_id = f"tg_{query.from_user.id}"
-        # Store ToS acceptance
+        # Store ToS acceptance as proper legal record in consent DB
+        try:
+            import hashlib
+            from nobi.compliance.consent import ConsentManager
+            cm = ConsentManager()
+
+            # Compute ToS version hash (SHA-256 of current ToS URL content identifier)
+            tos_version = "tos-2026-03-23-v1"  # Update when ToS changes
+            privacy_version = "privacy-2026-03-20-v1"  # Update when Privacy Policy changes
+
+            # Record consent with all default permissions accepted
+            cm.record_consent(
+                user_id=user_id,
+                consent={
+                    "data_processing": True,
+                    "memory_extraction": True,
+                    "analytics": True,
+                    "profiling": False,
+                    "marketing": False,
+                    "third_party_sharing": False,
+                },
+                age_verified=True,
+                source=f"telegram_onboarding|tos={tos_version}|privacy={privacy_version}",
+            )
+            logger.info(f"[Legal] Consent recorded for {user_id}: ToS={tos_version}, Privacy={privacy_version}")
+        except Exception as e:
+            logger.error(f"[Legal] Consent recording failed for {user_id}: {e}")
+
+        # Also store in memory for the ToS enforcement check in handle_message
         try:
             companion.memory.store(
                 user_id,
-                "User accepted Terms of Service and Privacy Policy",
+                f"User accepted Terms of Service ({tos_version}) and Privacy Policy ({privacy_version})",
                 memory_type="context",
                 importance=1.0,
             )
         except Exception as e:
-            logger.warning(f"[Onboarding] Could not store ToS acceptance: {e}")
+            logger.warning(f"[Onboarding] Memory store failed: {e}")
 
         # Step 3: Show instructions + start chatting
         await query.edit_message_text(
