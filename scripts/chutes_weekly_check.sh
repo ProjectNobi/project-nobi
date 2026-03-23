@@ -1,5 +1,5 @@
 #!/bin/bash
-export CHUTES_API_KEY="REDACTED_CHUTES_KEY_6"
+export CHUTES_API_KEY="${CHUTES_API_KEY:?Set CHUTES_API_KEY env var}"
 export CHUTES_MODEL="deepseek-ai/DeepSeek-V3.1-TEE"
 cd /root/project-nobi
 output=$(python3 scripts/chutes_model_check.py 2>&1)

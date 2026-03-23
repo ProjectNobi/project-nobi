@@ -52,7 +52,7 @@ python3 scripts/deploy_256.py --phase all
 | ContaboServer4 | server4 | 50 | 4 | 076–125 | 08–11 |
 | ContaboServer5 | server5 | 50 | 4 | 126–175 | 12–15 |
 | ContaboServer6 | server6 | 11 | 2 | 176–186 | 16–17 |
-| AnonServer | root@REDACTED_SERVER_IP | 50 | 3 | 187–236 | 18–20 |
+| AnonServer | anonserver | 50 | 3 | 187–236 | 18–20 |
 | **Total** | | **236** | **20** | | |
 
 ---
@@ -120,7 +120,7 @@ ssh server2 "pm2 list"
 ssh server2 "pm2 logs nobi-miner-001 --lines 50"
 
 # Check all servers at once
-for s in server2 server3 server4 server5 server6 "root@REDACTED_SERVER_IP"; do
+for s in server2 server3 server4 server5 server6 "anonserver"; do
   echo "=== $s ==="; ssh $s "pm2 list --no-color 2>/dev/null | grep -c online"; done
 ```
 

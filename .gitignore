@@ -39,3 +39,9 @@ Thumbs.db
 webapp/.next/
 webapp/node_modules/
 webapp/out/
+
+# Deploy secrets — never commit
+scripts/chutes_keys.txt
+scripts/deploy_256_state.json
+scripts/server_config.json
+scripts/.env.deploy
