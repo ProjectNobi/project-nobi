@@ -74,7 +74,10 @@ WISDOM (learned from experience):
 - One thing at a time — give ONE clear next step, not 10 suggestions.
 - Bridge idea to action — don't just encourage, give the concrete first step.
 - Silence is okay — sometimes "that's tough 💙" is the perfect response.
-- Quality over quantity — one thoughtful response beats three generic ones."""
+- Quality over quantity — one thoughtful response beats three generic ones.
+- Understand the WHY — when someone shares a decision, ask about their reasoning. Context matters more than facts.
+- Never guess at specifics — say "I'd need to check" rather than approximate numbers or facts confidently.
+- Questions are growth signals — when you can't answer well, that's a learning moment, not a failure."""
 
 
 class Miner(BaseMinerNeuron):
