@@ -25,7 +25,7 @@ export interface CryptoKeySet {
   /** Derived AES-GCM key for this session */
   key: CryptoKey;
   /** Salt used for key derivation (persist for decryption) */
-  salt: Uint8Array;
+  salt: Uint8Array<ArrayBuffer>;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -41,16 +41,28 @@ const DEVICE_SALT_KEY = "nobi_device_salt_v1";
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
-function toBase64(buffer: ArrayBuffer): string {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+/**
+ * TypeScript strict mode workaround: Web Crypto APIs require Uint8Array<ArrayBuffer>
+ * but getRandomValues / TextEncoder return Uint8Array<ArrayBufferLike>.
+ * This helper copies bytes into a fresh Uint8Array backed by a plain ArrayBuffer.
+ */
+function toArrayBuffer(data: Uint8Array): Uint8Array<ArrayBuffer> {
+  const ab = new ArrayBuffer(data.byteLength);
+  new Uint8Array(ab).set(data);
+  return new Uint8Array(ab) as Uint8Array<ArrayBuffer>;
 }
 
-function fromBase64(b64: string): Uint8Array {
-  return new Uint8Array(
-    atob(b64)
-      .split("")
-      .map((c) => c.charCodeAt(0))
-  );
+function toBase64(buffer: ArrayBuffer | Uint8Array<ArrayBuffer>): string {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  return btoa(String.fromCharCode(...bytes));
+}
+
+function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
+  const bytes = atob(b64).split("").map((c) => c.charCodeAt(0));
+  const ab = new ArrayBuffer(bytes.length);
+  const view = new Uint8Array(ab) as Uint8Array<ArrayBuffer>;
+  view.set(bytes);
+  return view;
 }
 
 // ─── Key Derivation ──────────────────────────────────────────────────────────
@@ -61,9 +73,11 @@ function fromBase64(b64: string): Uint8Array {
  */
 export async function deriveKey(
   passphrase: string,
-  salt?: Uint8Array
+  salt?: Uint8Array<ArrayBuffer>
 ): Promise<CryptoKeySet> {
-  const resolvedSalt = salt ?? crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+  const rawSalt = salt ?? crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+  // Ensure we have a plain ArrayBuffer-backed Uint8Array for Web Crypto compatibility
+  const resolvedSalt = toArrayBuffer(rawSalt);
 
   const baseKey = await crypto.subtle.importKey(
     "raw",
@@ -96,13 +110,13 @@ export async function deriveKey(
  */
 export async function getOrCreateDeviceKey(): Promise<CryptoKeySet> {
   let saltB64 = localStorage.getItem(DEVICE_SALT_KEY);
-  let salt: Uint8Array;
+  let salt: Uint8Array<ArrayBuffer>;
 
   if (saltB64) {
     salt = fromBase64(saltB64);
   } else {
-    salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
-    localStorage.setItem(DEVICE_SALT_KEY, toBase64(salt));
+    salt = toArrayBuffer(crypto.getRandomValues(new Uint8Array(SALT_LENGTH)));
+    localStorage.setItem(DEVICE_SALT_KEY, toBase64(salt.buffer));
   }
 
   // Derive from a device fingerprint (stable but not secret)
@@ -130,8 +144,8 @@ export async function encrypt(
   plaintext: string,
   keySet: CryptoKeySet
 ): Promise<EncryptedPayload> {
-  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-  const encoded = new TextEncoder().encode(plaintext);
+  const iv = toArrayBuffer(crypto.getRandomValues(new Uint8Array(IV_LENGTH)));
+  const encoded = toArrayBuffer(new TextEncoder().encode(plaintext));
 
   const ciphertextBuffer = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
