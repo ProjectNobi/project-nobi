@@ -17,6 +17,8 @@ import threading
 from collections import deque
 from typing import List, Dict, Optional
 
+from nobi.safety.content_filter import ContentFilter, SafetyLevel
+
 logger = logging.getLogger("nobi-group")
 
 # ─── Constants ───────────────────────────────────────────────
@@ -97,6 +99,7 @@ class GroupHandler:
         self.memory = memory_manager
         self.companion = companion
         self._lock = threading.Lock()
+        self.content_filter = ContentFilter()
 
         # Group context: {group_id: deque of {user_name, user_id, message, timestamp}}
         self._group_contexts: Dict[str, deque] = {}
@@ -289,6 +292,13 @@ class GroupHandler:
         if not self.companion or not self.companion.client:
             return "I'm having trouble connecting right now 🤖"
 
+        # ── Content Safety: check user message before generating ──────────────
+        user_safety = self.content_filter.check_user_message(user_id, message, platform="telegram_group")
+        if not user_safety.is_safe:
+            logger.info(f"[Safety][Group] User message blocked (level={user_safety.level.value}, "
+                        f"category={user_safety.category}) for user {user_id} in group {group_id}")
+            return user_safety.response
+
         # Get user memory context (per-user, even within groups)
         user_memory = ""
         try:
@@ -349,6 +359,17 @@ class GroupHandler:
             if not response or not response.strip():
                 return "Hmm, I got tongue-tied! 😅"
 
+            # ── Content Safety: check bot response before sending ─────────────
+            response_safety = self.content_filter.check_bot_response(
+                user_id, message, response, platform="telegram_group"
+            )
+            if not response_safety.is_safe:
+                logger.warning(
+                    f"[Safety][Group] Bot response blocked (level={response_safety.level.value}, "
+                    f"category={response_safety.category}) for user {user_id} in group {group_id}"
+                )
+            response = response_safety.response
+
             # Save assistant response (group-scoped to prevent leaking to DM)
             try:
                 self.memory.save_conversation_turn(group_user_id, "assistant", response)
@@ -380,6 +401,11 @@ class GroupHandler:
                     response = fallback_completion.choices[0].message.content
                     if response and response.strip():
                         logger.info(f"[Group] OpenRouter fallback succeeded")
+                        # Safety check on fallback response too
+                        fb_safety = self.content_filter.check_bot_response(
+                            user_id, message, response, platform="telegram_group"
+                        )
+                        response = fb_safety.response
                         try:
                             self.memory.save_conversation_turn(group_user_id, "assistant", response)
                         except Exception:

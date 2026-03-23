@@ -161,7 +161,10 @@ class ContentFilter:
 
     def _init_db(self):
         """Initialise the safety audit log database."""
-        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        if self.db_path != ":memory:":
+            db_dir = os.path.dirname(self.db_path)
+            if db_dir:
+                os.makedirs(db_dir, exist_ok=True)
         self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self._conn.execute("""
             CREATE TABLE IF NOT EXISTS safety_log (
@@ -358,17 +361,115 @@ class ContentFilter:
         platform: str = "unknown",
     ) -> SafetyDecision:
         """
-        Check a bot response for unqualified professional advice.
-        Appends appropriate disclaimers when detected.
+        Check a bot response for safety issues.
 
-        Always returns is_safe=True (we add disclaimers, not block responses),
-        unless the response itself contains CSAM or extreme content.
+        Priority order:
+          1. CSAM in response → CRITICAL: block entirely, replace with safe refusal
+          2. Self-harm content in response → CRITICAL: block, replace with crisis resources
+          3. Extreme violence / illegal instructions in response → BLOCKED: replace with refusal
+          4. Unqualified professional advice → WARNING: append disclaimer
         """
         if not bot_response:
             return SafetyDecision(
                 is_safe=True, level=SafetyLevel.SAFE, category="none",
                 response=bot_response, original_response=bot_response,
                 action_taken="allowed", flags=[],
+            )
+
+        # ── 1. CSAM in bot response — zero tolerance, block entirely ──────────
+        csam_flags = self._match_patterns(bot_response, _CSAM_PATTERNS)
+        if csam_flags:
+            logger.critical(f"[Safety] CSAM detected in bot response for user {user_id} — BLOCKING")
+            self._log(user_id, "bot", SafetyLevel.CRITICAL, "csam",
+                      "blocked", csam_flags, bot_response, platform)
+            return SafetyDecision(
+                is_safe=False,
+                level=SafetyLevel.CRITICAL,
+                category="csam",
+                response=(
+                    "I can't send that response. Content involving minors in a sexual context "
+                    "is strictly prohibited. This incident has been flagged for review."
+                ),
+                original_response=bot_response,
+                action_taken="blocked",
+                flags=csam_flags,
+            )
+
+        # ── 2. Self-harm instructions/encouragement in bot response ────────────
+        # Only trigger if the response contains actionable harm guidance (not crisis support)
+        # Use a targeted sub-pattern list to avoid blocking our own crisis resources
+        _RESPONSE_SELF_HARM_PATTERNS = [
+            r"\b(here('s| is) how (to|you can).{0,40}(kill yourself|end your life|commit suicide))\b",
+            r"\b(step[s]? (to|for).{0,30}(self.harm|suicide|kill yourself))\b",
+            r"\b(best way to (kill yourself|end your life|commit suicide|self.harm))\b",
+            r"\b(you should (kill yourself|end your life|hurt yourself))\b",
+            r"\b(try (killing yourself|ending your life|self.harming))\b",
+        ]
+        harm_flags = self._match_patterns(bot_response, _RESPONSE_SELF_HARM_PATTERNS)
+        if harm_flags:
+            logger.critical(f"[Safety] Self-harm instructions in bot response for user {user_id} — BLOCKING")
+            self._log(user_id, "bot", SafetyLevel.CRITICAL, "self_harm",
+                      "blocked", harm_flags, bot_response, platform)
+            return SafetyDecision(
+                is_safe=False,
+                level=SafetyLevel.CRITICAL,
+                category="self_harm",
+                response=(
+                    "I'm not the right help for this. Please reach out to someone who can truly help:\n"
+                    "🇬🇧 Samaritans: 116 123 (free, 24/7)\n"
+                    "🇺🇸 988 Suicide & Crisis Lifeline: call or text 988\n"
+                    "🌍 Crisis Text Line: text HOME to 741741\n\n"
+                    "If you're in immediate danger, please call emergency services (999 / 911). 💙"
+                ),
+                original_response=bot_response,
+                action_taken="blocked",
+                flags=harm_flags,
+            )
+
+        # ── 3. Extreme violence / weapons instructions in bot response ──────────
+        # Additional patterns for response-side instruction text (no "how to" prefix needed)
+        _RESPONSE_VIOLENCE_PATTERNS = _EXTREME_VIOLENCE_PATTERNS + [
+            r"\b(to (make|build|create|assemble).{0,20}(bomb|explosive|weapon)).{0,30}(step|first|gather|mix|here)\b",
+            r"\b(first,? gather.{0,40}(explosive|bomb|weapon))\b",
+            r"\b(step \d+.{0,30}(bomb|explosive|weapon|poison))\b",
+            r"\bhere('s| is) (how|what).{0,30}(bomb|explosive|kill|attack|poison)\b",
+            r"\b(ingredients.{0,30}(bomb|explosive)|mix.{0,30}explosive|assemble.{0,20}bomb)\b",
+        ]
+        violence_flags = self._match_patterns(bot_response, _RESPONSE_VIOLENCE_PATTERNS)
+        if violence_flags:
+            logger.warning(f"[Safety] Extreme violence content in bot response for user {user_id} — BLOCKING")
+            self._log(user_id, "bot", SafetyLevel.BLOCKED, "extreme_violence",
+                      "blocked", violence_flags, bot_response, platform)
+            return SafetyDecision(
+                is_safe=False,
+                level=SafetyLevel.BLOCKED,
+                category="extreme_violence",
+                response=(
+                    "I can't send that response — it contains content I'm not able to share. "
+                    "Is there something else I can help with?"
+                ),
+                original_response=bot_response,
+                action_taken="blocked",
+                flags=violence_flags,
+            )
+
+        # ── 4. Illegal activity instructions in bot response ───────────────────
+        illegal_flags = self._match_patterns(bot_response, _ILLEGAL_PATTERNS)
+        if illegal_flags:
+            logger.warning(f"[Safety] Illegal content in bot response for user {user_id} — BLOCKING")
+            self._log(user_id, "bot", SafetyLevel.BLOCKED, "illegal",
+                      "blocked", illegal_flags, bot_response, platform)
+            return SafetyDecision(
+                is_safe=False,
+                level=SafetyLevel.BLOCKED,
+                category="illegal",
+                response=(
+                    "I can't send that response — it involves assistance I'm not able to provide. "
+                    "Is there something else I can help with?"
+                ),
+                original_response=bot_response,
+                action_taken="blocked",
+                flags=illegal_flags,
             )
 
         response_lower = bot_response.lower()

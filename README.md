@@ -53,7 +53,7 @@ No setup, no account, no payment. It remembers you.
 | Languages | 30+ | 20+ | ✅ 20 (auto-detected) |
 | Single point of failure | Yes | Yes | ✅ Decentralized |
 
-¹ *Memory is encrypted (AES-128) with user-controlled deletion (`/forget`). On-device memory storage and federated learning are on the roadmap. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) and [WHITEPAPER.md](docs/WHITEPAPER.md) for details.*
+¹ *Memory is encrypted at rest (AES-128, server-side encryption — protects stored data) with user-controlled deletion (`/forget`). Miners process conversation content to generate responses. End-to-end TEE encryption is code-complete and deploying to production. Browser-side memory extraction is code-complete and available in the web app. On-device federated learning is on the roadmap. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) and [WHITEPAPER.md](docs/WHITEPAPER.md) for details.*
 
 ---
 
@@ -239,7 +239,9 @@ cd webapp && npx vercel --prod
 - **API:** FastAPI (Python) — REST API for web/mobile
 - **Web App:** Next.js 14 + TypeScript + Tailwind CSS
 - **Memory:** SQLite + semantic embeddings (sentence-transformers) + relationship graphs
-- **Encryption:** AES-128 (Fernet, PBKDF2 100K iterations)
+- **Encryption at rest:** AES-128 (Fernet, PBKDF2 100K iterations) — server-side, protects stored data
+- **End-to-end TEE encryption:** Code-complete, deploying to production (AMD SEV-SNP / NVIDIA CC)
+- **Browser-side memory extraction:** Code-complete, available in web app
 - **Infrastructure:** PM2, Docker, systemd
 
 ---

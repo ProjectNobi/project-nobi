@@ -52,13 +52,15 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "topic": "Is my data private?",
         "keywords": ["private", "privacy", "data", "secure", "security", "encrypted", "safe", "gdpr", "delete data"],
         "answer": (
-            "Yes — privacy is our #1 priority. 🔒\n\n"
-            "• All memories are **AES-128 encrypted** at rest (Fernet, PBKDF2 per-user keys)\n"
+            "Yes — privacy is a core priority. 🔒\n\n"
+            "• All memories are **AES-128 encrypted at rest** (Fernet, PBKDF2 per-user keys)\n"
+            "• This is server-side encryption — it protects stored data\n"
+            "• Miners process conversation content to generate responses\n"
             "• We don't sell, share, or analyze your conversations\n"
             "• You can export or delete ALL your data at any time\n"
             "• Open source: anyone can audit the encryption code on GitHub\n\n"
-            "Current encryption is server-side (storage-level protection). On-device encryption "
-            "and federated privacy (data never leaves your device) are on our roadmap for mainnet."
+            "End-to-end TEE encryption is code-complete and deploying to production. "
+            "Browser-side memory extraction is code-complete and available in the web app."
         ),
     },
     {

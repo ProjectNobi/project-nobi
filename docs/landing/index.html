@@ -138,14 +138,14 @@
         <div class="pillar-content">
           <div class="pillar-number">03 — PROACTIVE & PRIVATE</div>
           <h2 class="pillar-title">Reaches out. Stays encrypted.</h2>
-          <p class="pillar-text">Nori remembers your birthday, follows up on stressful events, and checks in when you've been quiet. All memories are <strong>AES-128 encrypted</strong>. No single company owns your data. You control everything.</p>
+          <p class="pillar-text">Nori remembers your birthday, follows up on stressful events, and checks in when you've been quiet. All memories are <strong>encrypted at rest (AES-128, server-side)</strong>. End-to-end TEE encryption is code-complete and deploying to production. No single company owns your data. You control everything.</p>
         </div>
         <div class="pillar-visual">
           <div class="visual-card">
             <div class="chat-mock">
               <div class="chat-bubble chat-nori">Hey! 🎂 Happy birthday! I hope your day is as awesome as you are. Any special plans?</div>
               <div class="chat-bubble chat-user">Wow, you remembered! 😊</div>
-              <div class="chat-memory">🔐 AES-128 encrypted · 🎯 Proactive outreach</div>
+              <div class="chat-memory">🔐 AES-128 encrypted at rest · 🎯 Proactive outreach</div>
             </div>
           </div>
         </div>
@@ -198,7 +198,7 @@
         <div class="step">
           <div class="step-number">🔐</div>
           <h3 class="step-title">Encrypted Memories</h3>
-          <p class="step-text">AES-128 encryption. Your data, your control. Export or delete anytime.</p>
+          <p class="step-text">AES-128 encryption at rest (server-side). Miners process conversation content to generate responses. End-to-end TEE encryption: code-complete, deploying to production. Your data, your control. Export or delete anytime.</p>
         </div>
       </div>
     </div>
@@ -700,9 +700,9 @@
       faqData = data.faq || [];
     } catch {
       faqData = [
-        { id: 'what_is_nobi', topic: 'What is Project Nobi?', answer: 'Project Nobi is a free, open-source AI companion built on Bittensor. Nori remembers you across conversations, speaks 20 languages, and keeps your data encrypted. No subscriptions, no corporations — community-funded and community-owned.' },
-        { id: 'how_memory_works', topic: "How does Nori's memory work?", answer: 'Nori builds a semantic memory graph from your conversations — tracking facts, preferences, emotions, relationships, and events. She remembers your sister lives in London, that you like Italian food, and that you have a job interview next Tuesday. All encrypted with AES-128.' },
-        { id: 'privacy', topic: 'Is my data private?', answer: 'Yes. All memories are encrypted with AES-128 before storage. You have full control: view your memories (/memories), export everything (/export), or delete it all (/forget). On-device memory storage is on our roadmap.' },
+        { id: 'what_is_nobi', topic: 'What is Project Nobi?', answer: 'Project Nobi is a free, open-source AI companion built on Bittensor. Nori remembers you across conversations, speaks 20 languages, and keeps your data encrypted at rest (AES-128, server-side). No subscriptions, no corporations — community-funded and community-owned.' },
+        { id: 'how_memory_works', topic: "How does Nori's memory work?", answer: 'Nori builds a semantic memory graph from your conversations — tracking facts, preferences, emotions, relationships, and events. She remembers your sister lives in London, that you like Italian food, and that you have a job interview next Tuesday. All encrypted at rest with AES-128 (server-side encryption). End-to-end TEE encryption is code-complete and deploying to production.' },
+        { id: 'privacy', topic: 'Is my data private?', answer: 'Yes. All memories are encrypted at rest with AES-128 (server-side encryption — protects stored data). Miners process conversation content to generate responses. End-to-end TEE encryption is code-complete and deploying to production. Browser-side memory extraction is code-complete and available in the web app. You have full control: view your memories (/memories), export everything (/export), or delete it all (/forget).' },
         { id: 'how_to_mine', topic: 'How do I mine on the Nobi subnet?', answer: 'No GPU needed! 4+ CPU cores, 8GB+ RAM, and a VPS ($30-70/month). Install Bittensor, register a wallet, and run our setup script. Full guide: github.com/ProjectNobi/project-nobi/blob/main/docs/MINING_GUIDE.md' },
         { id: 'hardware', topic: 'What hardware do I need to mine?', answer: 'Minimal requirements: 4+ CPU cores, 8GB+ RAM, 20GB disk. VPS from Contabo, Hetzner, or DigitalOcean ($30-70/month). No GPU needed — Nobi uses API inference. Mining should be accessible to everyone.' },
         { id: 'pricing', topic: 'How much does Nori cost?', answer: 'Nori is completely free for all users — no subscriptions, no premium tiers, no limits. The service is funded by Bittensor network emissions and voluntary community staking. The owner receives the mandatory 18% take and burns 100% via burn_alpha() — verifiable on-chain.' },

@@ -194,7 +194,7 @@
         <div class="faq-answer">
           <p>Three structural differences — not just features:</p>
           <p><strong>Ownership:</strong> ChatGPT can delete your history, change policies, or shut down. Nobi memories are encrypted on a decentralised network — no single entity controls them.</p>
-          <p><strong>Privacy:</strong> OpenAI may train on your conversations. Nobi memories are AES-128 encrypted, stored across independent miners. Your data, your control.</p>
+          <p><strong>Privacy:</strong> OpenAI may train on your conversations. Nobi memories are encrypted at rest (AES-128, server-side). Miners process conversation content to generate responses. End-to-end TEE encryption is code-complete and deploying to production. Your data, your control.</p>
           <p><strong>Persistence:</strong> ChatGPT doesn't truly know you across sessions. Nobi builds a persistent knowledge graph — your name, preferences, relationships, emotional patterns — that compounds over months and years.</p>
           <p>The pitch isn't "better ChatGPT." It's: <strong>"Your AI companion that no company can take away from you."</strong></p>
         </div>
@@ -406,7 +406,8 @@
           <span class="arrow">▼</span>
         </div>
         <div class="faq-answer">
-          <p>Your memories are encrypted with <strong>AES-128 encryption</strong> before being stored. They're distributed across independent miners on the Bittensor network — no single company owns or controls your data.</p>
+          <p>Your memories are <strong>encrypted at rest with AES-128</strong> (server-side encryption — protects stored data). They're distributed across independent miners on the Bittensor network — no single company owns or controls your data.</p>
+          <p>Miners process conversation content to generate responses. End-to-end TEE encryption is <strong>code-complete and deploying to production</strong>. Browser-side memory extraction is code-complete and available in the web app.</p>
           <p>You have full control: use <code>/memories</code> to see what Nori knows, <code>/export</code> to download everything, <code>/forget</code> to delete it all permanently. Your data, your choice.</p>
         </div>
       </div>
@@ -417,8 +418,8 @@
           <span class="arrow">▼</span>
         </div>
         <div class="faq-answer">
-          <p>Miners store encrypted memory blobs — the content is encrypted before it reaches them. However, this is <strong>server-side encryption</strong>, not end-to-end encryption. During processing, miners do see conversation content to generate responses.</p>
-          <p>On-device privacy (where raw data never leaves your device) is on our <strong>roadmap for mainnet</strong> — it's not yet live. We're honest about current limitations while working toward stronger privacy guarantees.</p>
+          <p>Miners store encrypted memory blobs — the content is encrypted at rest before it reaches them. This is <strong>server-side encryption</strong>, which protects stored data. During processing, miners do see conversation content to generate responses.</p>
+          <p><strong>End-to-end TEE encryption is code-complete and deploying to production.</strong> This will prevent miners from seeing conversation content. Browser-side memory extraction is also code-complete and available in the web app. We're honest about the current state while actively shipping stronger protections.</p>
         </div>
       </div>
 
@@ -429,7 +430,10 @@
         </div>
         <div class="faq-answer">
           <p>You're right — handling personal memories IS sensitive data. We take this seriously:</p>
-          <p>• <strong>AES-128 encryption</strong> on all stored memories — today, in testnet<br>
+          <p>• <strong>AES-128 encryption at rest</strong> on all stored memories — today, in testnet (server-side encryption)<br>
+          • <strong>Miners process conversation content</strong> to generate responses — this is transparent and expected<br>
+          • <strong>End-to-end TEE encryption:</strong> code-complete, deploying to production<br>
+          • <strong>Browser-side memory extraction:</strong> code-complete, available in the web app<br>
           • <strong>User controls:</strong> <code>/memories</code> to view, <code>/export</code> to download, <code>/forget</code> to delete everything<br>
           • <strong>Open source:</strong> anyone can audit our code right now on GitHub<br>
           • <strong>No central database:</strong> memories are distributed across independent miners</p>
@@ -453,7 +457,7 @@
           • Miners never see your raw conversations<br>
           • Memory matching happens client-side</p>
           <p>It IS harder for decentralised architecture than centralised — but not impossible. The key insight: miners don't need your raw data to serve good responses. They need encrypted memory embeddings plus your current message.</p>
-          <p>This is planned for our mainnet phases — not yet live. We're transparent about the current state (server-side encryption) while working toward the strongest possible privacy guarantees.</p>
+          <p>End-to-end TEE encryption is <strong>code-complete and deploying to production</strong>. Browser-side memory extraction is code-complete and available in the web app. We're transparent about the current state (server-side encryption at rest) while actively shipping stronger protections.</p>
         </div>
       </div>
     </div>

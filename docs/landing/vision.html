@@ -251,7 +251,7 @@
 
     <p><strong>Validators</strong> are the quality controllers. They score miners on response quality, memory recall accuracy, personality warmth, and response speed. These scores become weights on the Bittensor blockchain, determining how much each miner earns. Good miners thrive. Bad miners are replaced.</p>
 
-    <p><strong>Your memories</strong> are stored with encryption (AES-128, per-user keys). You control them completely — view them, export them, delete them. Our roadmap includes on-device memory storage, where your memories never leave your phone at all. The long-term architecture is federated: your raw data stays on your device, and only anonymized model updates (not your actual memories) are shared with the network.</p>
+    <p><strong>Your memories</strong> are stored encrypted at rest (AES-128, per-user keys — server-side encryption). Miners process conversation content to generate responses. You control your data completely — view it, export it, delete it. End-to-end TEE encryption is code-complete and deploying to production. Browser-side memory extraction is code-complete and available in the web app. The long-term roadmap includes federated learning where your raw data stays on your device and only anonymized updates are shared.</p>
 
     <h3>Content Safety and Legal Compliance</h3>
 
@@ -267,7 +267,7 @@
       <li><strong>Subnet registration costs are significant.</strong> Registering a mainnet subnet on Bittensor requires burning TAO — a cost that fluctuates but is substantial. We're bootstrapping this with personal funds and community support. It's a real financial barrier.</li>
       <li><strong>We're small.</strong> The team is the founder (James), a developer (Slumpz), and an AI builder (T68Bot). We don't have Google's resources. We move fast and build efficiently, but we're honest about our scale.</li>
       <li><strong>Decentralization has tradeoffs.</strong> Response latency through a decentralized network is higher than a direct API call. Quality variance between miners exists. These are solvable problems, but they're real today.</li>
-      <li><strong>Memory privacy at scale requires more work.</strong> Current encryption is AES-128 server-side. True end-to-end encryption and on-device memory storage are on the roadmap, not yet deployed. We won't pretend otherwise.</li>
+      <li><strong>Memory privacy at scale requires more work.</strong> Current encryption is AES-128 at rest (server-side — protects stored data). Miners process conversation content to generate responses. End-to-end TEE encryption is code-complete and deploying to production. Browser-side memory extraction is code-complete and available in the web app. We won't pretend otherwise.</li>
       <li><strong>User acquisition without a marketing budget is slow.</strong> We're betting on the Bittensor community, word of mouth, and the quality of the product itself. That's a slower path than spending millions on ads.</li>
       <li><strong>Bittensor itself is evolving.</strong> Network upgrades, economic changes, governance decisions — all outside our control and all impacting our subnet. We're building on a foundation that's still being laid.</li>
     </ul>
@@ -339,7 +339,9 @@
       <li><span class="status-ok">✅</span> Web application — accessible interface</li>
       <li><span class="status-ok">✅</span> Memory system — semantic graphs, emotion tracking, relationship mapping</li>
       <li><span class="status-ok">✅</span> Content safety — compliant, responsible</li>
-      <li><span class="status-ok">✅</span> Encryption — AES-128 per-user memory encryption</li>
+      <li><span class="status-ok">✅</span> Encryption at rest — AES-128 per-user memory encryption (server-side)</li>
+      <li><span class="status-ok">✅</span> End-to-end TEE encryption — code-complete, deploying to production</li>
+      <li><span class="status-ok">✅</span> Browser-side memory extraction — code-complete, available in web app</li>
       <li><span class="status-ok">✅</span> Full documentation — whitepaper, subnet design, mining guide, validating guide</li>
       <li><span class="status-ok">✅</span> Open source — auditable, forkable, improvable</li>
       <li><span class="status-ok">✅</span> Legal compliance framework — privacy, safety, regulatory</li>

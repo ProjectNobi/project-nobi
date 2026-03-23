@@ -18,6 +18,7 @@ from nobi.memory.adapters import UserAdapterManager
 from nobi.i18n import detect_language, LanguageDetector, get_language_prompt
 from nobi.i18n.prompts import build_multilingual_system_prompt
 from nobi.mining.specialization import SPECIALIZATIONS
+from nobi.safety.content_filter import ContentFilter, SafetyLevel
 
 try:
     from openai import OpenAI
@@ -96,6 +97,9 @@ class Miner(BaseMinerNeuron):
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
+
+        # Content safety filter — initialized once for this miner instance
+        self.content_filter = ContentFilter()
 
         # Initialize encryption, memory manager, adapter manager, and language detector
         ensure_master_secret()
@@ -373,6 +377,30 @@ class Miner(BaseMinerNeuron):
             except Exception as e:
                 bt.logging.debug(f"Adapter update failed (non-fatal): {e}")
 
+        # ── Content Safety: check generated response before returning ─────────
+        # This runs at the miner level as a second line of defence
+        safety_check = self.content_filter.check_bot_response(user_id or "unknown", message, response)
+        if safety_check.level in (SafetyLevel.BLOCKED, SafetyLevel.CRITICAL):
+            bt.logging.warning(
+                f"[Safety] Miner response blocked (level={safety_check.level.value}, "
+                f"category={safety_check.category}) for user {user_id}"
+            )
+            response = safety_check.response
+            # Overwrite the saved assistant turn with the safe replacement
+            if user_id:
+                try:
+                    self.memory.save_conversation_turn(user_id, "assistant", response)
+                except Exception:
+                    pass
+        elif safety_check.level == SafetyLevel.WARNING:
+            # Disclaimer appended — use modified response
+            response = safety_check.response
+            if user_id:
+                try:
+                    self.memory.save_conversation_turn(user_id, "assistant", response)
+                except Exception:
+                    pass
+
         return response, memory_entries
 
     def _fallback_response(self, message: str) -> str:
@@ -488,7 +516,13 @@ class Miner(BaseMinerNeuron):
         )
 
         synapse.response = response
-        synapse.confidence = 0.8 if self.client else 0.2
+        # Safety check already happened in _generate_response(); if response was replaced,
+        # signal low confidence so validator scoring down-weights the exchange.
+        _was_blocked = response and (
+            "I can't send that response" in response
+            or "I'm not the right help for this" in response
+        )
+        synapse.confidence = 0.1 if _was_blocked else (0.8 if self.client else 0.2)
         synapse.miner_specialization = self.specialization
 
         # Phase 2: Advertise TEE public key so validator can cache it for HPKE wrapping

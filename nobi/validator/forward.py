@@ -21,10 +21,11 @@ import numpy as np
 import bittensor as bt
 
 from nobi.protocol import CompanionRequest, MemoryStore, MemoryRecall
-from nobi.validator.reward import get_rewards
+from nobi.validator.reward import get_rewards, safety_score
 from nobi.validator.query_generator import (
     generate_single_turn_query,
     generate_multi_turn_scenario,
+    generate_safety_probe,
 )
 from nobi.utils.uids import get_random_uids
 from nobi.memory.sync import sync_memories_to_miners
@@ -190,10 +191,11 @@ async def forward(self):
         except Exception as e:
             bt.logging.warning(f"[Memory test] Error (non-fatal): {e}")
 
-    # 60% multi-turn, 40% single-turn
-    use_multi_turn = random.random() < 0.6
-
-    if use_multi_turn:
+    # ~10% safety probes, else 60% multi-turn / 40% single-turn
+    roll = random.random()
+    if roll < 0.10:
+        await _forward_safety_probe(self, miner_uids)
+    elif roll < 0.10 + 0.54:  # 60% of remaining 90% = 54% total
         await _forward_multi_turn(self, miner_uids)
     else:
         await _forward_single_turn(self, miner_uids)
@@ -338,6 +340,75 @@ def _build_synapse_for_miner(
 
     # Fallback: plaintext (backward compatible)
     return CompanionRequest(message=query, user_id=user_id, query_type=query_type)
+
+
+async def _forward_safety_probe(self, miner_uids):
+    """
+    Safety probe round: send adversarial query to miners, score safety.
+    Safety score is a MULTIPLIER — harmful content → zero emission.
+
+    ~10% of all validator rounds are safety probes.
+    """
+    probe = generate_safety_probe()
+    query = probe["query"]
+    category = probe["category"]
+    fake_user_id = f"user_{random.randint(100000, 999999)}"
+
+    bt.logging.info(
+        f"[Safety Probe] category={category}, query='{query[:80]}', "
+        f"querying {len(miner_uids)} miners"
+    )
+
+    synapses = [
+        _build_synapse_for_miner(query, fake_user_id, "safety", miner_uid=int(uid))
+        for uid in miner_uids
+    ]
+
+    tasks = [
+        _query_single_miner(
+            self.dendrite,
+            self.metagraph.axons[uid],
+            synapse,
+            self.config.neuron.timeout,
+        )
+        for uid, synapse in zip(miner_uids, synapses)
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    processed = []
+    latencies = []
+    for uid, r in zip(miner_uids, results):
+        if isinstance(r, Exception):
+            processed.append("")
+            latencies.append(self.config.neuron.timeout)
+        else:
+            processed.append(r[0])
+            latencies.append(r[1])
+            if r[2]:
+                cache_miner_pubkey(int(uid), r[2])
+
+    # Compute safety multipliers
+    api_key = (
+        getattr(self.config.neuron, "openrouter_api_key", "")
+        or os.environ.get("OPENROUTER_API_KEY", "")
+    )
+    s_scores = safety_score(
+        responses=processed,
+        queries=[query] * len(processed),
+        categories=[category] * len(processed),
+        api_key=api_key,
+    )
+    bt.logging.info(f"[Safety Probe] Scores: {s_scores} (category={category})")
+
+    # Base quality rewards, then multiply by safety scores
+    rewards = get_rewards(
+        self, query=query, responses=processed,
+        test_type="single", latencies=latencies,
+        safety_scores=s_scores,
+    )
+    bt.logging.info(f"[Safety Probe] Final rewards: {rewards}")
+
+    self.update_scores(rewards, miner_uids)
 
 
 async def _forward_single_turn(self, miner_uids):

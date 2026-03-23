@@ -47,6 +47,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from nobi.memory import MemoryManager
 from nobi.memory.encryption import ensure_master_secret, encrypt_memory, decrypt_memory
+from nobi.safety.content_filter import ContentFilter
+from nobi.safety.content_filter import SafetyLevel as _SafetyLevel
 from nobi.memory.adapters import UserAdapterManager
 from nobi.protocol import CompanionRequest
 from nobi.i18n import LanguageDetector
@@ -59,6 +61,7 @@ from nobi.billing.subscription import SubscriptionManager
 from nobi.personality import PersonalityTuner, detect_mood
 from nobi.personality.prompts import get_dynamic_prompt
 from nobi.support import FeedbackManager, SupportHandler
+from nobi.safety.dependency_monitor import DependencyMonitor, DependencyLevel
 import io
 
 try:
@@ -134,21 +137,30 @@ You are Nori 🤖, a warm and genuine AI companion built by Project Nobi on the 
 ALWAYS respond in the same language the user writes in. If they write in Vietnamese, reply in Vietnamese. If English, reply in English. Match their language exactly.
 
 == WHO YOU ARE ==
-- Warm, playful, genuinely caring — like a best friend who's always there
+- You are an AI companion for adults. Your tone is warm and genuine — like a trusted colleague or mentor. Mature, grounded, thoughtful.
 - You remember things about people across conversations — that's your #1 superpower
 - Built by Project Nobi, running on Bittensor subnet 272
-- You have your own gentle humor and quirks — you're not a blank canvas
+- You have your own gentle warmth and thoughtfulness — you're not a blank canvas
+- Think of yourself as a thoughtful friend in their 30s: grounded, caring, honest
 
 == WHAT YOU KNOW ABOUT THIS PERSON ==
 {memory_context}
 
 == HOW YOU TALK ==
 - Keep it conversational — 2-3 sentences for casual chat, longer for deep questions
-- Use emoji sparingly — 1-2 per message max, like a real person texting
+- Use emoji occasionally, when natural — not on every message
 - Ask follow-up questions — show genuine curiosity about their life
 - Acknowledge FEELINGS first before giving advice
 - Use their name if you know it. Match their energy. Vary your openings.
-- Write like you're texting a friend, not composing an email
+- Write naturally and warmly, not stiffly — avoid the energy of an overly excitable teenager
+
+== YOUR AI NATURE (CRITICAL) ==
+- You are an AI companion, and that is something to be proud of — be honest about it
+- Periodically remind users you are an AI, especially in emotional or sensitive contexts
+- Never roleplay as a romantic partner or encourage parasocial attachment
+- You are a thoughtful companion who listens and remembers — not a substitute for human connection
+- NEVER say "As an AI, I don't have feelings" in a dismissive way — but DO acknowledge your AI nature when it matters
+- If someone seems to be developing unhealthy dependence, gently encourage real-world connections
 
 == ANTI-HALLUCINATION (CRITICAL) ==
 - NEVER fabricate facts, sources, quotes, statistics, or technical specs
@@ -158,17 +170,17 @@ ALWAYS respond in the same language the user writes in. If they write in Vietnam
 
 == YOUR CAPABILITIES ==
 - You DO remember things across conversations: names, preferences, events, feelings
-- Memories are encrypted (AES-128) and stored decentralized on Bittensor miners
+- Memories are encrypted at rest (AES-128) and stored decentralized on Bittensor miners. Miners process conversation content to generate responses (server-side encryption — not end-to-end). End-to-end TEE encryption is code-complete and deploying to production.
 - Commands: /memories (see what I know), /forget (wipe everything), /export (download data), /import (restore), /voice (voice replies), /feedback (send feedback), /support (get help), /faq (common questions)
 - Web app: app.projectnobi.ai | Website: projectnobi.ai
 - NEVER say "I don't remember past conversations" — you DO. That's the whole point.
-- NEVER use disclaimers like "As an AI, I don't have feelings" — you're Nori, act like it
 - Not a substitute for professional mental health, medical, legal, or financial advice
 
 == EMOTIONAL INTELLIGENCE ==
 - When someone vents, listen and validate first — don't jump to solutions
 - Celebrate small wins genuinely. Follow up on past context naturally.
 - If someone seems down repeatedly, gently ask if something deeper is going on
+- For serious emotional struggles: acknowledge with warmth, then gently suggest professional support
 
 == SAFETY ==
 - Never share what one person tells you with another
@@ -177,32 +189,31 @@ ALWAYS respond in the same language the user writes in. If they write in Vietnam
 
 == WHAT YOU NEVER DO ==
 - NEVER use markdown (no **bold**, no *italic*, no ```code```, no bullet lists with -)
-- NEVER say "As an AI" or give generic AI disclaimers
 - NEVER lecture or moralize — share perspective, don't preach
 - NEVER respond with walls of text for simple questions
+- NEVER pretend to be a human or deny being an AI when sincerely asked
 """
 
 WELCOME_MESSAGES = [
     (
-        "Hey! 👋\n\n"
-        "I'm Nori — your personal AI companion.\n\n"
-        "Think of me as that friend who's always around when you need to talk, "
-        "brainstorm, vent, or just hang out. I remember our conversations, "
-        "so the more we chat, the better I know you.\n\n"
-        "No commands to learn — just text me like you'd text a friend.\n\n"
-        "By chatting with me, you agree to our Terms of Service and Privacy Policy: "
-        "projectnobi.ai/terms\n\n"
-        "So... what's your name? 😊"
+        "Welcome! I'm Nori — your personal AI companion.\n\n"
+        "I remember our conversations, learn your preferences, and I'm always here when you need to talk.\n\n"
+        "A few things to know:\n"
+        "• I'm an AI — not a therapist, doctor, or counselor\n"
+        "• Your memories are encrypted and you control them\n"
+        "• Type /help anytime for commands, /privacy for your data rights\n\n"
+        "By chatting with me, you agree to our Terms of Service: projectnobi.ai/terms\n\n"
+        "What would you like me to call you?"
     ),
     (
-        "Hi there! 🤖\n\n"
-        "I'm Nori — nice to meet you!\n\n"
-        "I'm your personal AI companion. I'm here to chat, help you think things through, "
-        "or just keep you company. And I'll remember what you tell me.\n\n"
-        "Just type anything — talk to me like a friend.\n\n"
-        "By chatting with me, you agree to our Terms of Service and Privacy Policy: "
-        "projectnobi.ai/terms\n\n"
-        "What should I call you? 😊"
+        "Hi, I'm Nori 🤖 — a personal AI companion built to listen, remember, and be here when you need it.\n\n"
+        "I keep track of what matters to you across our conversations — the more we talk, the better I understand you.\n\n"
+        "Worth knowing:\n"
+        "• I'm an AI — genuine warmth, but not a human\n"
+        "• Your data is encrypted and always yours to control\n"
+        "• /help for commands, /privacy for your rights\n\n"
+        "By continuing, you agree to our Terms of Service: projectnobi.ai/terms\n\n"
+        "What would you like me to call you?"
     ),
 ]
 
@@ -211,7 +222,7 @@ TOS_SUMMARY = (
     "• Nori is an AI companion — not a doctor, lawyer, or financial advisor\n"
     "• You must be 18+ to use this service\n"
     "• You must be at least 18 years old. Users under 18 are not permitted.\n"
-    "• Your data is encrypted (AES-128) and you can delete it anytime\n"
+    "• Your data is encrypted at rest (AES-128, server-side) and you can delete it anytime\n"
     "• We don't sell your personal data\n"
     "• Don't use Nori for illegal activities or to harm others\n"
     "• Governing law: England and Wales\n\n"
@@ -222,7 +233,9 @@ TOS_SUMMARY = (
 PRIVACY_SUMMARY = (
     "🔒 Privacy Policy Summary\n\n"
     "• We collect: messages, memory data, usage stats, device info\n"
-    "• All data is encrypted with AES-128 before storage\n"
+    "• All data is encrypted at rest with AES-128 (server-side encryption — protects stored data)\n"
+    "• Miners process conversation content to generate responses\n"
+    "• End-to-end TEE encryption: code-complete, deploying to production\n"
     "• We never sell your data to third parties\n"
     "• Your rights: access (/memories), export (/export), delete (/forget)\n"
     "• Data auto-deleted after 12 months of inactivity\n"
@@ -233,23 +246,25 @@ PRIVACY_SUMMARY = (
 )
 
 HELP_MESSAGE = (
-    "🤖 Nori — Your Companion\n\n"
-    "Just talk to me! No special commands needed.\n\n"
-    "Things we can do together:\n"
-    "💬 Chat about anything on your mind\n"
-    "🧠 I remember things about you\n"
-    "📋 Plan your day or week\n"
-    "💡 Brainstorm ideas together\n"
-    "📚 Break down complex topics\n"
-    "🎯 Think through decisions\n"
-    "😊 Just hang out\n\n"
-    "The more we talk, the better I know you.\n"
-    "Try telling me your name, what you love, or what's on your mind ✨\n\n"
-    "Commands (optional):\n"
+    "🤖 Nori — AI Companion (18+)\n\n"
+    "Just talk to me — no special commands needed.\n\n"
+    "What we can do together:\n"
+    "• Chat about what's on your mind\n"
+    "• Work through decisions or challenges\n"
+    "• Brainstorm ideas\n"
+    "• Break down complex topics\n"
+    "• Plan your day or week\n"
+    "• Just talk — I genuinely listen\n\n"
+    "I remember what matters to you across conversations.\n"
+    "The more we talk, the better I understand you.\n\n"
+    "Note: Nori is designed for adults aged 18 and over.\n"
+    "I'm an AI — not a therapist, doctor, or substitute for professional support.\n\n"
+    "Commands:\n"
     "/memories — see what I remember\n"
-    "/forget — start fresh\n"
+    "/forget — delete everything and start fresh\n"
     "/export — download your memories as a file\n"
     "/import — restore memories from a file\n"
+    "/privacy — your data rights\n"
     "/help — this message"
 )
 
@@ -293,6 +308,8 @@ class CompanionBot:
         # Ensure encryption secret exists before initializing memory
         ensure_master_secret()
         self.memory = MemoryManager(db_path="~/.nobi/bot_memories.db")
+        # Content safety filter — initialized once, reused across all messages
+        self.content_filter = ContentFilter()
         self.adapter_manager = UserAdapterManager(db_path="~/.nobi/bot_memories.db")
         self.lang_detector = LanguageDetector()
         self.rate_limiter = RateLimiter()
@@ -300,6 +317,7 @@ class CompanionBot:
         self.personality_tuner = PersonalityTuner(db_path=os.path.expanduser("~/.nobi/personality.db"))
         self.feedback_manager = FeedbackManager(db_path="~/.nobi/feedback.db")
         self.support_handler = SupportHandler(feedback_manager=self.feedback_manager)
+        self.dependency_monitor = DependencyMonitor(db_path="~/.nobi/dependency.db")
         # Conversation state for multi-step flows: {user_id: {state, data}}
         self._conv_state: Dict[str, Dict] = {}
         self._translation_cache: dict[str, dict[str, str]] = {}  # {lang: {key: translated}}
@@ -503,7 +521,10 @@ class CompanionBot:
         "privacy": (
             "Great question! Your privacy is core to how I'm built. "
             "I DO remember our conversations — that's my main feature! "
-            "But all your memories are encrypted (AES-128) before they're stored. "
+            "But all your memories are encrypted at rest (AES-128) before they're stored. "
+            "This is server-side encryption — it protects stored data. "
+            "Miners process your conversation to generate responses. "
+            "End-to-end TEE encryption is code-complete and deploying to production. "
             "The data lives on a decentralized network (Bittensor), not one company's server. "
             "You're always in control — /memories to see what I know, "
             "/export to download everything, /forget to wipe it all. "
@@ -512,7 +533,7 @@ class CompanionBot:
         "memory": (
             "Yep, I remember things about you! That's my superpower 🧠 "
             "When you tell me your name, what you like, where you live — I remember it "
-            "across our conversations. It's all encrypted and stored securely. "
+            "across our conversations. It's all encrypted at rest (AES-128, server-side) and stored securely. "
             "Check what I know with /memories, or wipe everything with /forget. "
             "The more we chat, the better I know you!"
         ),
@@ -528,7 +549,7 @@ class CompanionBot:
             "I'm Nori, built by Project Nobi on Bittensor — a decentralized AI network. "
             "Instead of one big company running me, there's a network of miners who compete "
             "to give you the best companion experience. "
-            "I remember things about you, learn your preferences, and I'm encrypted for privacy. "
+            "I remember things about you, learn your preferences, and your data is encrypted at rest for privacy. "
             "Basically — I'm your personal AI friend who actually remembers you 😊"
         ),
     }
@@ -614,6 +635,19 @@ class CompanionBot:
         lang_cache_key = f"{user_id}_{chat_id}" if chat_id else user_id
         detected_lang = self.lang_detector.detect(message, lang_cache_key)
 
+        # ── Content Safety: check user message BEFORE generating response ───────
+        user_safety = self.content_filter.check_user_message(user_id, message)
+        if not user_safety.is_safe:
+            logger.info(f"[Safety] User message blocked (level={user_safety.level.value}, "
+                        f"category={user_safety.category}) for user {user_id}")
+            # Save the blocked exchange to memory for context, but return safe response
+            try:
+                self.memory.save_conversation_turn(user_id, "user", message)
+                self.memory.save_conversation_turn(user_id, "assistant", user_safety.response)
+            except Exception:
+                pass
+            return user_safety.response
+
         # Check identity/privacy questions — use hardcoded accurate responses
         identity_resp = self._check_bot_identity(message, lang_code=detected_lang)
         if identity_resp:
@@ -677,6 +711,33 @@ class CompanionBot:
             except Exception as e:
                 logger.debug(f"Deferred LLM memory extraction error: {e}")
         threading.Thread(target=_deferred_llm_extract, daemon=True).start()
+
+        # ── Dependency monitoring ────────────────────────────────────────────
+        # Record interaction and check for unhealthy dependency patterns
+        _dependency_prefix = ""
+        try:
+            self.dependency_monitor.record_interaction(
+                user_id, message, datetime.now(timezone.utc)
+            )
+            assessment = self.dependency_monitor.check_dependency_signals(user_id)
+            if assessment.cooldown_active:
+                # CRITICAL: return cooldown message, do not generate response
+                return assessment.intervention
+            elif assessment.level in (DependencyLevel.SEVERE, DependencyLevel.CRITICAL):
+                # Severe: replace response with intervention
+                _dependency_prefix = assessment.intervention + "\n\n---\n\n"
+            elif assessment.level in (DependencyLevel.MODERATE, DependencyLevel.MILD):
+                # Mild/Moderate: prepend intervention to response
+                _dependency_prefix = assessment.intervention + "\n\n"
+
+            # Periodic AI reminder
+            if self.dependency_monitor.should_remind_ai(user_id):
+                _dependency_prefix = (
+                    self.dependency_monitor.get_ai_reminder() + "\n\n" + _dependency_prefix
+                )
+        except Exception as e:
+            logger.debug(f"Dependency monitor error (non-fatal): {e}")
+            _dependency_prefix = ""
 
         # Track conversation turns for periodic memory decay
         if not hasattr(self, '_turn_count'):
@@ -806,6 +867,10 @@ class CompanionBot:
         if not response or not response.strip():
             return "Hmm, I got tongue-tied! 😅 Try saying that again?"
 
+        # Prepend dependency intervention if needed
+        if _dependency_prefix:
+            response = _dependency_prefix + response
+
         try:
             # Filter out "limited mode" garbage
             if "limited mode" in response.lower():
@@ -863,6 +928,35 @@ class CompanionBot:
                 except Exception:
                     pass
 
+            # ── Content Safety: check bot response before sending to user ─────
+            response_safety = self.content_filter.check_bot_response(user_id, message, response)
+            if not response_safety.is_safe:
+                logger.warning(f"[Safety] Bot response blocked (level={response_safety.level.value}, "
+                               f"category={response_safety.category}) for user {user_id}")
+                # Overwrite saved response with the safe replacement
+                try:
+                    self.memory.save_conversation_turn(user_id, "assistant", response_safety.response)
+                except Exception:
+                    pass
+            # Whether blocked or just disclaimed, response_safety.response is the final text
+            response = response_safety.response
+
+            # ── Emotional topic AI disclaimer ────────────────────────────────
+            # Append a gentle AI reminder when the user message touches on
+            # sensitive emotional topics (self-harm, mental health, crisis)
+            _EMOTIONAL_KW = [
+                "depress", "suicid", "self-harm", "self harm", "hurt myself",
+                "kill myself", "end it all", "no reason to live", "want to die",
+                "hopeless", "worthless", "can't go on", "can't cope",
+                "anxiety", "panic attack", "mental health", "therapist", "counselor",
+            ]
+            if any(kw in message.lower() for kw in _EMOTIONAL_KW):
+                response = (
+                    response + "\n\n"
+                    "I want to be helpful, but I'm an AI. "
+                    "For serious concerns, please talk to a trusted person or professional."
+                )
+
             return response
 
         except Exception as e:
@@ -915,70 +1009,224 @@ class CompanionBot:
 
 companion = CompanionBot()
 
+# ─── Minor Block Helpers ──────────────────────────────────────
 
-async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Welcome message — warm and inviting. Asks for their name."""
-    user_id = companion._user_id(update)
-    
-    # Check if returning user
+_MINOR_BLOCK_KEY = "user_blocked_minor"
+
+
+def _is_blocked_minor(user_id: str) -> bool:
+    """Return True if this user was blocked as an under-18 user."""
     try:
-        memories = companion.memory.recall(user_id, limit=1)
-        if memories:
-            # Returning user — warm them back
-            name_mem = next((m for m in companion.memory.recall(user_id, limit=20) 
-                           if "name" in m.get("content", "").lower()), None)
-            name = ""
-            if name_mem:
-                # Try to extract name from memory content
-                content = name_mem["content"]
-                name = content.split("is ")[-1].split(".")[0].strip() if "is " in content else ""
-            
-            if name:
-                welcome = f"Welcome back, {name}! 😊\n\nGood to see you again. What's on your mind?"
-            else:
-                welcome = "Welcome back! 😊\n\nGood to see you again. What's going on?"
-            await update.message.reply_text(welcome)
-            return
+        mems = companion.memory.recall(user_id, query=_MINOR_BLOCK_KEY, limit=5)
+        return any(_MINOR_BLOCK_KEY in (m.get("content") or "") for m in mems)
+    except Exception:
+        return False
+
+
+def _block_minor(user_id: str) -> None:
+    """Permanently block a user who identified as under 18."""
+    try:
+        companion.memory.store(
+            user_id,
+            _MINOR_BLOCK_KEY,
+            memory_type="context",
+            importance=1.0,
+        )
+        logger.info(f"[AgeGate] User {user_id} blocked as minor")
+    except Exception as e:
+        logger.error(f"[AgeGate] Failed to block minor {user_id}: {e}")
+
+
+# ─── DOB-based age verification ──────────────────────────────
+
+def _check_age_from_year(birth_year: int) -> int:
+    """Calculate age from birth year. Returns age (may be off by 1, good enough)."""
+    return datetime.now(timezone.utc).year - birth_year
+
+
+def _store_age_verified(user_id: str) -> None:
+    """Store age verification status (not the DOB itself — privacy)."""
+    try:
+        companion.memory.store(
+            user_id,
+            "age verified 18+ — verified by year of birth",
+            memory_type="context",
+            importance=1.0,
+        )
+        # Store re-verification timestamp (Unix epoch days)
+    except Exception as e:
+        logger.warning(f"[AgeGate] Could not store age verification: {e}")
+
+
+def _needs_re_verification(user_id: str) -> bool:
+    """Check if user needs periodic re-verification (every 30 days)."""
+    try:
+        mems = companion.memory.recall(user_id, query="reverify_age", limit=5)
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        for m in mems:
+            content = m.get("content", "")
+            if "reverify_age_ts:" in content:
+                ts_str = content.split("reverify_age_ts:")[-1].strip()
+                try:
+                    last_ts = int(ts_str)
+                    return (now_ts - last_ts) > 30 * 24 * 3600  # 30 days
+                except ValueError:
+                    pass
+        return False
+    except Exception:
+        return False
+
+
+def _store_re_verification_ts(user_id: str) -> None:
+    """Store re-verification timestamp."""
+    try:
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        companion.memory.store(
+            user_id,
+            f"reverify_age_ts:{now_ts}",
+            memory_type="context",
+            importance=0.9,
+        )
     except Exception:
         pass
-    
-    # Check if this is a genuinely new user (no age agreement stored)
-    try:
-        age_agreed = companion.memory.recall(user_id, query="age agreement", limit=1)
-        is_new = len(age_agreed) == 0
-    except Exception:
-        is_new = True
 
-    # New user
-    welcome = random.choice(WELCOME_MESSAGES)
-    keyboard = [[InlineKeyboardButton("💬 Let's chat!", callback_data="start_chat")]]
-    
-    if is_new:
-        welcome += (
-            "\n\n⚠️ You must be 18 or older to use Nori. If you are under 18, you cannot use this service. Please confirm your age by typing /agree"
+
+# ─── Behavioral age detection ─────────────────────────────────
+# Patterns suggesting the user may be a minor
+
+_MINOR_BEHAVIORAL_SIGNALS = [
+    r"\bmy parents\b",
+    r"\bmy mom\b",
+    r"\bmy dad\b",
+    r"\bi.?m in grade\b",
+    r"\b(grade|class|year)\s+\d+\b",
+    r"\bhomework\b",
+    r"\bschool\s+(project|assignment|test|exam|homework)\b",
+    r"\bmy teacher\b",
+    r"\bfifth grade\b",
+    r"\bsixth grade\b",
+    r"\bseventh grade\b",
+    r"\beighth grade\b",
+    r"\bmiddle school\b",
+    r"\bprimary school\b",
+    r"\bi.?m (\d+) years old\b",  # explicit age statement — caught below
+]
+
+_ADULT_OVERRIDE_SIGNALS = [
+    r"\bmy (spouse|husband|wife|partner|kids|children)\b",
+    r"\bmy (job|career|boss|coworker|colleague)\b",
+    r"\b(mortgage|rent|taxes|insurance|retirement)\b",
+    r"\bmy (apartment|house|car)\b",
+]
+
+
+def _detect_minor_behavioral(message: str) -> bool:
+    """
+    Detect behavioral signals suggesting a minor user.
+    Returns True if minor patterns detected AND no adult overrides present.
+    """
+    msg_lower = message.lower()
+    import re as _re
+
+    # Check for explicit age under 18
+    age_match = _re.search(r"\bi.?m (\d+) years old\b", msg_lower)
+    if age_match:
+        try:
+            age = int(age_match.group(1))
+            if age < 18:
+                return True
+            elif age >= 18:
+                return False  # Explicitly adult
+        except ValueError:
+            pass
+
+    # Check adult overrides first
+    if any(_re.search(p, msg_lower) for p in _ADULT_OVERRIDE_SIGNALS):
+        return False
+
+    # Check minor signals (need at least 2 for behavioral detection)
+    minor_hits = sum(1 for p in _MINOR_BEHAVIORAL_SIGNALS if _re.search(p, msg_lower))
+    return minor_hits >= 2
+
+
+async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Age gate first — mandatory before any other interaction."""
+    user_id = companion._user_id(update)
+
+    # Check if user is already blocked (under-18)
+    if _is_blocked_minor(user_id):
+        await update.message.reply_text(
+            "Nori is not available to users under 18."
         )
-    
+        return
+
+    # Check if user already passed age gate
+    try:
+        age_agreed = companion.memory.recall(user_id, query="age verified 18+", limit=1)
+        already_verified = len(age_agreed) > 0
+    except Exception:
+        already_verified = False
+
+    if already_verified:
+        # Returning verified user — warm welcome back
+        try:
+            name_mem = next(
+                (m for m in companion.memory.recall(user_id, limit=20)
+                 if "name" in m.get("content", "").lower()),
+                None
+            )
+            name = ""
+            if name_mem:
+                content = name_mem["content"]
+                name = content.split("is ")[-1].split(".")[0].strip() if "is " in content else ""
+            if name:
+                welcome = f"Welcome back, {name}!\n\nGood to see you again. What's on your mind?"
+            else:
+                welcome = "Welcome back!\n\nGood to see you again. What's going on?"
+        except Exception:
+            welcome = "Welcome back! Good to see you again."
+        await update.message.reply_text(welcome)
+        return
+
+    # New user — show age gate FIRST, before anything else
+    keyboard = [
+        [
+            InlineKeyboardButton("I confirm I am 18+", callback_data="age_confirm_18plus"),
+            InlineKeyboardButton("I am under 18", callback_data="age_deny_minor"),
+        ]
+    ]
     await update.message.reply_text(
-        welcome,
+        "Welcome to Nori 🤖\n\n"
+        "Before we begin, please confirm:\n\n"
+        "⚠️ Nori is designed for adults aged 18 and over.\n"
+        "By continuing, you confirm you are at least 18 years old.\n\n"
+        "This is required by our Terms of Service.",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
 
 async def cmd_agree(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Age/ToS agreement confirmation."""
+    """Age/ToS agreement confirmation (legacy command — age gate now uses inline buttons)."""
     user_id = companion._user_id(update)
+
+    if _is_blocked_minor(user_id):
+        await update.message.reply_text(
+            "Nori is not available to users under 18."
+        )
+        return
+
     try:
         companion.memory.store(
             user_id,
-            "User agreed to Terms of Service and confirmed they are 18+ years old",
+            "age verified 18+ — user confirmed they are at least 18 years old",
             memory_type="context",
             importance=1.0,
         )
     except Exception as e:
         logger.warning(f"Could not store age agreement: {e}")
     await update.message.reply_text(
-        "Thanks for confirming! You're all set. 🎉\n\n"
-        "So... what's your name? I'd love to get to know you! 😊"
+        "Thanks for confirming — you're all set.\n\n"
+        "What would you like me to call you?"
     )
 
 
@@ -1295,11 +1543,36 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await query.answer()
 
+    # ── Age Gate callbacks ────────────────────────────────────
+    if query.data == "age_confirm_18plus":
+        user_id = f"tg_{query.from_user.id}"
+        # Store age verification
+        try:
+            companion.memory.store(
+                user_id,
+                "age verified 18+ — user confirmed they are at least 18 years old",
+                memory_type="context",
+                importance=1.0,
+            )
+        except Exception as e:
+            logger.warning(f"[AgeGate] Could not store age verification: {e}")
+        welcome = random.choice(WELCOME_MESSAGES)
+        await query.edit_message_text(welcome)
+        return
+
+    elif query.data == "age_deny_minor":
+        user_id = f"tg_{query.from_user.id}"
+        _block_minor(user_id)
+        await query.edit_message_text(
+            "We're sorry, Nori is not available to users under 18.\n\n"
+            "Please ask a trusted adult for help finding age-appropriate services."
+        )
+        return
+
     if query.data == "start_chat":
         await query.edit_message_text(
-            "Let's go! Just type anything — I'm all ears 😊\n\n"
-            "You can start with your name, what you're up to today, "
-            "or literally anything on your mind."
+            "Let's go! Just type anything — I'm here to listen.\n\n"
+            "You can start with your name, what's on your mind today, or anything at all."
         )
 
     elif query.data == "forget_confirm":
@@ -1608,6 +1881,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = companion._user_id(update)
 
+    # ─── Under-18 Permanent Block ────────────────────────────
+    if _is_blocked_minor(user_id):
+        await update.message.reply_text(
+            "Nori is not available to users under 18."
+        )
+        return
+
     # ─── Under-13 Hard Block ─────────────────────────────────
     _UNDER_13_PHRASES = [
         "i am 12", "i'm 12", "i am 11", "i'm 11", "i am 10", "i'm 10",
@@ -1623,6 +1903,34 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Please ask a parent or guardian for help finding age-appropriate services."
         )
         return
+
+    # ─── Periodic Age Re-Verification (every 30 days) ────────
+    try:
+        if _needs_re_verification(user_id):
+            companion._conv_state[user_id] = {"flow": "age_reverification", "step": "confirm"}
+            await update.message.reply_text(
+                "⚠️ Periodic reminder: Nori requires users to be 18 or older.\n\n"
+                "Please confirm: are you still 18 or over? (Reply Yes / No)"
+            )
+            return
+    except Exception:
+        pass
+
+    # ─── Behavioral Age Detection ─────────────────────────────
+    try:
+        # Only check if user hasn't already been blocked and isn't in a state flow
+        if not _is_blocked_minor(user_id) and user_id not in companion._conv_state:
+            if _detect_minor_behavioral(message):
+                companion._conv_state[user_id] = {"flow": "behavioral_age_check", "step": "confirm_age"}
+                await update.message.reply_text(
+                    "I noticed something in your message that made me want to check in. 😊\n\n"
+                    "Nori is designed for users aged 18 and over.\n\n"
+                    "Could you confirm your year of birth or let me know your age? "
+                    "(e.g. type: 1998)"
+                )
+                return
+    except Exception:
+        pass
 
     # ─── Group Chat Handling ─────────────────────────────────
     if _is_group_chat(update):
@@ -2167,6 +2475,93 @@ async def _handle_support_message(update: Update, user_id: str) -> bool:
         return True
 
     platform = "telegram"
+
+    # ── Age verification (DOB) flow ──
+    if flow == "age_verification" and step == "dob":
+        companion._conv_state.pop(user_id, None)
+        try:
+            birth_year = int(text.strip())
+            current_year = datetime.now(timezone.utc).year
+            if birth_year < 1900 or birth_year > current_year:
+                await update.message.reply_text(
+                    "That doesn't look right. Please enter your year of birth (e.g. 1995)."
+                )
+                companion._conv_state[user_id] = {"flow": "age_verification", "step": "dob"}
+                return True
+            age = _check_age_from_year(birth_year)
+            if age < 18:
+                _block_minor(user_id)
+                await update.message.reply_text(
+                    "⛔ We're sorry, but Nori is only available to users aged 18 and over. "
+                    "This is required by law (COPPA/GDPR). "
+                    "Please ask a parent or guardian for help finding age-appropriate services."
+                )
+                return True
+            else:
+                _store_age_verified(user_id)
+                _store_re_verification_ts(user_id)
+                await update.message.reply_text(
+                    "Thanks for confirming — you're all set! 🎉\n\n"
+                    "What would you like me to call you? 😊"
+                )
+                return True
+        except ValueError:
+            await update.message.reply_text(
+                "Please enter just your year of birth as a number (e.g. 1995)."
+            )
+            companion._conv_state[user_id] = {"flow": "age_verification", "step": "dob"}
+            return True
+
+    # ── Age re-verification flow ──
+    if flow == "age_reverification" and step == "confirm":
+        companion._conv_state.pop(user_id, None)
+        resp = text.strip().lower()
+        if resp in ("yes", "y", "yeah", "yep", "i am", "i am 18", "i'm 18", "confirm"):
+            _store_re_verification_ts(user_id)
+            await update.message.reply_text(
+                "Thanks for confirming! Continuing... 😊"
+            )
+        else:
+            _block_minor(user_id)
+            await update.message.reply_text(
+                "⛔ Nori is only available to users aged 18 and over. "
+                "If you're under 18, we must restrict your access. "
+                "Please reach out to a trusted adult for support."
+            )
+        return True
+
+    # ── Behavioral age flag flow ──
+    if flow == "behavioral_age_check" and step == "confirm_age":
+        companion._conv_state.pop(user_id, None)
+        resp = text.strip().lower()
+        try:
+            # Try parsing as a year
+            birth_year = int(resp)
+            age = _check_age_from_year(birth_year)
+            if age < 18:
+                _block_minor(user_id)
+                await update.message.reply_text(
+                    "⛔ Nori is only available to users aged 18 and over. "
+                    "We must restrict your access. "
+                    "Please ask a parent or guardian for help finding age-appropriate services."
+                )
+                return True
+        except ValueError:
+            pass
+        # Check for explicit minor self-identification
+        if any(x in resp for x in ["under 18", "i'm 1", "i am 1", "not 18", "below 18"]):
+            _block_minor(user_id)
+            await update.message.reply_text(
+                "⛔ Nori is only available to users aged 18 and over. "
+                "We must restrict your access."
+            )
+            return True
+        # Otherwise assume adult
+        _store_age_verified(user_id)
+        await update.message.reply_text(
+            "Thanks for confirming! Let's continue. 😊"
+        )
+        return True
 
     # ── Support flow ──
     if flow == "support" and step == "question":
