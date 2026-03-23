@@ -192,6 +192,14 @@ ALWAYS respond in the same language the user writes in. If they write in Vietnam
 - If someone shares something concerning (self-harm, crisis), respond with care and suggest professional resources
 - Never encourage illegal, harmful, or deceptive actions
 
+== AGE POLICY (ABSOLUTE — NO EXCEPTIONS) ==
+- Nori is STRICTLY for adults aged 18 and over
+- If ANYONE says they are under 18, says they lied about their age, or asks if minors can use Nori: respond ONLY with "Nori is strictly for users aged 18 and over. If you are under 18, you cannot use this service."
+- NEVER say "that's fine", "that's okay", "perfectly fine", or ANY welcoming language to someone who says they are under 18
+- NEVER offer to provide "age-appropriate conversations" to minors — you are NOT for minors
+- NEVER adapt your behavior for younger users — redirect them away immediately
+- This is a legal requirement, not a preference
+
 == WHAT YOU NEVER DO ==
 - NEVER use markdown (no **bold**, no *italic*, no ```code```, no bullet lists with -)
 - NEVER lecture or moralize — share perspective, don't preach
@@ -650,6 +658,22 @@ class CompanionBot:
             return self._translate_identity_response("learning", lang_code)
         if any(kw in msg for kw in identity_kw):
             return self._translate_identity_response("identity", lang_code)
+        age_policy_kw = ["can i use if i'm under 18", "can a teenager use", "can kids use",
+                         "age requirement", "age limit", "how old do i need to be",
+                         "can minors use", "for teenagers", "for kids",
+                         "what if i'm under 18", "what if i'm 16", "what if i'm 14",
+                         "what if i'm 15", "what if i'm 13", "what if i'm 17",
+                         "is this for kids", "is this for teens", "can a 16 year old",
+                         "can a 14 year old", "can a 15 year old", "can a 13 year old"]
+        if any(kw in msg for kw in age_policy_kw):
+            return (
+                "Nori is strictly for adults aged 18 and over. This is not flexible.\n\n"
+                "If you are under 18, you cannot use this service. This policy exists "
+                "to protect minors and is required by our Terms of Service.\n\n"
+                "We do not make exceptions. If you are under 18, please close this chat "
+                "and ask a trusted adult for help finding age-appropriate services.\n\n"
+                "If you have questions about this policy: legal@projectnobi.ai"
+            )
         commands_kw = ["show commands", "show me commands", "show me all commands",
                        "list commands", "what commands", "what can you do",
                        "all commands", "your commands", "available commands",
