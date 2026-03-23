@@ -113,10 +113,10 @@ SUBNET_HOTKEY_NAME = os.environ.get("SUBNET_HOTKEY_NAME", "nobi-validator")
 
 # Configurable rate limits — adjust via env vars without code changes
 # Testnet defaults are generous; tighten for mainnet
-MESSAGES_PER_DAY = int(os.environ.get("NOBI_MESSAGES_PER_DAY", "300"))
-MESSAGES_PER_MINUTE = int(os.environ.get("NOBI_MESSAGES_PER_MINUTE", "10"))
-VOICE_PER_DAY = int(os.environ.get("NOBI_VOICE_PER_DAY", "30"))
-IMAGE_PER_DAY = int(os.environ.get("NOBI_IMAGE_PER_DAY", "30"))
+MESSAGES_PER_DAY = int(os.environ.get("NOBI_MESSAGES_PER_DAY", "200"))
+MESSAGES_PER_MINUTE = int(os.environ.get("NOBI_MESSAGES_PER_MINUTE", "8"))
+VOICE_PER_DAY = int(os.environ.get("NOBI_VOICE_PER_DAY", "5"))
+IMAGE_PER_DAY = int(os.environ.get("NOBI_IMAGE_PER_DAY", "5"))
 MEMORY_SLOTS = int(os.environ.get("NOBI_MEMORY_SLOTS", "300"))
 MAX_RESPONSE_TOKENS = int(os.environ.get("NOBI_MAX_RESPONSE_TOKENS", "512"))
 # Legacy alias kept for any code that references it directly
