@@ -386,9 +386,39 @@ class Miner(BaseMinerNeuron):
 
     async def forward(self, synapse: CompanionRequest) -> CompanionRequest:
         """Process an incoming CompanionRequest and generate a response."""
+        # Phase 5: TEE Encryption — decrypt if payload is encrypted
+        if getattr(synapse, "encrypted", False):
+            try:
+                from nobi.privacy.tee_encryption import decrypt_payload
+                plaintext_message, plaintext_context = decrypt_payload(
+                    encrypted_message=synapse.encrypted_message,
+                    encrypted_context=synapse.encrypted_context,
+                    key_id=synapse.key_id,
+                )
+                # Overwrite with decrypted values — from here on, processing is identical
+                synapse.message = plaintext_message
+                # Context will be picked up via preferences override below
+                if plaintext_context and synapse.preferences is not None:
+                    if isinstance(synapse.preferences, dict):
+                        synapse.preferences["memory_context"] = plaintext_context
+                    else:
+                        synapse.preferences = {"memory_context": plaintext_context}
+                elif plaintext_context:
+                    synapse.preferences = {"memory_context": plaintext_context}
+                bt.logging.info(
+                    f"TEE decrypt OK — message {len(plaintext_message)} chars, "
+                    f"context {len(plaintext_context)} chars"
+                )
+            except Exception as e:
+                bt.logging.error(f"TEE decryption failed: {e} — returning empty response")
+                synapse.response = ""
+                synapse.confidence = 0.0
+                return synapse
+
         bt.logging.info(
             f"Received query from user '{synapse.user_id}' "
-            f"(query_type={synapse.query_type}): {synapse.message[:100]}"
+            f"(query_type={synapse.query_type}, encrypted={getattr(synapse, 'encrypted', False)}): "
+            f"{synapse.message[:100]}"
         )
 
         # Extract bot-provided memory context if available (sent via preferences field)

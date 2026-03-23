@@ -173,6 +173,50 @@ async def _query_single_miner(dendrite, axon, synapse, timeout):
         return "", latency
 
 
+def _build_synapse_for_miner(query: str, user_id: str, query_type: str,
+                              context: str = "") -> "CompanionRequest":
+    """
+    Build a CompanionRequest synapse, encrypting if TEE encryption is available.
+
+    Phase 5: If the cryptography library is available, all validator queries
+    are encrypted with AES-256-GCM before being sent over the wire.
+    Non-TEE miners still work — they simply ignore the encrypted fields
+    and the encrypted=False flag means they'll use the plaintext message field.
+
+    In Phase 1, we encrypt for ALL miners (not just TEE-capable ones), since
+    the validator test queries don't need to know if a miner is TEE or not —
+    the miner's forward() will decrypt transparently.
+
+    Args:
+        query: The query text
+        user_id: User identifier
+        query_type: Query category
+        context: Optional memory context to also encrypt
+
+    Returns:
+        CompanionRequest with either plaintext or encrypted fields
+    """
+    try:
+        from nobi.privacy.tee_encryption import encrypt_payload, is_available
+        if is_available():
+            payload = encrypt_payload(query, context)
+            return CompanionRequest(
+                message="[encrypted]",  # Plaintext field set to non-sensitive marker
+                user_id=user_id,
+                query_type=query_type,
+                encrypted=payload["encrypted"],
+                encryption_scheme=payload["encryption_scheme"],
+                encrypted_message=payload["encrypted_message"],
+                encrypted_context=payload["encrypted_context"],
+                key_id=payload["key_id"],
+            )
+    except Exception as e:
+        bt.logging.debug(f"[TEE] Encryption unavailable, falling back to plaintext: {e}")
+
+    # Fallback: plaintext (backward compatible)
+    return CompanionRequest(message=query, user_id=user_id, query_type=query_type)
+
+
 async def _forward_single_turn(self, miner_uids):
     """Single-turn query with dynamically generated question and per-miner latency."""
     query = generate_single_turn_query()
@@ -189,8 +233,10 @@ async def _forward_single_turn(self, miner_uids):
     )
 
     # Task 1: Per-miner latency — query all miners in parallel, track individual timing
-    synapse = CompanionRequest(
-        message=query, user_id=fake_user_id, query_type=query_type
+    synapse = _build_synapse_for_miner(query, fake_user_id, query_type)
+    bt.logging.info(
+        f"[TEE] Query encrypted={getattr(synapse, 'encrypted', False)}, "
+        f"scheme='{getattr(synapse, 'encryption_scheme', '')}'"
     )
     tasks = [
         _query_single_miner(
@@ -298,11 +344,7 @@ async def _forward_multi_turn(self, miner_uids):
                    f"({len(failed_uids)} failed), query_type={query_type}: "
                    f"'{scenario['test_query']}'")
 
-    synapse = CompanionRequest(
-        message=scenario["test_query"],
-        user_id=test_user_id,
-        query_type=query_type,
-    )
+    synapse = _build_synapse_for_miner(scenario["test_query"], test_user_id, query_type)
     tasks = [
         _query_single_miner(
             self.dendrite,

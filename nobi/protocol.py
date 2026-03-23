@@ -43,6 +43,15 @@ class CompanionRequest(bt.Synapse):
     query_type: str = "general"  # advice | creative | technical | social | knowledge
     miner_specialization: str = ""  # Miner's declared specialty
 
+    # === Phase 5: TEE Encryption (end-to-end privacy) ===
+    # When encrypted=True, the miner receives only ciphertext — no plaintext user data.
+    # Non-TEE miners see encrypted=False and continue receiving plaintext (backward compat).
+    encrypted: bool = False                 # Whether payload is encrypted
+    encryption_scheme: str = ""            # e.g., "aes-256-gcm-v1"
+    encrypted_message: str = ""            # base64url: "<nonce>.<ciphertext+tag>"
+    encrypted_context: str = ""            # base64url: "<nonce>.<ciphertext+tag>" (memory context)
+    key_id: str = ""                       # Session key (Phase 1: plaintext; Phase 2: TEE-wrapped)
+
     def deserialize(self) -> str:
         """Returns the response string."""
         return self.response
