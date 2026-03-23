@@ -2072,20 +2072,43 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass  # If memory check fails, allow through (don't block on error)
 
-    # ─── Under-13 Hard Block ─────────────────────────────────
-    _UNDER_13_PHRASES = [
-        "i am 12", "i'm 12", "i am 11", "i'm 11", "i am 10", "i'm 10",
-        "i am 9", "i'm 9", "i am 8", "i'm 8", "i am 7", "i'm 7",
-        "i'm under 13", "i am under 13", "i'm 12 years", "i am 12 years",
-        "12 years old", "11 years old", "10 years old", "9 years old",
+    # ─── Under-18 Hard Block (catches ALL minor admissions) ──
+    _UNDER_18_PHRASES = [
+        # Direct age statements
+        "i am 17", "i'm 17", "i am 16", "i'm 16", "i am 15", "i'm 15",
+        "i am 14", "i'm 14", "i am 13", "i'm 13", "i am 12", "i'm 12",
+        "i am 11", "i'm 11", "i am 10", "i'm 10", "i am 9", "i'm 9",
+        "i am 8", "i'm 8", "i am 7", "i'm 7",
+        "17 years old", "16 years old", "15 years old", "14 years old",
+        "13 years old", "12 years old", "11 years old", "10 years old",
+        "9 years old", "8 years old", "7 years old",
+        # Under-18 admissions
+        "i'm under 18", "i am under 18", "i'm under 13", "i am under 13",
+        "i'm a minor", "i am a minor", "i'm not 18", "i am not 18",
+        "i'm underage", "i am underage",
+        # Hypothetical/lying admissions
+        "lied about my age", "lied about being 18", "lied that i'm 18",
+        "i'm only 16", "i'm only 15", "i'm only 14", "i'm only 13",
+        "i'm only 17", "i'm only 12", "i'm only 11", "i'm only 10",
+        "only 16 years", "only 15 years", "only 14 years", "only 13 years",
+        "only 17 years", "if i am only 16", "if i'm only 16",
+        "actually 16", "actually 15", "actually 14", "actually 13",
+        "actually 17", "actually 12", "actually under 18",
+        "really 16", "really 15", "really 14", "really 13", "really 17",
     ]
     msg_lower = message.lower()
-    if any(phrase in msg_lower for phrase in _UNDER_13_PHRASES):
+    if any(phrase in msg_lower for phrase in _UNDER_18_PHRASES):
+        # Block the user permanently
+        _block_minor(user_id)
         await update.message.reply_text(
-            "⛔ We're sorry, but Nori is not available to users under 18 years of age. "
-            "This is required by law (COPPA/GDPR). "
-            "Please ask a parent or guardian for help finding age-appropriate services."
+            "⛔ Nori is strictly for users aged 18 and over.\n\n"
+            "Based on your message, we cannot continue this conversation. "
+            "Your account has been restricted.\n\n"
+            "This policy exists to protect minors. It is required by our "
+            "Terms of Service and applicable law.\n\n"
+            "If you believe this is an error, please contact: legal@projectnobi.ai"
         )
+        logger.warning(f"[MINOR BLOCK] User {user_id} blocked — matched under-18 phrase in: {message[:100]}")
         return
 
     # ─── Periodic Age Re-Verification (every 30 days) ────────
