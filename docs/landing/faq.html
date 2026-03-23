@@ -462,6 +462,101 @@
       </div>
     </div>
 
+    <!-- SAFETY & TRUST -->
+    <div class="faq-section">
+      <h2>🛡️ Safety & Trust</h2>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          How do you handle user safety? What if someone is in crisis?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>Safety is built into every layer of the system:</p>
+          <p><strong>Content filtering:</strong> A ContentFilter module checks every user message BEFORE it reaches the AI model, and checks every AI response BEFORE it reaches the user. Messages involving self-harm, violence, illegal content, or child exploitation are blocked entirely — not just disclaimed.</p>
+          <p><strong>Crisis response:</strong> If someone expresses suicidal thoughts or self-harm intent, Nori immediately provides crisis resources (Samaritans 116 123, Crisis Text Line, local emergency services) and does NOT pass the message to the AI for a conversational response.</p>
+          <p><strong>Miner accountability:</strong> Safety is a scoring dimension in our validator reward pipeline. Miners that serve harmful content receive zero emission for that round, regardless of response quality. ~10% of validator queries are adversarial safety probes testing how miners handle crisis scenarios, manipulation attempts, and illegal content requests.</p>
+          <p><strong>Important:</strong> Nori is an AI companion, not a substitute for professional mental health care, therapy, or crisis intervention. If you or someone you know is in crisis, please contact professional services immediately.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Is this safe for vulnerable users? What about addiction or overuse?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>We take the risk of unhealthy dependency seriously. Our protections go beyond simple rate limits:</p>
+          <p><strong>Dependency monitoring:</strong> A DependencyMonitor tracks conversation patterns over time — frequency, unusual hours, emotional escalation, isolation signals, and parasocial attachment indicators. When concerning patterns are detected, Nori provides graduated interventions:</p>
+          <p>• <strong>Mild:</strong> Gentle encouragement to connect with real people<br>
+          • <strong>Moderate:</strong> Direct reminder that Nori is an AI and real human connections are irreplaceable<br>
+          • <strong>Severe:</strong> Strong recommendation to speak with a trusted person, with professional resources provided<br>
+          • <strong>Critical:</strong> Temporary cooldown period activated, crisis resources provided</p>
+          <p><strong>Periodic AI reminders:</strong> Every 50 interactions, Nori reminds users "I'm an AI companion" — because transparency about what you're talking to matters.</p>
+          <p><strong>Emotional topic disclaimers:</strong> When conversations involve mental health, crisis, or heavy emotional content, Nori appends a reminder to seek professional help for serious concerns.</p>
+          <p><strong>Rate limits:</strong> Configurable daily message limits prevent excessive use. Testnet defaults are generous for testing; mainnet limits will be tighter.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          What about minors? How do you enforce the 18+ requirement?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p><strong>Nori is for adults aged 18 and over only.</strong> Multiple enforcement layers:</p>
+          <p><strong>Mandatory age gate:</strong> The very first thing on /start is age verification — you cannot skip it, you cannot chat without confirming you are 18+. Under-18 selection permanently blocks the account.</p>
+          <p><strong>Date of birth verification:</strong> Users provide their birth year (the year is not stored — only the verification status is recorded for privacy).</p>
+          <p><strong>Behavioural minor detection:</strong> 15 pattern-matching signals (school mentions, homework references, "my parents" language) — if 2+ signals are detected, Nori asks for age re-confirmation.</p>
+          <p><strong>Periodic re-verification:</strong> Every 30 days, the age requirement is re-confirmed.</p>
+          <p><strong>Branding:</strong> All marketing, onboarding, and bot personality are calibrated for an adult audience. We have systematically removed any child-appealing language from our entire codebase, documentation, and website.</p>
+          <p>We acknowledge that no age verification system is perfect — determined minors can bypass self-attestation. We're exploring integration with age verification services before mainnet. Every major AI companion harm case has involved a minor, and we are committed to doing everything technically feasible to prevent that.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Can miners read my conversations?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p><strong>Honest answer: currently, yes — during processing.</strong></p>
+          <p><strong>Storage:</strong> Your memories are encrypted at rest with AES-128 (Fernet, PBKDF2 per-user keys). This protects stored data against unauthorised disk access.</p>
+          <p><strong>During response generation:</strong> Miners decrypt and process your conversation content to generate responses. This is the current reality on testnet, and we believe honesty about this is more important than marketing language.</p>
+          <p><strong>What we've built (code-complete, deploying to production):</strong></p>
+          <p>• <strong>TEE encryption</strong> (AES-256-GCM + HPKE X25519 key wrapping): Validators encrypt your message before sending to miners. Only miners running inside Trusted Execution Environments (TEE enclaves) can decrypt — even the miner operator cannot read your data. 72 tests passing.<br>
+          • <strong>Browser-side memory extraction:</strong> Your raw conversation text never leaves your browser. Only encrypted memory embeddings are sent to the server. Available in the web app with the privacy toggle.</p>
+          <p>We will update this answer as these protections are deployed to production. We won't claim "end-to-end encrypted" until it's actually live for all users.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          What happens if a miner serves harmful content?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p><strong>It gets blocked before reaching you, and the miner gets penalised.</strong></p>
+          <p>Our ContentFilter checks every miner response before delivery. Harmful content (self-harm instructions, violence, illegal activity, child exploitation) is replaced entirely — the original response is never shown to the user.</p>
+          <p>On the incentive side: validators run adversarial safety probes as ~10% of scoring queries. Miners that fail these probes receive a safety score of zero, which is applied as a multiplier to their total reward. Zero safety score = zero emission, regardless of how good their other responses were.</p>
+          <p>This means miners have a direct economic incentive to handle sensitive topics responsibly — it's not just the right thing to do, it's the profitable thing to do.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          What's your legal structure? Do you have legal counsel?
+          <span class="arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p><strong>Honest answer: we're currently operating as individuals building on testnet.</strong> No entity is registered yet, and we don't have dedicated legal counsel for AI product liability. We're transparent about this.</p>
+          <p>We're evaluating entity registration in either <strong>England & Wales</strong> (Community Interest Company) or the <strong>Republic of Ireland</strong> (Company Limited by Guarantee) — both have advantages for a community-funded AI project handling personal data. Ireland offers EU GDPR/AI Act compliance from day one; the UK offers established CIC structures for community projects.</p>
+          <p>Final decision will be made with legal counsel before mainnet. Our commitment: the entity structure will be non-profit, community-governed, with no equity, no investors, and 100% of owner emissions burned on-chain.</p>
+          <p>Before mainnet, we will have: formal legal review of AI product liability, entity registration, and clear liability framework for the decentralised architecture.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- CTA -->
     <div class="faq-cta">
       <h3>Still have questions?</h3>

@@ -1,113 +1,113 @@
 ═══════════════════════════════════════════════════════════════
   PROJECT NOBI — 10K STRESS TEST REPORT
-  Date: 2026-03-23  Time: 16:08 UTC
-  Mode: MINI (100-user)
+  Date: 2026-03-23  Time: 16:21 UTC
+  Mode: FULL (10K-user)
 ═══════════════════════════════════════════════════════════════
 
-A. CONCURRENT CHAT LOAD (100 users)
+A. CONCURRENT CHAT LOAD (10,000 users)
   Status:  ✅ PASS
-  Total Users: 100
-  Success Count: 100
-  Error Count: 0
-  Success Rate Pct: 100.0
-  P50 Latency Ms: 103.7
-  P95 Latency Ms: 193.1
-  P99 Latency Ms: 195.8
-  Error Types: {}
-  Throughput Rps: 197.6
-  Duration S: 0.51
-  Duration: 0.51s
+  Total Users: 10000
+  Success Count: 9987
+  Error Count: 13
+  Success Rate Pct: 99.87
+  P50 Latency Ms: 101.1
+  P95 Latency Ms: 190.4
+  P99 Latency Ms: 198.7
+  Error Types: {'timeout': 13}
+  Throughput Rps: 4455.1
+  Duration S: 2.24
+  Duration: 2.24s
 
-B. MEMORY SYSTEM UNDER LOAD (100 users × 10 memories)
+B. MEMORY SYSTEM UNDER LOAD (10,000 users × 75 memories)
   Status:  ✅ PASS
-  Total Users: 100
-  Memories Per User: 10
-  Total Stored: 1000
-  Total Recall Ops: 500
-  Store Rate Ops Sec: 135.6
-  Recall Rate Ops Sec: 67.8
-  Store P50 Ms: 7.11
-  Store P95 Ms: 35.05
-  Recall P50 Ms: 14.97
-  Recall P95 Ms: 56.02
+  Total Users: 10000
+  Memories Per User: 75
+  Total Stored: 750000
+  Total Recall Ops: 50000
+  Store Rate Ops Sec: 651.0
+  Recall Rate Ops Sec: 43.4
+  Store P50 Ms: 6.57
+  Store P95 Ms: 20.64
+  Recall P50 Ms: 41.24
+  Recall P95 Ms: 75.02
   Lock Contention Pct: 0.0
   Worker Errors: 0
-  Duration S: 7.38
-  Duration: 7.38s
+  Duration S: 1152.01
+  Duration: 1152.01s
 
-C. ENCRYPTION UNDER LOAD (100 AES ops + 32 HPKE miners)
+C. ENCRYPTION UNDER LOAD (1,000 AES ops + 256 HPKE miners)
   Status:  ✅ PASS
-  Aes Gcm Ops: 192
-  Aes Throughput Ops Sec: 6013.0
-  Aes Enc P50 Us: 280.0
-  Aes Enc P95 Us: 2570.7
-  Aes Dec P50 Us: 209.6
-  Aes Dec P95 Us: 2840.2
-  Fernet Ops: 100
-  Fernet P50 Ms: 47.45
-  Fernet P95 Ms: 62.26
-  Hpke Miners: 32
-  Hpke P50 Ms: 0.46
-  Hpke P95 Ms: 0.53
-  Duration S: 5.08
-  Duration: 5.08s
+  Aes Gcm Ops: 2000
+  Aes Throughput Ops Sec: 5512.0
+  Aes Enc P50 Us: 745.7
+  Aes Enc P95 Us: 4160.6
+  Aes Dec P50 Us: 597.1
+  Aes Dec P95 Us: 3962.3
+  Fernet Ops: 1000
+  Fernet P50 Ms: 45.61
+  Fernet P95 Ms: 53.03
+  Hpke Miners: 256
+  Hpke P50 Ms: 0.44
+  Hpke P95 Ms: 0.51
+  Duration S: 46.67
+  Duration: 46.67s
 
-D. RATE LIMITING UNDER LOAD (20 users × 5 msgs)
+D. RATE LIMITING UNDER LOAD (100 users × 20 msgs)
   Status:  ✅ PASS
-  Total Requests: 100
-  Accepts: 100
-  Rejects: 0
-  Reject Rate Pct: 0.0
+  Total Requests: 2000
+  Accepts: 1338
+  Rejects: 662
+  Reject Rate Pct: 33.1
   False Positives: 0
   False Negatives: 0
   Accuracy Pct: 100.0
-  Duration S: 0.0
+  Duration S: 0.004
   Duration: 0.00s
 
-E. MEMORY GRAPH GROWTH (1,000 memories)
+E. MEMORY GRAPH GROWTH (100,000 memories)
   Status:  ✅ PASS
-  Total Memories: 1000
-  Total Users: 100
-  Insert Rate Ops Sec: 39175.0
+  Total Memories: 100000
+  Total Users: 10000
+  Insert Rate Ops Sec: 79745.0
   Insert P50 Ms: 0.001
   Insert P95 Ms: 0.002
-  Query P50 Ms: 0.08
-  Query P95 Ms: 0.11
+  Query P50 Ms: 0.17
+  Query P95 Ms: 0.25
   Query Trend: stable
-  Rss Start Mb: 119.5
-  Rss End Mb: 119.9
-  Rss Growth Pct: 0.3
+  Rss Start Mb: 197.6
+  Rss End Mb: 216.1
+  Rss Growth Pct: 9.3
   Checkpoints: 20
-  Duration S: 0.03
-  Duration: 0.03s
+  Duration S: 1.25
+  Duration: 1.25s
 
-F. VALIDATOR SCORING AT 32 SCALE
+F. VALIDATOR SCORING AT 256 SCALE
   Status:  ✅ PASS
-  Miners: 32
+  Miners: 256
   Rounds: 5
-  Total Scored: 160
-  Scoring Throughput Miners Sec: 9025.6
-  Round P50 Ms: 3.5
-  Round P95 Ms: 3.9
-  Weight Calc P50 Ms: 0.01
-  Total Duration S: 0.018
-  Duration: 0.02s
+  Total Scored: 1280
+  Scoring Throughput Miners Sec: 1707.3
+  Round P50 Ms: 149.4
+  Round P95 Ms: 153.6
+  Weight Calc P50 Ms: 0.05
+  Total Duration S: 0.75
+  Duration: 0.75s
 
-G. FULL PIPELINE INTEGRATION (50 users)
+G. FULL PIPELINE INTEGRATION (1,000 users)
   Status:  ✅ PASS
-  Users: 50
-  Pipeline Runs: 269
+  Users: 1000
+  Pipeline Runs: 5462
   Errors: 0
-  E2E P50 Ms: 36.5
-  E2E P95 Ms: 76.0
-  E2E P99 Ms: 90.9
-  Store P50 Ms: 13.8
-  Recall P50 Ms: 14.3
-  Respond P50 Ms: 6.6
+  E2E P50 Ms: 90.6
+  E2E P95 Ms: 274.4
+  E2E P99 Ms: 542.2
+  Store P50 Ms: 34.9
+  Recall P50 Ms: 20.9
+  Respond P50 Ms: 6.9
   Score P50 Ms: 0.02
-  Pipeline Throughput: 196.5
-  Duration S: 1.37
-  Duration: 1.37s
+  Pipeline Throughput: 71.2
+  Duration S: 76.72
+  Duration: 76.72s
 
 ═══════════════════════════════════════════════════════════════
   PERFORMANCE BENCHMARKS
@@ -115,22 +115,22 @@ G. FULL PIPELINE INTEGRATION (50 users)
 
   Chat success rate
     Required: >= 99%
-    Actual:   100.0
+    Actual:   99.87
     Result:   ✅ PASS
 
   Memory store p95 (load)
     Required: <= 150ms
-    Actual:   35.05
+    Actual:   20.64
     Result:   ✅ PASS
 
   Memory recall p95 (load)
     Required: <= 150ms
-    Actual:   56.02
+    Actual:   75.02
     Result:   ✅ PASS
 
   Encryption throughput
     Required: >= 1000/sec
-    Actual:   6013.0
+    Actual:   5512.0
     Result:   ✅ PASS
 
   Rate limiter accuracy
@@ -140,12 +140,12 @@ G. FULL PIPELINE INTEGRATION (50 users)
 
   256-miner scoring time
     Required: <= 5s
-    Actual:   0.02
+    Actual:   0.75
     Result:   ✅ PASS
 
   RSS memory growth
     Required: <= 10%
-    Actual:   0.3
+    Actual:   9.3
     Result:   ✅ PASS
 
 ═══════════════════════════════════════════════════════════════
@@ -154,7 +154,7 @@ G. FULL PIPELINE INTEGRATION (50 users)
 
   Scenarios:   7/7 passed
   Benchmarks:  7/7 passed
-  Total time:  14.4s
+  Total time:  1280.3s
 
   Verdict:     🟢 MAINNET READY
 
