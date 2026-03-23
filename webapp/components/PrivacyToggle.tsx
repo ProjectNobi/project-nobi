@@ -56,24 +56,27 @@ export default function PrivacyToggle({ onChange, compact = false }: PrivacyTogg
           onMouseLeave={() => setShowTooltip(false)}
           disabled={!supported}
           className={`
-            w-8 h-8 flex items-center justify-center rounded-lg transition-colors
+            flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all text-xs font-medium
             ${settings.enabled
-              ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"}
-            ${!supported ? "opacity-50 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"}
+              ? "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 ring-1 ring-green-300 dark:ring-green-700"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"}
+            ${!supported ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
           `}
           aria-label={settings.enabled ? "Privacy mode on — click to disable" : "Privacy mode off — click to enable"}
         >
           {settings.enabled ? "🔒" : "🔓"}
+          <span className="hidden sm:inline">
+            {settings.enabled ? "Private" : "Privacy"}
+          </span>
         </button>
 
         {showTooltip && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap z-50 pointer-events-none">
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap z-50 pointer-events-none max-w-xs text-center">
             {!supported
               ? "Privacy mode not supported in this browser"
               : settings.enabled
-              ? "🔒 On-device privacy: memories extracted locally"
-              : "🔓 Standard mode: server-side memory extraction"}
+              ? "🔒 On-device privacy ON — memories extracted locally, only encrypted data sent"
+              : "🔓 Click to enable on-device privacy — your data stays in your browser"}
             <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
           </div>
         )}
