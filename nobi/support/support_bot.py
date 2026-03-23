@@ -449,6 +449,29 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
             "with no equity, no investors, and 100% of owner emissions burned on-chain."
         ),
     },
+    {
+        "id": "alpha_value",
+        "topic": "No revenue means no value. Why would anyone stake on Nobi?",
+        "keywords": ["revenue", "stake", "alpha", "value", "monetize", "money", "profit", "survive", "sustainable", "economics"],
+        "answer": (
+            "'No monetization' means no monetization FROM USERS. "
+            "The subnet has real economic activity — it's the usage itself.\n\n"
+            "The ALPHA demand loop:\n"
+            "Millions of users chatting → millions of queries → miners needed → "
+            "miners buy ALPHA to stake and mine → ALPHA demand increases.\n\n"
+            "The burn effect:\n"
+            "We receive 18% owner emissions (mandatory). We burn 100% via burn_alpha(). "
+            "Every burn reduces ALPHA supply. More users = more burns = less supply = "
+            "deflationary pressure for all ALPHA holders.\n\n"
+            "Miner profitability:\n"
+            "Miners earn TAO for serving quality responses. Profitable mining attracts "
+            "more miners → more ALPHA staked → more demand.\n\n"
+            "If nobody stakes? Emissions stay low, miners leave, quality drops. "
+            "That's the same risk every subnet faces. We're betting that millions "
+            "of daily users create enough demand to sustain itself.\n\n"
+            "Disclaimer: Not financial advice. Staking involves risk."
+        ),
+    },
 ]
 
 # ─── SupportHandler ─────────────────────────────────────────
