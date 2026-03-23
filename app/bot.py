@@ -1608,8 +1608,65 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         except Exception as e:
             logger.warning(f"[AgeGate] Could not store age verification: {e}")
-        welcome = random.choice(WELCOME_MESSAGES)
-        await query.edit_message_text(welcome)
+
+        # Step 2: Show Terms & Privacy for acceptance
+        keyboard = [
+            [InlineKeyboardButton("I accept Terms & Privacy Policy", callback_data="tos_accept")],
+            [InlineKeyboardButton("Read Terms of Service", url="https://projectnobi.ai/terms.html")],
+            [InlineKeyboardButton("Read Privacy Policy", url="https://projectnobi.ai/privacy.html")],
+        ]
+        await query.edit_message_text(
+            "Thank you for confirming your age.\n\n"
+            "Before we start, please review and accept our legal documents:\n\n"
+            "📋 Terms of Service: projectnobi.ai/terms.html\n"
+            "🔒 Privacy Policy: projectnobi.ai/privacy.html\n\n"
+            "Key points:\n"
+            "• Nori is an AI companion — not a therapist, doctor, or lawyer\n"
+            "• Your memories are encrypted at rest (AES-128)\n"
+            "• You can export or delete all your data anytime (/export, /forget)\n"
+            "• We don't sell your data. Ever.\n"
+            "• 18+ only. No exceptions.\n\n"
+            "By tapping 'I accept', you agree to both documents.",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+        return
+
+    elif query.data == "tos_accept":
+        user_id = f"tg_{query.from_user.id}"
+        # Store ToS acceptance
+        try:
+            companion.memory.store(
+                user_id,
+                "User accepted Terms of Service and Privacy Policy",
+                memory_type="context",
+                importance=1.0,
+            )
+        except Exception as e:
+            logger.warning(f"[Onboarding] Could not store ToS acceptance: {e}")
+
+        # Step 3: Show instructions + start chatting
+        await query.edit_message_text(
+            "Welcome to Nori! 🤖\n\n"
+            "I'm your personal AI companion. I remember our conversations, "
+            "learn your preferences, and I'm always here when you need to talk.\n\n"
+            "📖 How to use Nori:\n\n"
+            "Just type anything — talk to me like a friend. No special commands needed.\n\n"
+            "Useful commands:\n"
+            "  /memories — see what I remember about you\n"
+            "  /forget — delete all your data (GDPR Art. 17)\n"
+            "  /export — download your memories as a file\n"
+            "  /import — restore memories from a backup\n"
+            "  /voice — toggle voice replies on/off\n"
+            "  /language — change language (20+ supported)\n"
+            "  /feedback — send bug reports or feature requests\n"
+            "  /support — get help\n"
+            "  /faq — common questions\n"
+            "  /privacy — your data rights & consent status\n"
+            "  /privacy_mode — on-device privacy options\n"
+            "  /help — full command list\n\n"
+            "The more we chat, the better I know you.\n\n"
+            "So... what would you like me to call you?"
+        )
         return
 
     elif query.data == "age_deny_minor":
@@ -1939,6 +1996,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Nori is not available to users under 18."
         )
         return
+
+    # ─── ToS Acceptance Check (DMs only) ─────────────────────
+    if not _is_group_chat(update):
+        try:
+            tos_check = companion.memory.recall(user_id, query="accepted Terms of Service", limit=1)
+            if not tos_check:
+                await update.message.reply_text(
+                    "Please complete the onboarding first.\n\n"
+                    "Type /start to begin — you'll need to confirm your age "
+                    "and accept our Terms of Service and Privacy Policy before chatting."
+                )
+                return
+        except Exception:
+            pass  # If memory check fails, allow through (don't block on error)
 
     # ─── Under-13 Hard Block ─────────────────────────────────
     _UNDER_13_PHRASES = [
