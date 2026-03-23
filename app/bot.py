@@ -1323,6 +1323,36 @@ async def cmd_privacy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg, parse_mode="Markdown")
 
 
+async def cmd_privacy_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Explain on-device privacy mode and link to the web app."""
+    await update.message.reply_text(
+        "🔒 On-Device Privacy Mode\n\n"
+        "On-device privacy means your conversations are processed locally — "
+        "raw text never leaves your device. Only encrypted memory embeddings "
+        "are sent to our servers.\n\n"
+        "How it works:\n"
+        "  1. You type a message\n"
+        "  2. Your browser extracts memories locally (names, facts, feelings)\n"
+        "  3. Only AES-256-GCM encrypted data is sent\n"
+        "  4. Nori responds using encrypted context\n"
+        "  5. Raw text stays on YOUR device\n\n"
+        "Availability:\n"
+        "  🌐 Web App — Available now! Click the 🔓 Privacy button in the top bar\n"
+        "     👉 https://app.projectnobi.ai\n\n"
+        "  📱 Telegram — Not yet available. Telegram doesn't allow client-side "
+        "JavaScript, so on-device extraction isn't possible here.\n\n"
+        "  💬 Discord — Not yet available (same reason).\n\n"
+        "Your Telegram privacy today:\n"
+        "  • Memories encrypted at rest (AES-128)\n"
+        "  • Content filter blocks harmful responses\n"
+        "  • Dependency monitoring for healthy usage\n"
+        "  • Full data control: /memories, /export, /forget\n\n"
+        "For maximum privacy, use the web app with privacy mode ON. "
+        "TEE encryption (where even miners can't read your data) is "
+        "code-complete and deploying to production soon."
+    )
+
+
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Help message."""
     await update.message.reply_text(HELP_MESSAGE)
@@ -2661,6 +2691,7 @@ def main():
     app.add_handler(CommandHandler("limits", cmd_limits))
     app.add_handler(CommandHandler("terms", cmd_terms))
     app.add_handler(CommandHandler("privacy", cmd_privacy))
+    app.add_handler(CommandHandler("privacy_mode", cmd_privacy_mode))
     app.add_handler(CommandHandler("agree", cmd_agree))
     app.add_handler(CommandHandler("data_request", cmd_data_request))
     # Note: Telegram commands cannot contain hyphens — /data_request is the valid form
