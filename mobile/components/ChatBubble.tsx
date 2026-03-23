@@ -74,8 +74,11 @@ export function ChatBubble({ message, onRetry }: ChatBubbleProps) {
           {message.content}
         </Text>
 
-        {/* Footer: time + status */}
+        {/* Footer: time + encryption indicator + status */}
         <View style={styles.footer}>
+          {message.isEncrypted && (
+            <Text style={styles.privacyIcon} accessibilityLabel="End-to-end encrypted">🔒</Text>
+          )}
           <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
 
           {isSending && <ActivityIndicator size="small" color={theme.colors.textMuted} />}
@@ -151,6 +154,10 @@ const styles = StyleSheet.create({
   time: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textMuted,
+  },
+  privacyIcon: {
+    fontSize: 11,
+    opacity: 0.7,
   },
   statusIcon: {
     fontSize: theme.fontSize.xs,

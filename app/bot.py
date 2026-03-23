@@ -987,9 +987,70 @@ async def cmd_terms(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(TOS_SUMMARY)
 
 
+async def cmd_data_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """GDPR formal data subject request menu (/data-request)."""
+    keyboard = [
+        [InlineKeyboardButton("📋 Access my data (Art. 15)", callback_data="gdpr_access")],
+        [InlineKeyboardButton("🗑️ Delete my data (Art. 17)", callback_data="gdpr_erasure_prompt")],
+        [InlineKeyboardButton("📦 Export my data (Art. 20)", callback_data="gdpr_export")],
+        [InlineKeyboardButton("🔒 Restrict processing (Art. 18)", callback_data="gdpr_restrict")],
+        [InlineKeyboardButton("❌ Cancel", callback_data="gdpr_cancel")],
+    ]
+    await update.message.reply_text(
+        "📜 *GDPR Data Subject Request*\n\n"
+        "You have the right to:\n"
+        "• Access all data we hold about you\n"
+        "• Have it deleted permanently\n"
+        "• Export it in a portable format\n"
+        "• Restrict how we process it\n\n"
+        "Responses are provided within 30 days as required by GDPR Art. 12.\n\n"
+        "What would you like to do?",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="Markdown",
+    )
+
+
 async def cmd_privacy(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show Privacy Policy summary."""
-    await update.message.reply_text(PRIVACY_SUMMARY)
+    """GDPR-enhanced /privacy — show consent status and data management options."""
+    user_id = companion._user_id(update)
+    try:
+        from nobi.compliance.consent import ConsentManager
+        cm = ConsentManager()
+        status = cm.get_consent_status(user_id)
+        requires_reconsent = cm.requires_reconsent(user_id)
+    except Exception:
+        status = None
+        requires_reconsent = False
+
+    consent_lines = []
+    if status:
+        consent_lines = [
+            f"  • Data processing: {'✅' if status.get('data_processing') else '❌'}",
+            f"  • Memory extraction: {'✅' if status.get('memory_extraction') else '❌'}",
+            f"  • Analytics: {'✅' if status.get('analytics') else '❌'}",
+            f"  • Processing restricted: {'⛔ YES' if status.get('processing_restricted') else '✅ No'}",
+            f"  • Age verified (18+): {'✅' if status.get('age_verified') else '❓'}",
+        ]
+    else:
+        consent_lines = ["  No consent record found — default settings apply."]
+
+    reconsent_note = "\n⚠️ Our privacy policy has been updated — please review and re-confirm." if requires_reconsent else ""
+
+    msg = (
+        "🔒 *Your Privacy & Data Rights*\n\n"
+        + PRIVACY_SUMMARY
+        + "\n\n*Your Current Consent Status:*\n"
+        + "\n".join(consent_lines)
+        + reconsent_note
+        + "\n\n*Your Rights (GDPR):*\n"
+        "  • /memories — see what I know\n"
+        "  • /export — download all your data (Art. 20)\n"
+        "  • /forget — delete everything (Art. 17)\n"
+        "  • /data-request — formal GDPR data subject request\n\n"
+        "Questions? privacy@projectnobi.ai\n"
+        "Full policy: projectnobi.ai/privacy"
+    )
+    await update.message.reply_text(msg, parse_mode="Markdown")
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1047,29 +1108,35 @@ async def cmd_forget(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_export(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Export all user memories as a JSON file."""
+    """GDPR Art. 20 — Right to Data Portability. Export all user data as structured JSON."""
     user_id = companion._user_id(update)
     try:
-        data = companion.memory.export_memories(user_id)
-        if "error" in data:
-            await update.message.reply_text("Something went wrong exporting your data. Try again later!")
-            return
-
+        from nobi.compliance.gdpr import GDPRHandler
+        handler = GDPRHandler()
+        payload = handler.handle_portability_request(user_id)
+        import json as _json
+        data = _json.loads(payload)
         mem_count = len(data.get("memories", []))
-        if mem_count == 0:
+
+        if mem_count == 0 and not data.get("conversation_history"):
             await update.message.reply_text(
                 "Nothing to export yet! We need to chat more first 😊"
             )
             return
 
-        json_bytes = json.dumps(data, indent=2, ensure_ascii=False).encode("utf-8")
         await update.message.reply_document(
-            document=io.BytesIO(json_bytes),
-            filename=f"nobi_memories_{user_id}.json",
-            caption=f"📦 Here are your {mem_count} memories! Your data is yours. 💙",
+            document=io.BytesIO(payload),
+            filename=f"nobi-gdpr-export-{user_id}.json",
+            caption=(
+                f"📦 Your full data export is ready!\n\n"
+                f"• {mem_count} memories\n"
+                f"• {len(data.get('conversation_history', []))} conversation turns\n\n"
+                "This is your complete data under GDPR Art. 20 (Right to Portability). "
+                "Your data is yours. 💙"
+            ),
         )
     except Exception as e:
-        logger.error(f"Export error: {e}")
+        logger.error(f"Export/GDPR error: {e}")
         await update.message.reply_text("Oops, something went wrong. Try again in a moment!")
 
 
@@ -1238,22 +1305,104 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "forget_confirm":
         user_id = f"tg_{query.from_user.id}"
         try:
-            conn = companion.memory._conn
-            conn.execute("DELETE FROM memories WHERE user_id = ?", (user_id,))
-            conn.execute("DELETE FROM conversations WHERE user_id = ?", (user_id,))
-            conn.execute("DELETE FROM user_profiles WHERE user_id = ?", (user_id,))
-            conn.commit()
+            # GDPR Art. 17: use GDPRHandler for complete, audited erasure
+            from nobi.compliance.gdpr import GDPRHandler
+            handler = GDPRHandler()
+            result = handler.handle_erasure_request(user_id)
+            deleted = result.get("deleted", {})
+            summary = ", ".join(f"{k}: {v}" for k, v in deleted.items() if v)
+            logger.info(f"[GDPR/Bot] Erasure for {user_id}: {summary}")
             await query.edit_message_text(
                 "All gone 🫧\n\n"
-                "Clean slate — we're starting from scratch. "
+                "Clean slate — your data has been permanently deleted (GDPR Art. 17). "
                 "Tell me your name and let's get to know each other again!"
             )
         except Exception as e:
-            logger.error(f"Forget error: {e}")
+            logger.error(f"Forget/GDPR error: {e}")
             await query.edit_message_text("Hmm, that didn't work. Try /forget again in a moment.")
 
     elif query.data == "forget_cancel":
         await query.edit_message_text("I'm glad 😊 Your memories are safe with me. 💙")
+
+    # ── GDPR Data Subject Request callbacks ──────────────────
+    elif query.data == "gdpr_access":
+        user_id = f"tg_{query.from_user.id}"
+        try:
+            from nobi.compliance.gdpr import GDPRHandler
+            handler = GDPRHandler()
+            data = handler.handle_access_request(user_id)
+            mems = len(data.get("data", {}).get("memories", []))
+            convs = len(data.get("data", {}).get("conversation_history", []))
+            profile = data.get("data", {}).get("profile")
+            lines = [
+                "📋 *Your Data (GDPR Art. 15)*\n",
+                f"• Memories: {mems}",
+                f"• Conversation turns: {convs}",
+                f"• Profile: {'Yes' if profile else 'None'}",
+                f"• Consent record: {'Yes' if data.get('data', {}).get('consent') else 'None'}",
+                f"\nRequest logged. Deadline: {data.get('deadline', 'N/A')[:10]}",
+                "\nUse /export to download the full dataset.",
+            ]
+            await query.edit_message_text("\n".join(lines), parse_mode="Markdown")
+        except Exception as e:
+            logger.error(f"GDPR access callback error: {e}")
+            await query.edit_message_text("Something went wrong. Try again or email privacy@projectnobi.ai")
+
+    elif query.data == "gdpr_erasure_prompt":
+        keyboard = [
+            [
+                InlineKeyboardButton("✅ Yes, delete everything", callback_data="forget_confirm"),
+                InlineKeyboardButton("❌ Cancel", callback_data="gdpr_cancel"),
+            ]
+        ]
+        await query.edit_message_text(
+            "⚠️ *Permanent Deletion (GDPR Art. 17)*\n\n"
+            "This will permanently delete:\n"
+            "• All your memories\n"
+            "• Your conversation history\n"
+            "• Your profile\n"
+            "• Your consent records\n\n"
+            "This cannot be undone. Are you sure?",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown",
+        )
+
+    elif query.data == "gdpr_export":
+        user_id = f"tg_{query.from_user.id}"
+        await query.edit_message_text("Preparing your export... ⏳")
+        try:
+            from nobi.compliance.gdpr import GDPRHandler
+            handler = GDPRHandler()
+            payload = handler.handle_portability_request(user_id)
+            import json as _json
+            data = _json.loads(payload)
+            await query.message.reply_document(
+                document=io.BytesIO(payload),
+                filename=f"nobi-gdpr-export-{user_id}.json",
+                caption="📦 Full GDPR data export (Art. 20). Your data is yours. 💙",
+            )
+        except Exception as e:
+            logger.error(f"GDPR export callback error: {e}")
+            await query.message.reply_text("Export failed. Try /export or email privacy@projectnobi.ai")
+
+    elif query.data == "gdpr_restrict":
+        user_id = f"tg_{query.from_user.id}"
+        try:
+            from nobi.compliance.gdpr import GDPRHandler
+            handler = GDPRHandler()
+            result = handler.handle_restriction_request(user_id, restrict=True)
+            await query.edit_message_text(
+                "🔒 *Processing Restricted (GDPR Art. 18)*\n\n"
+                "I will no longer extract new memories or run analytics on your data.\n\n"
+                "You can lift this restriction anytime via /data-request.",
+                parse_mode="Markdown",
+            )
+        except Exception as e:
+            logger.error(f"GDPR restrict callback error: {e}")
+            await query.edit_message_text("Something went wrong. Try again or email privacy@projectnobi.ai")
+
+    elif query.data == "gdpr_cancel":
+        await query.edit_message_text("Cancelled. Your data is safe. 💙")
 
 
 async def cmd_nori(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -2096,6 +2245,8 @@ def main():
     app.add_handler(CommandHandler("terms", cmd_terms))
     app.add_handler(CommandHandler("privacy", cmd_privacy))
     app.add_handler(CommandHandler("agree", cmd_agree))
+    app.add_handler(CommandHandler("data_request", cmd_data_request))
+    app.add_handler(CommandHandler("data-request", cmd_data_request))
 
     # Buttons
     app.add_handler(CallbackQueryHandler(handle_callback))

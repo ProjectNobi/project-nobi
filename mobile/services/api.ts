@@ -15,6 +15,8 @@ export interface Message {
   imageUri?: string;
   imageDescription?: string;
   status: 'sending' | 'sent' | 'error' | 'queued';
+  /** True if this message was end-to-end encrypted before sending */
+  isEncrypted?: boolean;
 }
 
 export interface Memory {

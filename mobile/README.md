@@ -56,30 +56,39 @@ const DEFAULT_BASE_URL = 'http://YOUR_SERVER_IP:8042';
 
 ```
 mobile/
-├── app/                    # Screens (Expo Router)
-│   ├── _layout.tsx         # Root navigation layout
-│   ├── index.tsx           # Chat screen (main)
-│   ├── memories.tsx        # Memory viewer
-│   ├── onboarding.tsx      # First-time setup
-│   └── settings.tsx        # Preferences
-├── components/             # Reusable UI components
-│   ├── ChatBubble.tsx      # Message bubble
-│   ├── MemoryCard.tsx      # Memory display card
-│   ├── NoriAvatar.tsx      # Nori robot avatar
-│   └── TypingIndicator.tsx # Animated typing dots
-├── hooks/                  # React hooks
-│   ├── useChat.ts          # Chat state management
-│   ├── useMemory.ts        # Memory operations
-│   └── useVoice.ts         # Voice recording/playback
-├── services/               # Backend integration
-│   ├── api.ts              # API client with retry + offline queue
-│   ├── auth.ts             # Anonymous auth + device ID
-│   ├── encryption.ts       # Client-side AES encryption
-│   ├── memory.ts           # Local memory cache
-│   └── voice.ts            # Audio recording + playback
+├── app/                      # Screens (Expo Router)
+│   ├── _layout.tsx           # Root Stack layout (onboarding gate)
+│   ├── onboarding.tsx        # First-time setup (fullscreen, no tabs)
+│   └── (tabs)/               # Tab navigation: Chat | Memories | Settings
+│       ├── _layout.tsx       # Tab bar config
+│       ├── index.tsx         # Chat screen (main)
+│       ├── memories.tsx      # Memory viewer
+│       └── settings.tsx      # Preferences
+├── components/               # Reusable UI components
+│   ├── ChatBubble.tsx        # Message bubble (🔒 encryption indicator)
+│   ├── MemoryCard.tsx        # Memory display card
+│   ├── NoriAvatar.tsx        # Animated Nori avatar
+│   └── TypingIndicator.tsx   # Animated typing dots
+├── hooks/                    # React hooks
+│   ├── useChat.ts            # Chat state management
+│   ├── useMemory.ts          # Memory operations
+│   └── useVoice.ts           # Voice recording/playback
+├── lib/                      # Shared TypeScript modules (adapted from webapp)
+│   ├── client-crypto.ts      # Key derivation + utils (expo-crypto)
+│   ├── local-extractor.ts    # On-device regex memory extraction (pure TS)
+│   └── memory-sync.ts        # AsyncStorage memory cache + server sync
+├── services/                 # Backend integration
+│   ├── api.ts                # API client with retry + offline queue
+│   ├── auth.ts               # Anonymous auth + device ID
+│   ├── encryption.ts         # Client-side AES encryption (expo-crypto)
+│   ├── memory.ts             # Local memory cache
+│   └── voice.ts              # TTS/STT via expo-speech + server Whisper
 ├── styles/
-│   └── theme.ts            # Color palette, spacing, typography
-├── app.json                # Expo config
+│   └── theme.ts              # Color palette, spacing, typography
+├── assets/                   # App icons + splash screen
+├── store/                    # App Store metadata (iOS/Android)
+├── app.json                  # Expo config (bundle: ai.projectnobi.nori v0.1.0)
+├── eas.json                  # EAS Build config
 ├── package.json
 └── tsconfig.json
 ```

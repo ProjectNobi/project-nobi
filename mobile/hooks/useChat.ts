@@ -90,12 +90,14 @@ export function useChat() {
       setError(null);
 
       // Create user message
+      const encryptionOn = user.preferences.encryptionEnabled;
       const userMessage: Message = {
         id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         role: 'user',
         content: content.trim(),
         timestamp: Date.now(),
         status: 'sending',
+        isEncrypted: encryptionOn,
       };
 
       // Add to UI immediately
@@ -109,7 +111,7 @@ export function useChat() {
 
       try {
         // Encrypt if enabled
-        const messageToSend = user.preferences.encryptionEnabled
+        const messageToSend = encryptionOn
           ? await encryption.encrypt(user.id, content.trim())
           : content.trim();
 
@@ -118,7 +120,7 @@ export function useChat() {
 
         if (result.ok && result.data) {
           // Decrypt response if needed
-          const responseText = user.preferences.encryptionEnabled
+          const responseText = encryptionOn
             ? await encryption.decrypt(user.id, result.data.response)
             : result.data.response;
 
@@ -132,6 +134,7 @@ export function useChat() {
             content: responseText,
             timestamp: Date.now(),
             status: 'sent',
+            isEncrypted: encryptionOn,
           };
 
           setMessages((prev) => {

@@ -1,5 +1,8 @@
 /**
- * Root layout — navigation setup with dark theme.
+ * Root layout — app entry point.
+ * Handles onboarding gate and routes to:
+ *   - (tabs) — main tab navigation (Chat | Memories | Settings)
+ *   - onboarding — first-time setup (stack, no header)
  */
 
 import React, { useEffect, useState } from 'react';
@@ -18,7 +21,6 @@ export default function RootLayout() {
   useEffect(() => {
     async function init() {
       try {
-        // Initialize services
         await api.init();
         const user = await auth.init();
         const onboarded = await auth.isOnboarded();
@@ -50,41 +52,27 @@ export default function RootLayout() {
     <>
       <StatusBar style="light" />
       <Stack
-        initialRouteName={isOnboarded ? 'index' : 'onboarding'}
+        initialRouteName={isOnboarded ? '(tabs)' : 'onboarding'}
         screenOptions={{
           headerStyle: { backgroundColor: theme.colors.background },
           headerTintColor: theme.colors.text,
-          headerTitleStyle: { fontWeight: '600' },
           contentStyle: { backgroundColor: theme.colors.background },
-          animation: 'slide_from_right',
+          headerShown: false,
         }}
       >
+        {/* Main app — tab navigation */}
         <Stack.Screen
-          name="index"
-          options={{
-            title: 'Nori',
-            headerShown: true,
-          }}
+          name="(tabs)"
+          options={{ headerShown: false }}
         />
-        <Stack.Screen
-          name="memories"
-          options={{
-            title: 'Memories',
-            headerShown: true,
-          }}
-        />
-        <Stack.Screen
-          name="settings"
-          options={{
-            title: 'Settings',
-            headerShown: true,
-          }}
-        />
+        {/* Onboarding — fullscreen, no tab bar */}
         <Stack.Screen
           name="onboarding"
           options={{
             headerShown: false,
             animation: 'fade',
+            // Prevent swipe-back to onboarding once done
+            gestureEnabled: false,
           }}
         />
       </Stack>

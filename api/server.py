@@ -1719,6 +1719,186 @@ async def get_burns_verify(
         raise HTTPException(status_code=500, detail="Failed to retrieve verification data")
 
 
+# ─── GDPR Compliance Endpoints ───────────────────────────────
+
+class GDPRAccessRequest(BaseModel):
+    user_id: str
+
+class GDPRRectifyRequest(BaseModel):
+    user_id: str
+    corrections: Dict[str, str]  # memory_id -> new_content
+
+class GDPRConsentUpdateRequest(BaseModel):
+    user_id: str
+    consent: Dict[str, bool]
+    age_verified: Optional[bool] = None
+    source: str = "api"
+
+class GDPRRestrictRequest(BaseModel):
+    user_id: str
+    restrict: bool = True
+
+
+def _get_gdpr_handler() -> "GDPRHandler":
+    """Lazy-load GDPRHandler."""
+    from nobi.compliance.gdpr import GDPRHandler
+    return GDPRHandler(
+        memory_db_path=DB_PATH,
+        billing_db_path=BILLING_DB_PATH,
+    )
+
+
+def _get_consent_manager() -> "ConsentManager":
+    """Lazy-load ConsentManager."""
+    from nobi.compliance.consent import ConsentManager
+    return ConsentManager()
+
+
+@app.post("/api/v1/gdpr/access")
+async def gdpr_access(req: GDPRAccessRequest):
+    """GDPR Art. 15 — Right of Access. Returns all data held about the user."""
+    try:
+        uid = f"web_{req.user_id}"
+        handler = _get_gdpr_handler()
+        data = handler.handle_access_request(uid)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"GDPR access error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process access request")
+
+
+@app.post("/api/v1/gdpr/erasure")
+async def gdpr_erasure(req: GDPRAccessRequest):
+    """GDPR Art. 17 — Right to Erasure. Permanently delete all user data."""
+    try:
+        uid = f"web_{req.user_id}"
+        handler = _get_gdpr_handler()
+        result = handler.handle_erasure_request(uid)
+        # Also clear in-memory session data
+        if uid in user_settings:
+            del user_settings[uid]
+        return {"success": True, "result": result}
+    except Exception as e:
+        logger.error(f"GDPR erasure error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process erasure request")
+
+
+@app.get("/api/v1/gdpr/export")
+async def gdpr_export(user_id: str):
+    """GDPR Art. 20 — Right to Data Portability. Export all user data as JSON."""
+    try:
+        uid = f"web_{user_id}"
+        handler = _get_gdpr_handler()
+        payload = handler.handle_portability_request(uid)
+        from fastapi.responses import Response
+        return Response(
+            content=payload,
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f'attachment; filename="nobi-gdpr-export-{user_id}.json"'
+            },
+        )
+    except Exception as e:
+        logger.error(f"GDPR export error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process export request")
+
+
+@app.post("/api/v1/gdpr/rectify")
+async def gdpr_rectify(req: GDPRRectifyRequest):
+    """GDPR Art. 16 — Right to Rectification. Correct inaccurate data."""
+    try:
+        uid = f"web_{req.user_id}"
+        handler = _get_gdpr_handler()
+        result = handler.handle_rectification_request(uid, req.corrections)
+        return {"success": True, "result": result}
+    except Exception as e:
+        logger.error(f"GDPR rectify error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process rectification request")
+
+
+@app.post("/api/v1/gdpr/restrict")
+async def gdpr_restrict(req: GDPRRestrictRequest):
+    """GDPR Art. 18 — Right to Restriction of Processing."""
+    try:
+        uid = f"web_{req.user_id}"
+        handler = _get_gdpr_handler()
+        result = handler.handle_restriction_request(uid, req.restrict)
+        return {"success": True, "result": result}
+    except Exception as e:
+        logger.error(f"GDPR restrict error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process restriction request")
+
+
+@app.get("/api/v1/gdpr/consent")
+async def gdpr_get_consent(user_id: str):
+    """Get current GDPR consent status for a user."""
+    try:
+        uid = f"web_{user_id}"
+        cm = _get_consent_manager()
+        status = cm.get_consent_status(uid)
+        requires_reconsent = cm.requires_reconsent(uid)
+        return {
+            "success": True,
+            "user_id": user_id,
+            "consent": status,
+            "requires_reconsent": requires_reconsent,
+            "policy_version": cm.policy_version,
+        }
+    except Exception as e:
+        logger.error(f"GDPR get consent error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get consent status")
+
+
+@app.post("/api/v1/gdpr/consent")
+async def gdpr_update_consent(req: GDPRConsentUpdateRequest):
+    """Update GDPR consent choices for a user."""
+    try:
+        uid = f"web_{req.user_id}"
+        cm = _get_consent_manager()
+        existing = cm.get_consent_status(uid)
+        if not existing:
+            result = cm.record_consent(
+                uid,
+                req.consent,
+                age_verified=req.age_verified or False,
+                source=req.source,
+            )
+        else:
+            updates = dict(req.consent)
+            if req.age_verified is not None:
+                updates["age_verified"] = req.age_verified
+            result = cm.update_consent(uid, updates, source=req.source)
+        return {"success": True, "consent": result}
+    except Exception as e:
+        logger.error(f"GDPR update consent error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update consent")
+
+
+@app.get("/api/v1/gdpr/audit")
+async def gdpr_audit_log(user_id: Optional[str] = None):
+    """Return GDPR audit log (admin endpoint). Filter by user_id if provided."""
+    try:
+        handler = _get_gdpr_handler()
+        uid = f"web_{user_id}" if user_id else None
+        entries = handler.get_audit_log(uid)
+        return {"success": True, "count": len(entries), "entries": entries}
+    except Exception as e:
+        logger.error(f"GDPR audit log error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve audit log")
+
+
+@app.get("/api/v1/gdpr/pia")
+async def gdpr_pia():
+    """Return the Privacy Impact Assessment report as structured JSON."""
+    try:
+        from nobi.compliance.pia import PIAReport
+        report = PIAReport()
+        return report.generate()
+    except Exception as e:
+        logger.error(f"GDPR PIA error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate PIA report")
+
+
 # ─── Run ─────────────────────────────────────────────────────
 
 if __name__ == "__main__":

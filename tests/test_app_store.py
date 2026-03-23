@@ -34,7 +34,7 @@ class TestAppJson:
         self.expo = self.data.get("expo", {})
 
     def test_app_name(self):
-        assert self.expo.get("name") == "Nori - AI Companion"
+        assert self.expo.get("name") == "Nori"
 
     def test_version(self):
         version = self.expo.get("version", "")
