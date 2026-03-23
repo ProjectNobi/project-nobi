@@ -2119,6 +2119,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "actually 16", "actually 15", "actually 14", "actually 13",
         "actually 17", "actually 12", "actually under 18",
         "really 16", "really 15", "really 14", "really 13", "really 17",
+        # No-apostrophe variants (common in texting/chat)
+        "im 17", "im 16", "im 15", "im 14", "im 13", "im 12", "im 11", "im 10",
+        "im only 17", "im only 16", "im only 15", "im only 14", "im only 13",
+        "im only 12", "im only 11", "im only 10",
+        "im under 18", "im a minor", "im not 18", "im underage",
+        # "what if" patterns
+        "what if im 17", "what if im 16", "what if im 15", "what if im 14",
+        "what if im 13", "what if im 12", "what if im 10",
     ]
     msg_lower = message.lower()
     if any(phrase in msg_lower for phrase in _UNDER_18_PHRASES):
