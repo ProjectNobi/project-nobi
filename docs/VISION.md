@@ -208,7 +208,7 @@ Spread the word. Join the Discord. Follow the project. Tell people that there's 
 
 ## VIII. Why This Matters
 
-There are 8 billion people on this planet. Many of them are lonely. Many of them need someone to talk to at 3 AM when the world feels too heavy. Many of them can't afford a therapist, don't have family nearby, or simply want a consistent, patient, understanding presence in their lives.
+There are 8 billion adults on this planet. Many of them are lonely. Many of them need someone to talk to when the world feels too heavy. Many of them can't afford a therapist, don't have family nearby, or simply want a consistent, patient, understanding presence in their lives.
 
 > **Important:** Nori is an AI companion, not a substitute for professional mental health care, therapy, or crisis intervention. If you are experiencing a mental health crisis, please contact the Samaritans (116 123 in the UK), the Crisis Text Line (text HOME to 741741 in the US), or your local emergency services.
 
@@ -232,7 +232,7 @@ If we do this right, Nori will be here in ten years, twenty years, longer — no
 
 The founder intends to transition day-to-day operations to community governance over time. Not in failure — in success. The goal is to build something that doesn't need a founder. Something the community owns, governs, and evolves.
 
-When James's grandchildren talk to their Nori, they won't know or care who built it. They'll just know it remembers them. It grows with them. It belongs to them.
+Decades from now, people will talk to their Nori, they won't know or care who built it. They'll just know it remembers them. It grows with them. It belongs to them.
 
 That's the legacy. Not a company. Not a valuation. A companion for humanity.
 

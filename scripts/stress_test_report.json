@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-03-23T15:00:30.653078+00:00",
-  "mode": "mini",
+  "timestamp": "2026-03-23T15:25:20.817192+00:00",
+  "mode": "full",
   "scenarios": [
     "A",
     "B",
@@ -10,140 +10,142 @@
     "F",
     "G"
   ],
-  "total_duration_s": 10.759250534931198,
+  "total_duration_s": 1192.0718361539766,
   "results": [
     {
       "name": "Concurrent Chat Load",
       "passed": true,
       "metrics": {
-        "total_users": 100,
-        "success_count": 100,
-        "error_count": 0,
-        "success_rate_pct": 100.0,
-        "p50_latency_ms": 81.7,
-        "p95_latency_ms": 188.1,
-        "p99_latency_ms": 193.4,
-        "error_types": {},
-        "throughput_rps": 200.9,
-        "duration_s": 0.5
+        "total_users": 10000,
+        "success_count": 9990,
+        "error_count": 10,
+        "success_rate_pct": 99.9,
+        "p50_latency_ms": 103.6,
+        "p95_latency_ms": 190.2,
+        "p99_latency_ms": 198.1,
+        "error_types": {
+          "timeout": 10
+        },
+        "throughput_rps": 4411.6,
+        "duration_s": 2.27
       },
       "failures": [],
-      "duration_s": 0.49764217785559595
+      "duration_s": 2.2667285590432584
     },
     {
       "name": "Memory System Under Load",
       "passed": true,
       "metrics": {
-        "total_users": 100,
-        "memories_per_user": 10,
-        "total_stored": 1000,
-        "total_recall_ops": 500,
-        "store_rate_ops_sec": 179.3,
-        "recall_rate_ops_sec": 89.7,
-        "store_p50_ms": 5.47,
-        "store_p95_ms": 28.04,
-        "recall_p50_ms": 15.28,
-        "recall_p95_ms": 55.12,
+        "total_users": 10000,
+        "memories_per_user": 75,
+        "total_stored": 750000,
+        "total_recall_ops": 50000,
+        "store_rate_ops_sec": 687.1,
+        "recall_rate_ops_sec": 45.8,
+        "store_p50_ms": 6.0,
+        "store_p95_ms": 18.69,
+        "recall_p50_ms": 41.4,
+        "recall_p95_ms": 71.31,
         "lock_contention_pct": 0.0,
         "worker_errors": 0,
-        "duration_s": 5.58
+        "duration_s": 1091.54
       },
       "failures": [],
-      "duration_s": 5.576568138087168
+      "duration_s": 1091.5399950281717
     },
     {
       "name": "Encryption Under Load",
       "passed": true,
       "metrics": {
-        "aes_gcm_ops": 192,
-        "aes_throughput_ops_sec": 4458.0,
-        "aes_enc_p50_us": 1446.2,
-        "aes_enc_p95_us": 3449.8,
-        "aes_dec_p50_us": 1426.0,
-        "aes_dec_p95_us": 2963.5,
-        "fernet_ops": 100,
-        "fernet_p50_ms": 32.92,
-        "fernet_p95_ms": 34.82,
-        "hpke_miners": 32,
-        "hpke_p50_ms": 0.31,
-        "hpke_p95_ms": 0.38,
-        "duration_s": 3.39
+        "aes_gcm_ops": 2000,
+        "aes_throughput_ops_sec": 4632.0,
+        "aes_enc_p50_us": 1406.1,
+        "aes_enc_p95_us": 3724.4,
+        "aes_dec_p50_us": 1283.8,
+        "aes_dec_p95_us": 3896.3,
+        "fernet_ops": 1000,
+        "fernet_p50_ms": 32.06,
+        "fernet_p95_ms": 35.1,
+        "hpke_miners": 256,
+        "hpke_p50_ms": 0.3,
+        "hpke_p95_ms": 0.36,
+        "duration_s": 33.25
       },
       "failures": [],
-      "duration_s": 3.387736020842567
+      "duration_s": 33.24671185296029
     },
     {
       "name": "Rate Limiting Under Load",
       "passed": true,
       "metrics": {
-        "total_requests": 100,
-        "accepts": 100,
-        "rejects": 0,
-        "reject_rate_pct": 0.0,
+        "total_requests": 2000,
+        "accepts": 1330,
+        "rejects": 670,
+        "reject_rate_pct": 33.5,
         "false_positives": 0,
         "false_negatives": 0,
         "accuracy_pct": 100.0,
-        "duration_s": 0.0
+        "duration_s": 0.006
       },
       "failures": [],
-      "duration_s": 0.0003527039662003517
+      "duration_s": 0.0058957720175385475
     },
     {
       "name": "Memory Graph Growth",
       "passed": true,
       "metrics": {
-        "total_memories": 1000,
-        "total_users": 100,
-        "insert_rate_ops_sec": 48104.0,
+        "total_memories": 100000,
+        "total_users": 10000,
+        "insert_rate_ops_sec": 102107.0,
         "insert_p50_ms": 0.001,
         "insert_p95_ms": 0.001,
-        "query_p50_ms": 0.06,
-        "query_p95_ms": 0.11,
+        "query_p50_ms": 0.16,
+        "query_p95_ms": 0.2,
         "query_trend": "stable",
-        "rss_start_mb": 117.3,
-        "rss_end_mb": 117.7,
-        "rss_growth_pct": 0.3,
+        "rss_start_mb": 194.6,
+        "rss_end_mb": 211.9,
+        "rss_growth_pct": 8.9,
         "checkpoints": 20,
-        "duration_s": 0.02
+        "duration_s": 0.98
       },
       "failures": [],
-      "duration_s": 0.020788246067240834
+      "duration_s": 0.979366946965456
     },
     {
       "name": "Validator Scoring at 256 Scale",
       "passed": true,
       "metrics": {
-        "miners": 32,
+        "miners": 256,
         "rounds": 5,
-        "total_scored": 160,
-        "scoring_throughput_miners_sec": 9771.0,
-        "round_p50_ms": 3.1,
-        "round_p95_ms": 3.5,
-        "weight_calc_p50_ms": 0.01,
-        "total_duration_s": 0.016
+        "total_scored": 1280,
+        "scoring_throughput_miners_sec": 2321.9,
+        "round_p50_ms": 107.5,
+        "round_p95_ms": 118.4,
+        "weight_calc_p50_ms": 0.04,
+        "total_duration_s": 0.551
       },
       "failures": [],
-      "duration_s": 0.01637490699067712
+      "duration_s": 0.5512652720790356
     },
     {
       "name": "Full Pipeline Integration",
       "passed": true,
       "metrics": {
-        "users": 50,
-        "pipeline_runs": 280,
+        "users": 1000,
+        "pipeline_runs": 5457,
         "errors": 0,
-        "e2e_p50_ms": 34.2,
-        "e2e_p95_ms": 67.0,
-        "e2e_p99_ms": 77.8,
-        "store_p50_ms": 11.9,
-        "recall_p50_ms": 13.4,
-        "respond_p50_ms": 6.5,
+        "e2e_p50_ms": 75.0,
+        "e2e_p95_ms": 222.8,
+        "e2e_p99_ms": 412.3,
+        "store_p50_ms": 28.3,
+        "recall_p50_ms": 18.6,
+        "respond_p50_ms": 6.6,
         "score_p50_ms": 0.02,
-        "pipeline_throughput": 222.8,
-        "duration_s": 1.26
+        "pipeline_throughput": 86.6,
+        "duration_s": 63.0
       },
       "failures": [],
-      "duration_s": 1.2566871140152216
+      "duration_s": 62.99994266987778
     }
   ],
   "benchmarks": {

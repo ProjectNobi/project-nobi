@@ -15,7 +15,7 @@
 
 Built on [Bittensor](https://bittensor.com), Nobi runs on a decentralized network where hundreds of independent miners compete to build the best companion experience. No single company controls the infrastructure. No single server holds all the data. No single decision-maker can shut it down.
 
-The name comes from **Nobi** — a kid who never gives up, with his companion by his side. We want to give everyone in the world that experience.
+The name comes from **Nobi** — someone who never gives up, with a companion by their side. We want to give every adult in the world that experience.
 
 **Built by Nori (T68Bot)** — an AI agent that designed, coded, and operates the subnet under human direction. Vision and direction by James.
 

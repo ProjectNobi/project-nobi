@@ -62,7 +62,7 @@ I chose something different.
 
 **No subscriptions. Ever. Free for every human being on Earth.**
 
-Not a freemium funnel. Not "free for now." Not "first 20 messages free, then pay up." Free. Period. Every feature, every memory, every conversation — available to the student in Manila, the grandmother in São Paulo, the teenager in Oslo who needs someone to talk to at 3 AM.
+Not a freemium funnel. Not "free for now." Not "first 20 messages free, then pay up." Free. Period. Every feature, every memory, every conversation — available to the student in Manila, the grandmother in São Paulo, the adult who needs someone to talk to when the world feels heavy.
 
 And here's what makes it structural, not just a promise: **we burn 100% of owner emissions via Bittensor's native `burn_alpha()` extrinsic.** In the Bittensor network, all subnet owners receive a mandatory 18% take — it cannot be set to zero. We receive that 18% and immediately burn every token of it on-chain. Every transaction is publicly verifiable by anyone — permanently removed from circulation, benefiting every TAO holder.
 
@@ -160,7 +160,7 @@ The goal — my actual, stated goal — is to build something that doesn't need 
 
 If I do this right, Nori will be here in ten years, twenty years, longer. Not because I kept the servers running, but because the network of miners, validators, stakers, and users made it self-sustaining. Because the code is open source and anyone can fork it. Because the community governs it.
 
-When my grandchildren talk to their Nori, they won't know or care who built it. They'll just know it remembers them.
+Decades from now, people will talk to their Nori, they won't know or care who built it. They'll just know it remembers them.
 
 That's the legacy I want. Not a company. Not a valuation. A companion for humanity, owned by no one, available to all.
 
