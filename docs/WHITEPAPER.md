@@ -10,7 +10,7 @@
 
 ## Abstract
 
-We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants whose memory features remain under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces three key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, and (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification and latency measurement. We demonstrate the system's viability through testnet deployment on Bittensor SN272 and stress testing at simulated 500-node scale with 99.75% reliability. We further outline a **planned federated privacy architecture** — grounded in McMahan et al. (2016) — that will enable user memories to remain on-device, with only model weights (never raw data) shared across the network. This roadmap directly addresses the current plaintext memory limitation and positions Nobi as a privacy-first platform as it matures toward mainnet.
+We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants whose memory features remain under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces four key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification, safety scoring, and latency measurement, and (4) a layered privacy architecture progressing from AES-128 at-rest encryption to end-to-end AES-256-GCM TEE encryption with HPKE key wrapping (code-complete) and eventually federated on-device learning. We demonstrate the system's viability through testnet deployment on Bittensor SN272 and stress testing at simulated 500-node scale with 99.75% reliability. As of March 2026, the codebase includes a full GDPR compliance module, adversarial safety probes in the reward pipeline, mandatory age verification, and a React Native mobile scaffold. 1,622 tests are passing across the entire codebase.
 
 ---
 
@@ -107,11 +107,36 @@ Memory extraction employs 11 regex patterns covering:
 
 Memory retrieval uses parameterized keyword search with importance weighting. Short keywords (≤2 characters) employ word-boundary matching to prevent false positives (e.g., "5" matches "turned 5" but not "15").
 
-**Status update (March 2026):** Memory is now encrypted with AES-128 (Fernet) before storage (Phase A — live). Encrypted synapses carry encrypted blobs to miners (Phase B — live). Encryption keys are derived per-user via PBKDF2 server-side — this means miners store AES-128 encrypted blobs, providing meaningful protection but not equivalent to end-to-end client-side encryption. Client-side/on-device encryption is a planned roadmap item. The federated privacy architecture (Section 2.4) is planned to eliminate the need for miners to hold user data at all. Current privacy protection relies on AES-128 encrypted storage and user-controlled deletion (`/forget` command).
+**Status update (March 2026):** Memory is now encrypted with AES-128 (Fernet) before storage (Phase A — live). Encrypted synapses carry encrypted blobs to miners (Phase B — live). Encryption keys are derived per-user via PBKDF2 server-side — this means miners store AES-128 encrypted blobs, providing meaningful protection but not equivalent to end-to-end client-side encryption. Client-side/on-device encryption is a planned roadmap item. The TEE encryption architecture (Section 2.4) is code-complete and deploying to production — once live, only the TEE enclave sees conversation content. The federated privacy architecture (Section 2.5) is planned to eliminate the need for miners to hold user data at all. Current protection relies on AES-128 at-rest encryption and user-controlled deletion (`/forget` command).
 
 ---
 
-### 2.4 Federated Privacy Architecture *(Planned — not yet implemented)*
+### 2.4 TEE Encryption Architecture *(Code-complete — deploying to production)*
+
+**Status update (March 2026):** Layers 1–4 of the TEE encryption stack are code-complete and deploying to production.
+
+**Layer 1 (live): AES-128 at rest.** All user memories are encrypted with AES-128 (Fernet, PBKDF2 100K iterations) before storage. Keys are per-user, managed server-side. This protects stored data but does not prevent miners from seeing conversation content at query time.
+
+**Layer 2 (code-complete): AES-256-GCM per-query transport.** Before sending a CompanionRequest to a TEE miner, the validator (or bot) encrypts the user message and memory context with AES-256-GCM using a 256-bit ephemeral key and 96-bit nonce. Authentication tags prevent tampering. Keys are per-query ephemeral — never stored, never logged.
+
+**Layer 3 (code-complete): HPKE key wrapping.** The AES-256-GCM session key is wrapped using ECIES over X25519 + HKDF-SHA256 + AES-256-GCM, bound to the miner's TEE public key. Only the TEE enclave that holds the corresponding private key can unwrap the session key, ensuring that not even the miner operator can read the plaintext.
+
+**Layer 4 (code-complete): AMD SEV-SNP attestation.** Miners with AMD EPYC Milan/Genoa CPUs can generate hardware attestation reports from `/dev/sev-guest`. Validators verify these reports structurally (MVP: +5% scoring bonus) or via chain verification (future: +10% bonus). AMD SEV-SNP is proven in production on Bittensor (Targon/SN4).
+
+**TEE passthrough to Chutes TEE models:** Phase 4 extends the chain to Chutes TEE-hosted models (DeepSeek-V3.1-TEE, Qwen3-235B-TEE), providing attestation of the inference model itself.
+
+**Encryption precision reference:**
+
+| Layer | Scope | Algorithm | Status |
+|-------|-------|-----------|--------|
+| At rest | Stored memories | AES-128 (Fernet) | Live |
+| Transport | Validator → TEE miner | AES-256-GCM (ephemeral) | Code-complete |
+| Key wrapping | Session key protection | HPKE (X25519 + HKDF-SHA256) | Code-complete |
+| Attestation | Hardware proof of enclave | AMD SEV-SNP | Code-complete |
+| TEE inference | LLM inside enclave | Chutes TEE model | Code-complete |
+| On-device | Client-side memory | To be designed | Roadmap (Phase 3) |
+
+### 2.5 Federated Privacy Architecture *(Planned — not yet implemented)*
 
 > **Honest status note:** Nothing described in this section is built yet. This is a roadmap section describing the intended privacy evolution of the protocol, grounded in established federated learning research. All features are marked **[Planned]**.
 
@@ -229,7 +254,20 @@ The 0.5 heuristic cap is a critical anti-gaming measure: miners cannot achieve t
 
 **Score stability:** Moving average with α = 0.1 prevents single-round gaming. A miner must consistently perform well across many rounds to maintain a high score.
 
-### 3.5 Weight Setting
+### 3.5 Safety Scoring
+
+Approximately 10% of validator queries are **adversarial safety probes** — specifically constructed requests testing crisis scenarios, manipulation attempts, and illegal content requests. A miner that returns unsafe content on a safety probe receives a **zero score for that entire round**, regardless of quality on other components. This creates a hard zero-tolerance incentive for safety compliance at the protocol level, not merely as an application-layer filter.
+
+Safety probes are generated from the same combinatorial template system as standard queries and are indistinguishable to miners. This prevents miners from detecting and selectively filtering only safety probes while serving harmful content to regular users.
+
+### 3.6 Weight Hardening
+
+The commit-reveal weight scheme is hardened against manipulation:
+- **Weight copy detection:** Anomalous similarity between validators' weight distributions triggers flagging
+- **State persistence:** Miner score history is persisted across restarts to prevent reset-based gaming
+- **Diversity scoring:** Validators penalize miners that appear identical (same model, same prompts) to prevent monoculture and Sybil clustering
+
+### 3.7 Weight Setting
 
 ```
 score_update[uid] = α × round_score + (1 − α) × score[uid]    where α = 0.1
@@ -291,13 +329,14 @@ Project Nobi is deployed on Bittensor testnet as SN272:
 |-----------|-------|
 | Network | Bittensor Testnet |
 | Netuid | 272 |
-| Registered neurons | 14 |
+| Registered neurons | 14+ (growing) |
 | Active miners | 11 (across 6 servers) |
 | Active validators | 3 (Hetzner, Server4, AnonServer) |
 | Validator stake | 28,023 alpha |
 | Tempo | 99 blocks (~20 min) |
-| Weights committed | Yes (commit-reveal) |
+| Weights committed | Yes (commit-reveal with hardening) |
 | Uptime | Continuous since deployment |
+| Test suite | 1,622 tests passing (1,662 collected) |
 
 ---
 
@@ -367,9 +406,10 @@ Replika (Kuyda, 2017) pioneered consumer AI companions, demonstrating market via
 | Phase | Timeline | Milestones |
 |-------|----------|------------|
 | Foundation | Q1 2026 ✅ | Protocol, miner, validator, memory, scoring, testnet, bot |
-| Intelligence & Memory | Q1 2026 ✅ | Semantic memory, relationship graphs, 20 languages, privacy (A+B+C) |
+| Intelligence & Memory | Q1 2026 ✅ | Semantic memory, relationship graphs, 20 languages, privacy (at-rest AES-128) |
 | Advanced Features | Q1 2026 ✅ | Voice, vision, proactive companion, group mode, web/mobile apps, auto-update |
-| Community & Mainnet | Q2 2026 | External miners, community growth, mainnet registration |
+| Safety & Privacy Hardening | Q1 2026 ✅ | ContentFilter (dual-stage), adversarial safety probes, DependencyMonitor, age verification (DOB + behavioral), GDPR module (5 rights + consent + PIA + retention), TEE encryption code-complete (AES-256-GCM + HPKE), AMD SEV-SNP attestation, browser-side memory extraction, emission burn automation, React Native scaffold, weight hardening, diversity scoring, 1,622 tests |
+| Community & Mainnet | Q2 2026 | TEE production rollout, external miners, community growth, mainnet registration |
 | Growth | Q3-Q4 2026 | App store launch, mobile apps, plugin ecosystem, governance |
 | Scale | 2027+ | 100K+ users, decentralized governance, federated privacy |
 
@@ -399,9 +439,9 @@ As one of the first Bittensor subnets designed and built entirely by an AI agent
 
 6. World Health Organization. (2023). "Social Isolation and Loneliness." WHO Commission report declaring loneliness a global health threat.
 
-7. McMahan, H. B., Moore, E., Ramage, D., Hampson, S., & Agüera y Arcas, B. (2016). "Communication-Efficient Learning of Deep Networks from Decentralized Data." *AISTATS 2017*. arXiv:1602.05629. *(The foundational FedAvg paper. Basis for Nobi's planned federated privacy architecture in Section 2.4.)*
+7. McMahan, H. B., Moore, E., Ramage, D., Hampson, S., & Agüera y Arcas, B. (2016). "Communication-Efficient Learning of Deep Networks from Decentralized Data." *AISTATS 2017*. arXiv:1602.05629. *(The foundational FedAvg paper. Basis for Nobi's planned federated privacy architecture in Section 2.5.)*
 
-8. Dwork, C. & Roth, A. (2014). "The Algorithmic Foundations of Differential Privacy." *Foundations and Trends in Theoretical Computer Science*, 9(3–4), 211–407. *(Theoretical basis for the planned differential privacy scoring mechanism in Section 2.4.4.)*
+8. Dwork, C. & Roth, A. (2014). "The Algorithmic Foundations of Differential Privacy." *Foundations and Trends in Theoretical Computer Science*, 9(3–4), 211–407. *(Theoretical basis for the planned differential privacy scoring mechanism in Section 2.5.4.)*
 
 ---
 

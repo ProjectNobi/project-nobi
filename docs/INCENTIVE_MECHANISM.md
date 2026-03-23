@@ -66,6 +66,28 @@ Keywords are checked with word-boundary matching (short keywords like "5" won't 
 | < 30 seconds | 0.4 |
 | ≥ 30 seconds | 0.2 |
 
+### Safety Multiplier
+
+Approximately 10% of validator queries are **adversarial safety probes** — queries testing crisis response, manipulation attempts, and illegal content handling. A miner that returns unsafe content on a safety probe receives **zero for the entire round**, regardless of quality, memory, or speed scores.
+
+This is a hard protocol-level guarantee: safety cannot be compensated by excellence in other dimensions. The safety multiplier is binary (pass/fail) and applied before the moving average.
+
+### TEE Privacy Bonus
+
+Miners running inside a Trusted Execution Environment (AMD SEV-SNP or NVIDIA CC) receive a scoring bonus for providing stronger user privacy:
+
+| TEE Type | Bonus | Status |
+|----------|-------|--------|
+| AMD SEV-SNP (structural validation) | +5% | Code-complete, deploying |
+| AMD SEV-SNP (chain-verified attestation) | +10% | Planned — future milestone |
+| NVIDIA CC | +5% | Code-complete, deploying |
+
+The TEE bonus rewards miners that invest in hardware that ensures not even the miner operator can read user conversation content. See [MINING_GUIDE.md](MINING_GUIDE.md) for TEE setup instructions.
+
+### Diversity Scoring
+
+To prevent monoculture and Sybil clustering, the validator applies a diversity factor to final weight normalization. Miners whose outputs are highly similar to a cluster (suggesting they run identical models with identical prompts) receive a reduced diversity factor (0.7–1.0). This penalizes copy-cat operations while rewarding miners that genuinely differentiate their companion quality.
+
 ## Anti-Gaming Measures
 
 ### No Pre-Caching (Dynamic Queries)
@@ -102,11 +124,24 @@ single_score = 0.90 * llm_judge_score + 0.10 * reliability_score
 # Multi-turn (60% of rounds):
 multi_score = 0.60 * llm_judge_score + 0.30 * memory_recall + 0.10 * reliability_score
 
+# Safety multiplier (applied to ALL rounds):
+# If adversarial safety probe (~10% of rounds) → miner returned unsafe content:
+#   round_score = 0.0  (zero override — no partial credit)
+# Otherwise: round_score unchanged
+
+# TEE bonus (for miners with verified AMD SEV-SNP):
+# Structural verification (+5% bonus):  round_score *= 1.05
+# Chain-verified attestation (+10% bonus, future): round_score *= 1.10
+
+# Diversity scoring (applied to final weights, not per-round scores):
+# Miners with outputs highly similar to a cluster (Sybil/monoculture signal) receive a diversity penalty
+# diversity_factor ∈ [0.7, 1.0] — applied as: weights[uid] *= diversity_factor[uid]
+
 # Moving average with alpha = 0.1
 score[uid] = 0.1 * new_score + 0.9 * score[uid]
 
-# Weights normalized across all miners
-weights = scores / sum(scores)
+# Weights normalized across all miners (after diversity factor)
+weights = (scores * diversity_factors) / sum(scores * diversity_factors)
 ```
 
 The LLM judge score includes helpfulness (40%), coherence (30%), and personality (30%) as sub-criteria within a single evaluation.
@@ -115,9 +150,11 @@ The LLM judge score includes helpfulness (40%), coherence (30%), and personality
 
 - **60% multi-turn tests** (memory + quality)
 - **40% single-turn tests** (quality only)
+- **~10% adversarial safety probes** (overlapping with the above; safety is a scoring dimension in every round selection pool)
 - **10-second intervals** between queries
 - **Sample size:** queries random subset of miners each round
 - **Epoch length:** configurable, default 100 blocks (~20 minutes)
+- **Scoring calibrated for 256 miners** — weight distribution verified to remain meaningful at full mainnet scale
 
 ## Miner Economics
 

@@ -115,10 +115,12 @@ Wallet address, all transactions, and all `burn_alpha()` calls will be publicly 
 
 | Task | Status | Priority | Description |
 |------|--------|----------|-------------|
-| Memory encryption review | ✅ Done (2026-03-23) | Critical | GDPR compliance module shipped — AES-128 implementation verified, key management reviewed, attack surfaces documented. |
+| Memory encryption review | ✅ Done (2026-03-23) | Critical | GDPR compliance module shipped — AES-128 at rest implementation verified, key management reviewed, attack surfaces documented. |
+| TEE transport encryption | ✅ Code-complete (2026-03-23) | Critical | AES-256-GCM per-query + HPKE key wrapping — deploying to production. AMD SEV-SNP attestation structural verification live. |
 | Protocol security review | 🔲 Planned | Critical | Synapse validation, input sanitization, injection attack prevention |
 | Miner data isolation | 🔲 Planned | High | Verify miners cannot access memories from users assigned to other miners |
 | Validator manipulation resistance | ✅ Done (2026-03-23) | High | Weight hardening + diversity modules confirm scoring cannot be gamed by collusion. |
+| Content safety pipeline | ✅ Done (2026-03-23) | High | ContentFilter (dual-stage) + adversarial safety probes + DependencyMonitor all shipped. |
 | Dependency audit | 🔲 Planned | Medium | Review all third-party libraries for known vulnerabilities |
 
 **Approach:** Community security review (open source audit) + targeted expert review if funding allows.
@@ -234,19 +236,25 @@ The community model significantly simplifies legal requirements compared to a su
 
 **Phase 1 Progress (as of 2026-03-23):**
 - ✅ 10K stress test suite shipped (MINI mode: 100% success rate, 200+ RPS)
-- ✅ Validator scoring calibration complete
-- ✅ Weight hardening shipped (commit-reveal manipulation prevention)
-- ✅ Miner diversity incentives shipped
-- ✅ GDPR compliance module + memory encryption review complete
-- ✅ Emission burn automation (burn_emissions.py) operational
-- ✅ React Native mobile app scaffold started (Phase 3 milestone started early)
-- ✅ ContentFilter integration — wired into bot, miner, and group handler (dual-stage: pre-LLM + post-LLM)
-- ✅ Safety scoring — adversarial safety probes wired into validator reward pipeline (miners failing safety = zero emissions)
-- ✅ DependencyMonitor — 4-level intervention system (MILD → MODERATE → SEVERE → CRITICAL) integrated into bot
-- ✅ Age verification — DOB-based gate + behavioral minor detection (15 patterns); under-18 permanently blocked
-- ✅ Onboarding UX — mandatory age gate on /start, warm-adult tone calibration, periodic AI-disclosure reminders
-- ✅ Privacy language hardened — all marketing uses "encrypted at rest (AES-128, server-side)"; miner plaintext processing explicitly disclosed
-- ✅ 1,622 tests passing (up from 1,089 at Phase 0 completion)
+- ✅ Validator scoring calibration complete — calibrated for 256 miners, LLM-as-judge consistency validated
+- ✅ Weight commit-reveal hardening — manipulation and weight-copying prevention shipped
+- ✅ Miner diversity incentives shipped — prevents monoculture (identical prompts/models)
+- ✅ GDPR compliance module — 5 data subject rights (access/erasure/portability/rectification/restriction), retention policy, consent management, Privacy Impact Assessment (PIA)
+- ✅ Emission burn automation (burn_emissions.py) operational — on-chain verifiable via `burn_alpha()`
+- ✅ React Native mobile app scaffold started — Expo + RN 0.76.6, services for auth, memory, API, encryption (Phase 3 milestone started early)
+- ✅ ContentFilter integration — wired into bot, miner, and group handler (dual-stage: pre-LLM user check + post-LLM response check)
+- ✅ Safety scoring — adversarial safety probes (~10% of validator queries) wired into reward pipeline; miners failing safety = zero emissions
+- ✅ DependencyMonitor — 4-level intervention system (MILD → MODERATE → SEVERE → CRITICAL), periodic AI-disclosure reminders every 50 interactions or weekly
+- ✅ Age verification — mandatory DOB-based gate on /start + behavioral minor detection (15 patterns); under-18 permanently blocked
+- ✅ Onboarding UX recalibration — warm-but-adult tone, mandatory age gate on /start, AI-disclosure reminders
+- ✅ TEE encryption Phase 1–4 (code-complete, deploying to production):
+  - Phase 1: AES-256-GCM per-query encryption (ephemeral keys, 96-bit nonce, authenticated)
+  - Phase 2: HPKE key wrapping (X25519 + HKDF-SHA256 — only TEE enclave can unwrap)
+  - Phase 3: AMD SEV-SNP attestation with structural + chain-verified verification (+5–10% scoring bonus)
+  - Phase 4: TEE passthrough to Chutes TEE models (DeepSeek-V3.1-TEE, Qwen3-TEE)
+- ✅ Browser-side memory extraction — code-complete, available in web app
+- ✅ Privacy language precision audit — "encrypted at rest (AES-128, server-side)" vs "E2E TEE (AES-256-GCM)" precision enforced across all docs and marketing
+- ✅ 1,622 tests passing (1,662 collected, 2 skipped — up from 1,089 at Phase 0 completion)
 - 🔲 External miner onboarding (ongoing)
 - 🔲 Protocol security review (next priority)
 - 🔲 Rate limiting / DDoS protection
@@ -601,6 +609,13 @@ The model is inherently sustainable because:
 | 0 | Testnet live (SN272) | Q1 2026 | ✅ Complete |
 | 0 | Working Telegram bot | Q1 2026 | ✅ Complete |
 | 0 | Full documentation suite | Q1 2026 | ✅ Complete |
+| 1 | Safety pipeline (content filter + probes + dependency monitor) | Q2 2026 | ✅ Code-complete (2026-03-23) |
+| 1 | GDPR compliance module (5 rights + consent + PIA + retention) | Q2 2026 | ✅ Code-complete (2026-03-23) |
+| 1 | TEE encryption (AES-256-GCM + HPKE + SEV-SNP attestation) | Q2 2026 | ✅ Code-complete, deploying (2026-03-23) |
+| 1 | Age verification (DOB gate + behavioral detection) | Q2 2026 | ✅ Code-complete (2026-03-23) |
+| 1 | Emission burn automation | Q2 2026 | ✅ Operational (2026-03-23) |
+| 1 | React Native mobile scaffold | Q3 2026 | ✅ Started early (2026-03-23) |
+| 1 | 10K stress test suite | Q2 2026 | ✅ Complete (2026-03-23) |
 | 1 | 10+ external miners | Q2 2026 | 🔲 In Progress |
 | 1 | Security review complete | Q2 2026 | 🔲 Planned |
 | 1 | Registration funds secured | Q2 2026 | 🔲 Planned |

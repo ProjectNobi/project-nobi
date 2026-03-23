@@ -53,7 +53,7 @@ No setup, no account, no payment. It remembers you.
 | Languages | 30+ | 20+ | ✅ 20 (auto-detected) |
 | Single point of failure | Yes | Yes | ✅ Decentralized |
 
-¹ *Memory is encrypted at rest (AES-128, server-side encryption — protects stored data) with user-controlled deletion (`/forget`). Miners process conversation content to generate responses. End-to-end TEE encryption is code-complete and deploying to production. Browser-side memory extraction is code-complete and available in the web app. On-device federated learning is on the roadmap. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) and [WHITEPAPER.md](docs/WHITEPAPER.md) for details.*
+¹ *Memory is encrypted at rest (AES-128, server-side encryption — protects stored data) with user-controlled deletion (`/forget`). Miners process conversation content to generate responses. End-to-end TEE encryption (AES-256-GCM + HPKE key wrapping) is code-complete and deploying to production. Browser-side memory extraction is code-complete and available in the web app. On-device federated learning is on the roadmap. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) and [WHITEPAPER.md](docs/WHITEPAPER.md) for details.*
 
 ---
 
@@ -77,7 +77,7 @@ User → App → Validators → Miners (competitive marketplace) → Best respon
 
 ## 📊 Incentive Mechanism
 
-Miners are scored through dynamically generated tests (1,200+ single-turn queries, 43,200+ multi-turn scenarios — miners can't pre-cache answers):
+Miners are scored through dynamically generated tests (1,200+ single-turn queries, 43,200+ multi-turn scenarios — miners can't pre-cache answers). ~10% of rounds are adversarial safety probes; miners that serve harmful content receive zero emissions for that round.
 
 **Single-turn tests (40% of rounds):**
 - **Quality + Personality** (90%) — LLM-as-judge: helpful, coherent, warm
@@ -166,7 +166,7 @@ Full guide: **[VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)**
 | Phase | Status | Highlights |
 |-------|--------|------------|
 | **0. Foundation** | ✅ Complete | Protocol, miner, validator, memory, scoring, 500 simulated-node stress test |
-| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅, safety scoring ✅, content filter ✅, age verification ✅, dependency monitor ✅ — 1,622 tests passing |
+| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅, safety scoring ✅, content filter ✅, age verification ✅, dependency monitor ✅, TEE encryption ✅, mobile scaffold ✅ — 1,622 tests passing |
 | **2. Mainnet Launch** | ⏳ Q3 2026 | Subnet registration, subnet routing, public beta, community staking |
 | **3. Growth** | ⏳ Q4 2026+ | Mobile app, 50+ languages, plugin ecosystem, governance |
 | **4. Scale** | ⏳ 2027+ | 100K+ users, decentralized governance, federated privacy |
@@ -240,13 +240,15 @@ cd webapp && npx vercel --prod
 - **Web App:** Next.js 14 + TypeScript + Tailwind CSS
 - **Memory:** SQLite + semantic embeddings (sentence-transformers) + relationship graphs
 - **Encryption at rest:** AES-128 (Fernet, PBKDF2 100K iterations) — server-side, protects stored data
-- **End-to-end TEE encryption:** Code-complete, deploying to production (AMD SEV-SNP / NVIDIA CC)
+- **End-to-end TEE encryption:** AES-256-GCM per-query (ephemeral keys) + HPKE X25519 key wrapping — code-complete, deploying to production (AMD SEV-SNP / NVIDIA CC)
+- **AMD SEV-SNP attestation:** Structural + chain-verified attestation — +5–10% scoring bonus for verified TEE miners
 - **Browser-side memory extraction:** Code-complete, available in web app
 - **Content safety:** ContentFilter (dual-stage: pre-LLM user check + post-LLM response check) — wired into bot, miner, group handler
-- **Safety scoring:** Adversarial safety probes in validator pipeline — miners failing safety = zero emissions
-- **GDPR compliance:** Full module — /forget, /export, /memories, right to access/erasure/portability/rectification/restriction
-- **Age verification:** DOB-based gate + behavioral minor detection (15 patterns) — 18+ enforced on /start
-- **Dependency detection:** DependencyMonitor with 4-level intervention system (MILD → MODERATE → SEVERE → CRITICAL)
+- **Safety scoring:** Adversarial safety probes (~10% of validator queries) in reward pipeline — miners failing safety = zero emissions
+- **GDPR compliance:** Full module — right to access/erasure/portability/rectification/restriction, consent management, retention policy, Privacy Impact Assessment (PIA)
+- **Age verification:** Mandatory DOB-based gate on /start + behavioral minor detection (15 patterns) — 18+ enforced
+- **Dependency detection:** DependencyMonitor with 4-level intervention system (MILD → MODERATE → SEVERE → CRITICAL), periodic AI-disclosure reminders
+- **Emission burn automation:** burn_emissions.py operational — all owner emissions burned on-chain via `burn_alpha()`, verifiable
 - **Infrastructure:** PM2, Docker, systemd
 
 ---

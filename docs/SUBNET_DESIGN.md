@@ -90,6 +90,32 @@ class MemoryRecall(bt.Synapse):
 - **Fake user_id on single-turn** — miners can't detect validator tests
 - **Heuristic cap at 0.5** — top scores require real LLM evaluation
 - **Moving average (α=0.1)** — can't game one round and coast
+- **Adversarial safety probes (~10% of rounds)** — miners returning unsafe content receive zero for the entire round
+- **Weight commit-reveal hardening** — weight copy detection + state persistence across restarts
+- **Diversity scoring** — Sybil/monoculture clusters penalized via diversity factor (0.7–1.0)
+
+### Safety Pipeline
+
+Nobi runs a dual-stage content safety pipeline at the application layer (separate from validator scoring):
+
+```
+User message → ContentFilter.check_user_message()
+    BLOCKED: return crisis resource / safe refusal (never reaches LLM)
+    SAFE: pass to LLM
+
+LLM response → ContentFilter.check_bot_response()
+    WARNING: append disclaimer
+    BLOCKED: replace with safe refusal
+    SAFE: return as-is
+```
+
+**DependencyMonitor** tracks behavioral patterns across conversations (message frequency, unusual-hour spikes, dependency phrases, social isolation signals) and triggers 4-level interventions:
+- MILD: gentle nudge toward real connections
+- MODERATE: clear AI disclosure + urge real connections
+- SEVERE: strong intervention with resources
+- CRITICAL: cooldown period + crisis resources
+
+**Periodic AI reminders** are sent every 50 interactions or weekly (whichever comes first) to prevent users from mistaking Nori for a human.
 
 ## Memory Architecture
 
@@ -113,8 +139,28 @@ class MemoryRecall(bt.Synapse):
   - Auto-extraction on every memory store (non-blocking, graceful fallback)
 - **Conversation history:** Stored per-user, last 20 turns retained
 
-### Memory IS Encrypted (Phase A+B — Live)
-All user memories are encrypted with AES-128 (Fernet) before storage. Per-user encryption keys are derived via PBKDF2 (100K iterations) and managed server-side. Miners store AES-128 encrypted blobs. Users control their data via /memories, /export, and /forget commands. Phase B adds encrypted synapses — bot encrypts before sending to miners. **Note:** Encryption keys are currently server-side managed; client-side/on-device key management is planned for mainnet.
+### Privacy Encryption Stack
+
+**Phase A (live): AES-128 at rest.** All user memories are encrypted with AES-128 (Fernet, PBKDF2 100K iterations) before storage. Per-user keys managed server-side. Miners store encrypted blobs. Users control their data via `/memories`, `/export`, and `/forget` commands.
+
+**Phase B (live): Encrypted synapses.** Bot encrypts memory context before sending to miners. Miners receive AES-128 encrypted blobs.
+
+**Phase C — TEE transport (code-complete, deploying):**
+- **AES-256-GCM per-query encryption** — validator encrypts user message + memory context before sending to TEE miner. Ephemeral 256-bit keys, 96-bit nonce, GCM authentication tag. Keys never stored or logged.
+- **HPKE key wrapping (Phase 2)** — session key wrapped with miner's X25519 TEE public key (ECIES: X25519 ECDH + HKDF-SHA256 + AES-256-GCM). Only the TEE enclave can unwrap. Key format: 92 bytes (32-byte ephemeral pubkey + 12-byte nonce + 48-byte wrapped key+tag), base64url encoded.
+- **AMD SEV-SNP attestation** — miners on AMD EPYC Milan/Genoa generate hardware attestation reports from `/dev/sev-guest`. Validators verify structurally (+5% bonus) or via chain (+10%, future).
+- **TEE passthrough** — Phase 4 routes inference through Chutes TEE models (DeepSeek-V3.1-TEE, Qwen3-235B-TEE) for end-to-end attestation of the inference process itself.
+
+**Encryption precision reference:**
+| Layer | Algorithm | Status |
+|-------|-----------|--------|
+| At rest | AES-128 (Fernet) | Live |
+| Transport | AES-256-GCM (ephemeral) | Code-complete |
+| Key wrapping | HPKE/X25519 | Code-complete |
+| Hardware attestation | AMD SEV-SNP | Code-complete |
+| On-device | TBD | Roadmap Phase 3 |
+
+**Note:** Encryption keys are currently server-side managed (Phase A+B). Client-side/on-device key management ships with the mobile app (Phase 3).
 
 ### Implemented Improvements
 - ✅ LLM-based memory extraction (with regex fallback)
@@ -154,10 +200,16 @@ class FederatedUpdate(bt.Synapse):
     new_round: Optional[int] = None    # Next aggregation round number
 ```
 
-### Federated Integration Points *(All Planned)*
+### Privacy Architecture Status
 
 | Feature | Status | Privacy Guarantee |
 |---------|--------|-------------------|
+| AES-128 at rest | ✅ Live | Stored memories encrypted, server-side keys |
+| Encrypted synapses (AES-128) | ✅ Live | Bot encrypts before sending to miners |
+| AES-256-GCM TEE transport | ✅ Code-complete, deploying | Query content encrypted in transit |
+| HPKE key wrapping (X25519) | ✅ Code-complete, deploying | Only TEE enclave can unwrap session key |
+| AMD SEV-SNP attestation | ✅ Code-complete, deploying | Hardware proof that code runs in enclave |
+| Browser-side memory extraction | ✅ Code-complete | Available in web app |
 | On-device memory storage (mobile) | Planned — Q3 2026 | Memories never reach miner disk |
 | Federated memory extractor training | Planned — Q4 2026 | Training data never leaves device |
 | Per-user federated adapter weights | Planned — Q4 2026 | Personality data stays on device |
@@ -232,14 +284,36 @@ project-nobi/
 │   │   └── store.py      # SQLite memory manager
 │   ├── validator/
 │   │   ├── forward.py    # Validation logic
-│   │   ├── reward.py     # Scoring functions
-│   │   └── query_generator.py  # Dynamic test queries
+│   │   ├── reward.py     # Scoring functions (incl. safety multiplier, TEE bonus, diversity)
+│   │   └── query_generator.py  # Dynamic test queries + adversarial safety probes
+│   ├── safety/
+│   │   ├── content_filter.py   # Dual-stage content filter (pre/post LLM)
+│   │   └── dependency_monitor.py  # 4-level dependency intervention system
+│   ├── compliance/
+│   │   ├── gdpr.py        # GDPR DSR handler (5 rights)
+│   │   ├── consent.py     # Consent management + versioning
+│   │   ├── retention.py   # Data retention policy
+│   │   └── pia.py         # Privacy Impact Assessment
+│   ├── privacy/
+│   │   ├── tee_encryption.py   # AES-256-GCM + HPKE key wrapping (Phase 1+2)
+│   │   └── tee_attestation.py  # AMD SEV-SNP attestation verification (Phase 3)
+│   ├── burn/
+│   │   ├── tracker.py     # Burn emission history tracker
+│   │   └── verifier.py    # On-chain burn verification
 │   ├── base/             # Base neuron classes (bt template)
 │   └── utils/            # Config, UID selection, logging
 ├── app/
-│   └── bot.py            # Telegram bot (@ProjectNobiBot)
+│   ├── bot.py            # Telegram bot — ContentFilter, AgeGate, DependencyMonitor wired in
+│   └── discord_bot.py    # Discord companion
+├── api/
+│   └── server.py         # FastAPI — incl. /api/v1/gdpr/*, /api/v1/burns/*, encrypted chat/memory endpoints
+├── mobile/               # React Native (Expo) mobile scaffold — RN 0.76.6
 ├── docs/                 # All documentation
-├── scripts/              # Deployment & monitoring scripts
+├── scripts/
+│   ├── burn_emissions.py        # Emission burn automation
+│   ├── setup_tee_miner.sh       # TEE miner automated setup
+│   ├── stress_test_10k.py       # 10K stress test suite
+│   └── ...                      # Deployment & monitoring scripts
 └── setup.py              # Package installation
 ```
 

@@ -156,7 +156,7 @@ Behind the scenes, Nori is powered by a decentralized network of miners and vali
 
 **Validators** are the quality controllers. They score miners on response quality, memory recall accuracy, personality warmth, and response speed. These scores become weights on the Bittensor blockchain, determining how much each miner earns. Good miners thrive. Bad miners are replaced.
 
-**Your memories** are stored with encryption (AES-128, per-user keys). You control them completely — view them, export them, delete them. Our roadmap includes on-device memory storage, where your memories never leave your phone at all. The long-term architecture is federated: your raw data stays on your device, and only anonymized model updates (not your actual memories) are shared with the network.
+**Your memories** are stored encrypted at rest (AES-128, per-user keys — server-side encryption). You control them completely — view them, export them, delete them via GDPR commands. End-to-end TEE encryption (AES-256-GCM + HPKE key wrapping) is code-complete and deploying to production — once live, miners' TEE enclaves process your data, and not even the miner operator can read it. Browser-side memory extraction is already available in the web app. Our roadmap includes on-device memory storage, where your memories never leave your phone at all. The long-term architecture is federated: your raw data stays on your device, and only anonymized model updates (not your actual memories) are shared with the network.
 
 ### Content Safety and Legal Compliance
 
@@ -246,11 +246,17 @@ That's the legacy. Not a company. Not a valuation. A companion for humanity.
 - ✅ Telegram bot (@ProjectNobiBot) — functional companion with memory
 - ✅ Web application — accessible interface
 - ✅ Memory system — semantic graphs, emotion tracking, relationship mapping
-- ✅ Content safety — compliant, responsible
-- ✅ Encryption — AES-128 per-user memory encryption
+- ✅ Content safety — ContentFilter (dual-stage), adversarial safety probes, DependencyMonitor (4-level)
+- ✅ Age verification — mandatory DOB gate + behavioral minor detection (18+ enforced from /start)
+- ✅ Encryption at rest — AES-128 per-user memory encryption (server-side)
+- ✅ End-to-end TEE encryption — AES-256-GCM + HPKE key wrapping: code-complete, deploying to production
+- ✅ Browser-side memory extraction — code-complete, available in web app
+- ✅ GDPR compliance module — 5 data subject rights, consent management, retention, PIA
+- ✅ Emission burn automation — on-chain verifiable via `burn_alpha()`
+- ✅ React Native mobile scaffold — Expo/RN 0.76.6, started early (Phase 3)
+- ✅ 1,622 tests passing (1,662 collected, 2 skipped)
 - ✅ Full documentation — whitepaper, subnet design, mining guide, validating guide
 - ✅ Open source — auditable, forkable, improvable
-- ✅ Legal compliance framework — privacy, safety, regulatory
 
 **What's next:** Mainnet. See our [ROADMAP.md](ROADMAP.md) for the detailed execution plan.
 

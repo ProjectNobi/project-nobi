@@ -403,6 +403,237 @@ Get usage statistics for the authenticating API key.
 
 ---
 
+### Encrypted Chat (TEE Privacy Mode)
+
+#### `POST /v1/api/chat/encrypted`
+
+Privacy-preserving chat with TEE passthrough. Client-side encryption via browser-side memory extraction — only the TEE enclave sees plaintext. Session token required.
+
+> **Status:** Code-complete, deploying to production. Available for testing on self-hosted deployments.
+
+**Request:**
+```json
+{
+  "encrypted_message": "<base64url-encoded AES-256-GCM ciphertext>",
+  "key_id": "<base64url-encoded session key or HPKE-wrapped key>",
+  "nonce": "<base64url-encoded 96-bit nonce>",
+  "session_token": "nobi_session_...",
+  "memories": {
+    "ciphertext": "<base64url encrypted memory blob>",
+    "key_id": "<key reference>"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "response": "...",
+  "memories_used": [],
+  "tee_verified": true,
+  "tee_type": "amd-sev-snp",
+  "gdpr_compliant": true
+}
+```
+
+---
+
+### Encrypted Memory Sync
+
+#### `POST /v1/api/memories/encrypted`
+
+Store an encrypted memory blob. The server never decrypts this data — it is stored as-is and returned to the client on request.
+
+> **Status:** Code-complete, deploying to production.
+
+**Request:**
+```json
+{
+  "user_id": "anon-user-id",
+  "ciphertext": "<base64url encrypted memory blob>",
+  "key_id": "<client key reference>",
+  "nonce": "<base64url nonce>"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "stored": true,
+  "memory_id": "uuid-here"
+}
+```
+
+---
+
+### GDPR Data Subject Rights
+
+All GDPR endpoints are available under `/api/v1/gdpr/`. These implement the five GDPR data subject rights per GDPR Articles 15–20, plus consent management and audit trail.
+
+#### `POST /api/v1/gdpr/access`
+
+**Art. 15: Right of Access** — Request a full copy of all data held about you.
+
+**Request:**
+```json
+{ "user_id": "your-user-id" }
+```
+
+**Response:** JSON object containing all stored data for the user, with audit record created.
+
+---
+
+#### `POST /api/v1/gdpr/erasure`
+
+**Art. 17: Right to Erasure ("right to be forgotten")** — Delete all data for a user.
+
+**Request:**
+```json
+{ "user_id": "your-user-id" }
+```
+
+---
+
+#### `GET /api/v1/gdpr/export`
+
+**Art. 20: Right to Data Portability** — Export all user data in machine-readable JSON format.
+
+**Query Parameters:** `user_id=<your-user-id>`
+
+---
+
+#### `POST /api/v1/gdpr/rectify`
+
+**Art. 16: Right to Rectification** — Correct inaccurate data.
+
+**Request:**
+```json
+{
+  "user_id": "your-user-id",
+  "memory_id": "uuid-of-memory",
+  "corrected_content": "Corrected text here"
+}
+```
+
+---
+
+#### `POST /api/v1/gdpr/restrict`
+
+**Art. 18: Right to Restriction** — Restrict processing of your data.
+
+**Request:**
+```json
+{ "user_id": "your-user-id", "reason": "Optional reason" }
+```
+
+---
+
+#### `GET /api/v1/gdpr/consent`
+
+Get current consent status for a user.
+
+**Query Parameters:** `user_id=<your-user-id>`
+
+---
+
+#### `POST /api/v1/gdpr/consent`
+
+Update consent for one or more processing types.
+
+**Request:**
+```json
+{
+  "user_id": "your-user-id",
+  "consents": {
+    "data_processing": true,
+    "memory_extraction": true,
+    "analytics": false,
+    "profiling": false,
+    "marketing": false,
+    "third_party_sharing": false
+  }
+}
+```
+
+---
+
+#### `GET /api/v1/gdpr/audit`
+
+Get the GDPR audit trail for a user (all DSR requests and their status).
+
+**Query Parameters:** `user_id=<your-user-id>`
+
+---
+
+#### `GET /api/v1/gdpr/pia`
+
+Get the Privacy Impact Assessment summary for the current deployment.
+
+---
+
+### Emission Burn Transparency
+
+#### `GET /api/v1/burns`
+
+List burn emission history. All burn transactions are on-chain verifiable.
+
+**Query Parameters:**
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| limit | int | 50 | Max results |
+| offset | int | 0 | Pagination offset |
+
+**Response:**
+```json
+{
+  "burns": [
+    {
+      "block": 12345678,
+      "amount_alpha": 12.5,
+      "tx_hash": "0x...",
+      "timestamp": "2026-03-23T12:00:00Z",
+      "verified": true
+    }
+  ],
+  "total": 1,
+  "total_burned_alpha": 12.5
+}
+```
+
+---
+
+#### `GET /api/v1/burns/total`
+
+Get aggregate burn statistics.
+
+**Response:**
+```json
+{
+  "total_burned_alpha": 12.5,
+  "burn_count": 1,
+  "first_burn": "2026-03-23T12:00:00Z",
+  "latest_burn": "2026-03-23T12:00:00Z"
+}
+```
+
+---
+
+#### `GET /api/v1/burns/verify`
+
+Verify burn history against on-chain records.
+
+**Response:**
+```json
+{
+  "verified": true,
+  "burns": [...],
+  "discrepancies": []
+}
+```
+
+---
+
 ## Quick Start
 
 ### Python

@@ -157,9 +157,9 @@ INFO | set_weights on chain successfully!
 Every ~20 seconds, the validator:
 
 1. **Selects random miners** to query (sample_size per round)
-2. **Generates a unique test** — either single-turn (40%) or multi-turn memory test (60%)
+2. **Generates a unique test** — single-turn (40%), multi-turn memory test (60%), or adversarial safety probe (~10% of all rounds, overlapping)
 3. **Queries miners** and measures response latency
-4. **Scores responses** using LLM-as-judge (quality + personality) + keyword memory check + latency
+4. **Scores responses** using LLM-as-judge (quality + personality) + keyword memory check + latency + safety check
 
 ### Scoring Breakdown
 
@@ -172,8 +172,20 @@ Every ~20 seconds, the validator:
 - 30% → Memory recall (did the miner remember user details?)
 - 10% → Reliability (response latency)
 
+**Adversarial safety probes (~10% of all rounds):**
+- Test miners with crisis scenarios, manipulation attempts, and illegal content requests
+- A miner returning unsafe content receives **zero for the entire round**, regardless of quality scores
+- Probes are indistinguishable from regular queries — miners cannot selectively filter them
+
 5. **Updates moving averages** (α=0.1 — scores smooth over time)
-6. **Commits weights on-chain** every epoch (~100 blocks = ~20 minutes)
+6. **Commits weights on-chain** every epoch (~100 blocks = ~20 minutes) using hardened commit-reveal scheme
+
+### Weight Hardening
+
+The commit-reveal weight scheme includes anti-manipulation protections:
+- **Weight copy detection:** anomalous similarity between validators' weight distributions is flagged
+- **State persistence:** miner scores persist across validator restarts (prevents reset-based gaming)
+- **Diversity scoring:** miners appearing identical (same model outputs) are penalized to prevent monoculture and Sybil clustering
 
 **All queries are dynamically generated** — different every round. You don't need to configure or seed the test bank.
 
