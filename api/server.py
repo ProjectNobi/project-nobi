@@ -25,9 +25,9 @@ sys.path.insert(0, PROJECT_ROOT)
 from nobi.memory import MemoryManager
 from nobi.memory.encryption import ensure_master_secret
 from nobi.memory.adapters import UserAdapterManager
-from nobi.i18n import detect_language, LanguageDetector
+from nobi.i18n import LanguageDetector
 from nobi.i18n.prompts import build_multilingual_system_prompt
-from nobi.i18n.languages import SUPPORTED_LANGUAGES, get_language_name
+from nobi.i18n.languages import SUPPORTED_LANGUAGES
 from nobi.billing.subscription import SubscriptionManager, TIERS
 from nobi.billing.stripe_handler import StripeHandler
 from nobi.api_auth import ApiKeyManager
@@ -185,12 +185,28 @@ support_handler: Optional[SupportHandler] = None
 _session_tokens: Dict[str, Dict[str, Any]] = {}
 
 
+async def _rate_limiter_cleanup_task():
+    """Periodically clean up stale rate limiter entries to prevent memory growth."""
+    while True:
+        await asyncio.sleep(3600)  # Every hour
+        try:
+            rate_limiter.cleanup_stale()
+        except Exception:
+            pass
+
 @asynccontextmanager
 async def lifespan(app):
     """Initialize resources on startup, clean up on shutdown."""
     await startup()
+    # Start background cleanup task
+    cleanup_task = asyncio.create_task(_rate_limiter_cleanup_task())
     yield
-    # Shutdown cleanup (if needed in future)
+    # Shutdown cleanup
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
 
 
 # ─── Session Auth Models ─────────────────────────────────────
@@ -251,13 +267,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+_CORS_ORIGINS_ENV = os.environ.get("NOBI_CORS_ORIGINS", "")
+_CORS_ORIGINS = (
+    [o.strip() for o in _CORS_ORIGINS_ENV.split(",") if o.strip()]
+    if _CORS_ORIGINS_ENV
+    else [
         "https://app.projectnobi.ai",
         "https://projectnobi.ai",
-        "http://localhost:3000",
-    ],
+        "http://localhost:3000",  # dev only; override via NOBI_CORS_ORIGINS in prod
+    ]
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
@@ -313,6 +336,18 @@ class IPRateLimiter:
         
         self._requests[key].append(now)
         return True, ""
+
+    def cleanup_stale(self, max_age_seconds: int = 3600):
+        """Remove stale entries older than max_age_seconds. Call periodically to prevent memory growth."""
+        now = time.time()
+        stale_keys = [k for k, times in list(self._requests.items()) if not times or now - times[-1] > max_age_seconds]
+        for k in stale_keys:
+            del self._requests[k]
+        # Clean expired blocks
+        expired_blocks = [ip for ip, until in list(self._blocked.items()) if now >= until]
+        for ip in expired_blocks:
+            del self._blocked[ip]
+            self._violations.pop(ip, None)
 
 rate_limiter = IPRateLimiter()
 

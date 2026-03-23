@@ -28,7 +28,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
             "Project Nobi is a decentralized AI companion network built on Bittensor! 🤖\n\n"
             "Nori (that's me!) is your personal AI companion who actually *remembers* you — "
             "your conversations, preferences, relationships, and life events. Unlike other AIs, "
-            "your data stays encrypted on-device or on your own server. I'm powered by the "
+            "your memories are AES-128 encrypted at rest. I'm powered by the "
             "Bittensor network, meaning real miners compete to give you the best AI responses. "
             "No Big Tech, no data harvesting — just a companion that genuinely knows you. 💙"
         ),
@@ -53,12 +53,12 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "keywords": ["private", "privacy", "data", "secure", "security", "encrypted", "safe", "gdpr", "delete data"],
         "answer": (
             "Yes — privacy is our #1 priority. 🔒\n\n"
-            "• All memories are **AES-256 encrypted** at rest\n"
-            "• Your data never leaves your server without your permission\n"
+            "• All memories are **AES-128 encrypted** at rest (Fernet, PBKDF2 per-user keys)\n"
             "• We don't sell, share, or analyze your conversations\n"
             "• You can export or delete ALL your data at any time\n"
-            "• Self-hosting option: run your own Nobi instance for maximum privacy\n\n"
-            "We follow a 'data stays with you' philosophy — the antithesis of Big Tech."
+            "• Open source: anyone can audit the encryption code on GitHub\n\n"
+            "Current encryption is server-side (storage-level protection). On-device encryption "
+            "and federated privacy (data never leaves your device) are on our roadmap for mainnet."
         ),
     },
     {

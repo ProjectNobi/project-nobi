@@ -23,6 +23,14 @@ import threading
 from datetime import datetime, timezone
 from typing import Dict, Optional
 
+# Load .env from project root if present (ensures env vars are set when run via PM2)
+try:
+    from dotenv import load_dotenv as _load_dotenv
+    _env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    _load_dotenv(_env_path, override=False)
+except ImportError:
+    pass
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -32,7 +40,7 @@ from telegram.ext import (
     filters,
     ContextTypes,
 )
-from telegram.constants import ChatAction, ParseMode
+from telegram.constants import ChatAction
 
 # Add project root for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -41,7 +49,7 @@ from nobi.memory import MemoryManager
 from nobi.memory.encryption import ensure_master_secret, encrypt_memory, decrypt_memory
 from nobi.memory.adapters import UserAdapterManager
 from nobi.protocol import CompanionRequest
-from nobi.i18n import detect_language, LanguageDetector
+from nobi.i18n import LanguageDetector
 from nobi.i18n.prompts import build_multilingual_system_prompt
 from nobi.i18n.languages import SUPPORTED_LANGUAGES, get_language_name
 from nobi.proactive import ProactiveEngine
@@ -1420,10 +1428,20 @@ async def cmd_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         _save_voice_users(_voice_enabled_users)
         # Install gTTS if needed
         try:
-            from gtts import gTTS
+            from gtts import gTTS  # noqa: F401
         except ImportError:
             import subprocess
             subprocess.run(["pip", "install", "--break-system-packages", "-q", "gTTS"], capture_output=True)
+            try:
+                import importlib
+                import sys
+                # Force reimport after install
+                if "gtts" in sys.modules:
+                    importlib.reload(sys.modules["gtts"])
+                else:
+                    import gtts  # noqa: F401
+            except ImportError:
+                pass  # Will retry on next voice message
         await update.message.reply_text("🔊 Voice replies ON! I'll send you a voice message with every reply.\n\nUse /voice again to turn it off.")
 
 

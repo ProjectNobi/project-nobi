@@ -6,6 +6,8 @@ The Nobi Public API lets third-party developers integrate with Nori, the AI comp
 
 **Base URL:** `https://api.projectnobi.ai` (or your self-hosted instance)
 
+> **Note:** The public API endpoint (`api.projectnobi.ai`) is not yet live. This document describes the planned API for mainnet launch. Self-hosted instances can use these endpoints directly against a local deployment.
+
 **API Version:** v1
 
 ---

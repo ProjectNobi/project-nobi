@@ -11,6 +11,7 @@ Storage: Only SHA-256 hash stored, never the raw key.
 import hashlib
 import os
 import sqlite3
+import threading
 import time
 import logging
 from datetime import datetime, timezone, timedelta
@@ -56,6 +57,7 @@ class ApiKeyManager:
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA busy_timeout=10000")
         self._conn.row_factory = sqlite3.Row
+        self._lock = threading.Lock()  # Protect concurrent writes from async handlers
         self._init_db()
 
     def _init_db(self):
@@ -101,12 +103,13 @@ class ApiKeyManager:
         prefix = _key_prefix(raw_key)
         now = datetime.now(timezone.utc).isoformat()
 
-        self._conn.execute(
-            """INSERT INTO api_keys (key_hash, key_prefix, user_id, name, tier, created_at)
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (key_hash, prefix, user_id, name, tier, now),
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                """INSERT INTO api_keys (key_hash, key_prefix, user_id, name, tier, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (key_hash, prefix, user_id, name, tier, now),
+            )
+            self._conn.commit()
 
         logger.info(f"Created API key for user={user_id} name={name} tier={tier} prefix={prefix}")
         return {
@@ -133,11 +136,12 @@ class ApiKeyManager:
 
         # Update last_used
         now = datetime.now(timezone.utc).isoformat()
-        self._conn.execute(
-            "UPDATE api_keys SET last_used = ? WHERE key_hash = ?",
-            (now, key_hash),
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                "UPDATE api_keys SET last_used = ? WHERE key_hash = ?",
+                (now, key_hash),
+            )
+            self._conn.commit()
 
         return {
             "key_hash": row["key_hash"],
@@ -152,11 +156,12 @@ class ApiKeyManager:
     def revoke_key(self, api_key: str) -> bool:
         """Revoke an API key. Returns True if key was found and revoked."""
         key_hash = _hash_key(api_key)
-        cursor = self._conn.execute(
-            "UPDATE api_keys SET revoked = 1 WHERE key_hash = ? AND revoked = 0",
-            (key_hash,),
-        )
-        self._conn.commit()
+        with self._lock:
+            cursor = self._conn.execute(
+                "UPDATE api_keys SET revoked = 1 WHERE key_hash = ? AND revoked = 0",
+                (key_hash,),
+            )
+            self._conn.commit()
         revoked = cursor.rowcount > 0
         if revoked:
             logger.info(f"Revoked API key hash={key_hash[:16]}...")
@@ -164,11 +169,12 @@ class ApiKeyManager:
 
     def revoke_key_by_prefix(self, key_prefix: str) -> bool:
         """Revoke an API key by its prefix. Returns True if found and revoked."""
-        cursor = self._conn.execute(
-            "UPDATE api_keys SET revoked = 1 WHERE key_prefix = ? AND revoked = 0",
-            (key_prefix,),
-        )
-        self._conn.commit()
+        with self._lock:
+            cursor = self._conn.execute(
+                "UPDATE api_keys SET revoked = 1 WHERE key_prefix = ? AND revoked = 0",
+                (key_prefix,),
+            )
+            self._conn.commit()
         revoked = cursor.rowcount > 0
         if revoked:
             logger.info(f"Revoked API key by prefix={key_prefix}")
@@ -198,11 +204,12 @@ class ApiKeyManager:
         """Record an API call for usage tracking."""
         key_hash = _hash_key(api_key)
         now = datetime.now(timezone.utc).isoformat()
-        self._conn.execute(
-            "INSERT INTO api_usage (key_hash, endpoint, timestamp) VALUES (?, ?, ?)",
-            (key_hash, endpoint, now),
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO api_usage (key_hash, endpoint, timestamp) VALUES (?, ?, ?)",
+                (key_hash, endpoint, now),
+            )
+            self._conn.commit()
 
     def get_usage(self, api_key: str, days: int = 30) -> dict:
         """Get usage statistics for an API key over the given number of days."""

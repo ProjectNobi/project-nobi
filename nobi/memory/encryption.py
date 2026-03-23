@@ -103,6 +103,7 @@ def ensure_master_secret() -> str:
 
 
 _key_cache: dict = {}  # Cache derived keys to avoid repeated PBKDF2 (100K iterations)
+_KEY_CACHE_MAX = 10000  # Prevent unbounded memory growth (~hundreds of bytes per entry)
 
 
 def get_user_key(user_id: str) -> "Fernet | None":
@@ -143,6 +144,11 @@ def get_user_key(user_id: str) -> "Fernet | None":
         # Fernet requires url-safe base64 encoded 32-byte key
         fernet_key = base64.urlsafe_b64encode(derived_key)
         key = Fernet(fernet_key)
+        # Evict oldest 10% of cache if at capacity to prevent unbounded growth
+        if len(_key_cache) >= _KEY_CACHE_MAX:
+            evict_count = max(1, _KEY_CACHE_MAX // 10)
+            for k in list(_key_cache.keys())[:evict_count]:
+                del _key_cache[k]
         _key_cache[user_id] = key  # Cache to avoid repeated PBKDF2
         return key
 
