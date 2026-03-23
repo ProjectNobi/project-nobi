@@ -478,17 +478,19 @@ def decrypt_payload(
     if not _CRYPTO_AVAILABLE:
         raise RuntimeError("TEE encryption requires the cryptography library")
 
-    # Determine Phase 1 vs Phase 2 and get the session key
-    if miner_privkey is not None:
-        # Phase 2: unwrap with private key
+    # Determine Phase 1 vs Phase 2 based on key_id length
+    # Phase 1: 44 chars (base64url of 32-byte raw key)
+    # Phase 2: 124 chars (base64url of 92-byte HPKE blob)
+    _is_phase2 = len(key_id) > 50  # Phase 2 blobs are 124 chars, Phase 1 keys are 44
+
+    if _is_phase2 and miner_privkey is not None:
+        # Phase 2: unwrap HPKE blob with miner's private key
         try:
             key = unwrap_session_key(key_id, miner_privkey)
         except Exception as e:
             raise RuntimeError(f"HPKE key unwrapping failed: {e}") from e
     else:
-        # Phase 1 fallback — or Phase 2 fallback if no private key provided
-        # Auto-detect: if key_id is 124 chars it's an HPKE blob, but without the private key
-        # we cannot unwrap it — caller should provide miner_privkey for Phase 2 synapses
+        # Phase 1: decode plaintext key directly (works with or without miner_privkey)
         key = decode_key(key_id)
 
     # Decrypt message

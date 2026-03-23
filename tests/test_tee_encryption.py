@@ -744,19 +744,20 @@ def test_phase1_decrypt_payload_no_privkey():
     assert recovered_ctx == context
 
 
-def test_phase1_decrypt_payload_with_privkey_fails():
-    """Phase 1 key_id (44 chars) fails if we try to unwrap it with a private key."""
+def test_phase1_decrypt_payload_with_privkey_succeeds():
+    """Phase 1 key_id (44 chars) auto-detected and decoded even when privkey is provided."""
     priv, _pub = generate_tee_keypair()
-    payload = encrypt_payload("test", "")  # Phase 1, short key_id
+    payload = encrypt_payload("test message", "")  # Phase 1, short key_id
 
-    with pytest.raises(Exception):
-        # Phase 1 key_id is too short to be an HPKE blob — should raise ValueError
-        decrypt_payload(
-            payload["encrypted_message"],
-            payload["encrypted_context"],
-            payload["key_id"],
-            miner_privkey=priv,  # Will try to unwrap Phase 1 key as HPKE blob
-        )
+    # With the auto-detect fix, Phase 1 key + miner_privkey should work
+    # (falls back to Phase 1 decode instead of trying HPKE unwrap)
+    msg, ctx = decrypt_payload(
+        payload["encrypted_message"],
+        payload["encrypted_context"],
+        payload["key_id"],
+        miner_privkey=priv,
+    )
+    assert msg == "test message"
 
 
 def test_both_phases_same_payload_encryption():
