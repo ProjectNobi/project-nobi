@@ -71,13 +71,13 @@ export default function PrivacyToggle({ onChange, compact = false }: PrivacyTogg
         </button>
 
         {showTooltip && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap z-50 pointer-events-none max-w-xs text-center">
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap z-50 pointer-events-none max-w-xs text-center shadow-lg">
             {!supported
               ? "Privacy mode not supported in this browser"
               : settings.enabled
               ? "🔒 On-device privacy ON — memories extracted locally, only encrypted data sent"
               : "🔓 Click to enable on-device privacy — your data stays in your browser"}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900" />
           </div>
         )}
       </div>
