@@ -43,7 +43,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
             "When you chat with me, I automatically pick up on things like your name, your "
             "relationships, your hobbies, and how you're feeling. Before each reply, I search "
             "my memories for relevant context to make the conversation feel personal.\n\n"
-            "Your memories are stored **encrypted** at rest. You can view, edit, or delete "
+            "Your memories are stored encrypted at rest. You can view, edit, or delete "
             "any memory at any time via /memories (Telegram) or the Memories page in the web app."
         ),
     },
@@ -53,7 +53,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "keywords": ["private", "privacy", "data", "secure", "security", "encrypted", "safe", "gdpr", "delete data"],
         "answer": (
             "Yes — privacy is a core priority. 🔒\n\n"
-            "• All memories are **AES-128 encrypted at rest** (Fernet, PBKDF2 per-user keys)\n"
+            "• All memories are AES-128 encrypted at rest (Fernet, PBKDF2 per-user keys)\n"
             "• This is server-side encryption — it protects stored data\n"
             "• Miners process conversation content to generate responses\n"
             "• We don't sell, share, or analyze your conversations\n"
@@ -70,7 +70,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "answer": (
             "Running a miner on the Nobi subnet earns you TAO rewards for serving AI "
             "responses! ⛏️\n\n"
-            "**Quick start:**\n"
+            "Quick start:\n"
             "1. Install Bittensor: `pip install bittensor`\n"
             "2. Create a wallet: `btcli wallet new_coldkey`\n"
             "3. Register on the subnet: `btcli subnet register --netuid <nobi_netuid>`\n"
@@ -86,11 +86,11 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "keywords": ["hardware", "gpu", "cpu", "ram", "specs", "requirements", "server", "compute", "min_compute"],
         "answer": (
             "Minimum hardware for mining on Nobi: 💻\n\n"
-            "• **CPU:** 8+ cores recommended\n"
-            "• **RAM:** 16 GB minimum, 32 GB recommended\n"
-            "• **GPU:** Optional for basic mining; GPU (A100/H100 class) needed for top-tier inference\n"
-            "• **Storage:** 50+ GB SSD\n"
-            "• **Network:** Stable internet, low latency preferred\n\n"
+            "• CPU: 8+ cores recommended\n"
+            "• RAM: 16 GB minimum, 32 GB recommended\n"
+            "• GPU: Optional for basic mining; GPU (A100/H100 class) needed for top-tier inference\n"
+            "• Storage: 50+ GB SSD\n"
+            "• Network: Stable internet, low latency preferred\n\n"
             "Check `min_compute.yml` in the repo for the exact current requirements. "
             "Validators score miners on response speed AND quality, so better hardware = more TAO."
         ),
@@ -101,11 +101,11 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "keywords": ["validator", "validate", "validation", "how to validate", "run validator", "stake"],
         "answer": (
             "Validators on Nobi score miners and distribute rewards! 🏆\n\n"
-            "**Requirements:**\n"
+            "Requirements:\n"
             "• Hold a minimum stake of TAO (check current minimum on the subnet)\n"
             "• Reliable server (24/7 uptime)\n"
             "• Register as a validator: `btcli subnet register --netuid <nobi_netuid>`\n\n"
-            "**Start validating:**\n"
+            "Start validating:\n"
             "```\npython neurons/validator.py --wallet.name <your_wallet>\n```\n\n"
             "Validators send test prompts to miners, grade their responses for quality/speed, "
             "and emit rewards proportional to performance. See the repo for full details."
@@ -116,7 +116,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "topic": "How much does Nori cost?",
         "keywords": ["price", "pricing", "cost", "free", "subscription", "plan", "tier", "pay", "billing", "premium"],
         "answer": (
-            "Nori is **free for all users**! 🎉\n\n"
+            "Nori is free for all users! 🎉\n\n"
             "The service is funded by Bittensor network emissions and community support — "
             "no subscriptions required. Every feature, every memory, every conversation is "
             "available to everyone.\n\n"
@@ -170,10 +170,10 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "keywords": ["delete memory", "forget", "erase", "remove memory", "clear memories", "wipe", "forget me"],
         "answer": (
             "You have full control over your memories! 🗑️\n\n"
-            "**Telegram:**\n"
+            "Telegram:\n"
             "• Delete a specific memory: use the Memories menu\n"
             "• Delete ALL memories: send /forgetme\n\n"
-            "**Web App:**\n"
+            "Web App:\n"
             "• Go to the Memories page\n"
             "• Click the trash icon on any memory to delete it\n"
             "• Use 'Forget Everything' in Settings to wipe all data\n\n"
@@ -214,7 +214,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "keywords": ["telegram", "bot", "start", "how to use", "getting started", "setup bot", "first time"],
         "answer": (
             "Getting started with Nori on Telegram is super easy! 📱\n\n"
-            "1. Open Telegram and search for **@ProjectNobiBot**\n"
+            "1. Open Telegram and search for @ProjectNobiBot\n"
             "2. Hit /start\n"
             "3. That's it — just start chatting!\n\n"
             "Nori will introduce herself and start building your memory profile automatically. "
@@ -228,7 +228,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "answer": (
             "Bittensor is a decentralized AI network where miners compete to provide the best "
             "AI services and earn TAO (the native token) as rewards. 🌐\n\n"
-            "Nobi runs as a **subnet** on Bittensor, meaning:\n"
+            "Nobi runs as a subnet on Bittensor, meaning:\n"
             "• Real people run miners providing AI compute\n"
             "• No single company controls the AI\n"
             "• Better miners earn more TAO\n"
@@ -271,8 +271,8 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "keywords": ["export", "download", "backup", "portability", "my data", "gdpr export", "save data"],
         "answer": (
             "You can export all your data at any time! 📦\n\n"
-            "**Telegram:** Use /export to get a JSON file of all your memories.\n\n"
-            "**Web App:**\n"
+            "Telegram: Use /export to get a JSON file of all your memories.\n\n"
+            "Web App:\n"
             "• Go to Settings → Privacy\n"
             "• Click 'Export My Data'\n"
             "• Downloads a full JSON backup of your memories and settings\n\n"
@@ -298,7 +298,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "topic": "Is there a paid plan?",
         "keywords": ["upgrade", "subscribe", "subscription", "pro plan", "pay", "stripe", "billing page", "premium"],
         "answer": (
-            "Nori is **free for all users** — no subscriptions needed! 🎉\n\n"
+            "Nori is free for all users — no subscriptions needed! 🎉\n\n"
             "All features are available to everyone:\n"
             "• Full chat with memory\n"
             "• Voice features\n"
@@ -314,9 +314,9 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "keywords": ["multiple devices", "sync", "device", "mobile", "desktop", "web", "cross-platform", "phone"],
         "answer": (
             "Yes! Nori syncs across all your devices automatically. 📱💻\n\n"
-            "• **Telegram:** Works on any device with your Telegram account\n"
-            "• **Web App:** Access at https://app.projectnobi.ai from any browser\n"
-            "• **Mobile:** Telegram app works on iOS and Android\n\n"
+            "• Telegram: Works on any device with your Telegram account\n"
+            "• Web App: Access at https://app.projectnobi.ai from any browser\n"
+            "• Mobile: Telegram app works on iOS and Android\n\n"
             "Your memory profile is tied to your user ID, so conversations from any platform "
             "are all part of the same memory graph. Nori always remembers, regardless of "
             "where you're chatting from."
@@ -328,10 +328,10 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "keywords": ["slow", "response time", "latency", "delay", "taking long", "timeout", "fast"],
         "answer": (
             "Response speed depends on a few factors: ⚡\n\n"
-            "• **Subnet routing:** When routed through Bittensor miners, speed varies by miner performance\n"
-            "• **Memory search:** Complex memory retrieval takes a moment\n"
-            "• **Model size:** Larger models = better quality but slower response\n"
-            "• **Server load:** During peak times, inference can be slower\n\n"
+            "• Subnet routing: When routed through Bittensor miners, speed varies by miner performance\n"
+            "• Memory search: Complex memory retrieval takes a moment\n"
+            "• Model size: Larger models = better quality but slower response\n"
+            "• Server load: During peak times, inference can be slower\n\n"
             "We're constantly optimizing. Pro users get priority routing to the fastest miners. "
             "If you experience persistent slowness, please use /feedback to report it!"
         ),
@@ -342,12 +342,93 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         "keywords": ["human", "real person", "agent", "support team", "contact support", "speak to someone", "email"],
         "answer": (
             "I can handle most questions, but sometimes you need a real human! 🧑‍💼\n\n"
-            "• **Telegram:** Use /feedback and choose 'complaint' — our team monitors all tickets\n"
-            "• **Discord:** Join our community at discord.gg/e6StezHM\n"
-            "• **Community:** Join our Telegram community group\n"
-            "• **GitHub Issues:** For technical bugs\n\n"
+            "• Telegram: Use /feedback and choose 'complaint' — our team monitors all tickets\n"
+            "• Discord: Join our community at discord.gg/e6StezHM\n"
+            "• Community: Join our Telegram community group\n"
+            "• GitHub Issues: For technical bugs\n\n"
             "We typically respond within 24-48 hours. For urgent issues, "
             "mark your ticket as high priority in the feedback form."
+        ),
+    },
+    {
+        "id": "safety_crisis",
+        "topic": "How does Nori handle safety and crisis situations?",
+        "keywords": ["safety", "crisis", "self-harm", "suicide", "dangerous", "harmful", "block"],
+        "answer": (
+            "Safety is built into every layer 🛡️\n\n"
+            "• Content Filter: Every message is checked before AND after the AI responds. "
+            "Harmful content (self-harm, violence, illegal activity) is blocked entirely — never shown to you.\n"
+            "• Crisis Response: If you express distress, Nori provides crisis resources immediately "
+            "(Samaritans 116 123, Crisis Text Line, local emergency services).\n"
+            "• Miner Accountability: Miners that serve harmful content receive zero emission — "
+            "safety is a scoring dimension, not optional.\n\n"
+            "Important: Nori is an AI companion, not a therapist. For serious concerns, "
+            "please contact a professional or crisis service."
+        ),
+    },
+    {
+        "id": "addiction_overuse",
+        "topic": "What protections exist against overuse or addiction?",
+        "keywords": ["addiction", "overuse", "dependency", "too much", "attached", "obsessed", "healthy"],
+        "answer": (
+            "We take this seriously. Multiple protections are in place:\n\n"
+            "• Dependency Monitor: Tracks conversation patterns over time — frequency, "
+            "unusual hours, emotional escalation, isolation signals.\n"
+            "• Graduated Interventions: Gentle nudges → direct reminders → strong recommendations → "
+            "temporary cooldown (24h) for severe cases.\n"
+            "• AI Reminders: Every 50 interactions, Nori reminds you it's an AI and encourages "
+            "real-world connections.\n"
+            "• Rate Limits: Daily message limits prevent excessive use.\n"
+            "• Emotional Disclaimers: On heavy topics, Nori suggests professional help.\n\n"
+            "Real human connections are irreplaceable. Nori is here to complement them, not replace them."
+        ),
+    },
+    {
+        "id": "minors_age",
+        "topic": "Is Nori safe for minors? How is the 18+ rule enforced?",
+        "keywords": ["minor", "age", "18", "child", "teenager", "young", "kids", "underage"],
+        "answer": (
+            "Nori is for adults aged 18 and over only. Multiple enforcement layers:\n\n"
+            "• Mandatory Age Gate: The first thing on signup — you cannot chat without confirming 18+.\n"
+            "• Birth Year Verification: We verify age via birth year (the year is not stored, only verification status).\n"
+            "• Behavioural Detection: 15 patterns detect potential minors (school mentions, "
+            "'my parents' language). If 2+ signals detected, age re-confirmation is required.\n"
+            "• Permanent Block: Under-18 users are permanently blocked.\n"
+            "• 30-Day Re-verification: Age requirement re-confirmed periodically.\n"
+            "• Adult Branding: All marketing, tone, and UX designed for adults.\n\n"
+            "No system is perfect, but we do everything technically feasible to protect minors."
+        ),
+    },
+    {
+        "id": "miners_read_data",
+        "topic": "Can miners read my conversations?",
+        "keywords": ["miner", "read", "see", "plaintext", "data", "conversations", "privacy"],
+        "answer": (
+            "Honest answer: currently, yes — during processing.\n\n"
+            "Storage: Your memories are encrypted at rest (AES-128, server-side). "
+            "This protects stored data.\n\n"
+            "During response generation: Miners process your conversation content "
+            "to generate responses. This is the current reality.\n\n"
+            "What we've built (code-complete, deploying):\n"
+            "• TEE Encryption: Miners can only decrypt inside secure enclaves — "
+            "even the operator can't read your data. 72 tests passing.\n"
+            "• Browser Extraction: Raw text never leaves your browser — "
+            "only encrypted embeddings sent to server. Available in web app.\n\n"
+            "We won't claim 'end-to-end encrypted' until it's live for all users."
+        ),
+    },
+    {
+        "id": "harmful_miner",
+        "topic": "What happens if a miner serves harmful content?",
+        "keywords": ["harmful", "miner", "bad response", "inappropriate", "blocked", "penalise"],
+        "answer": (
+            "It gets blocked before reaching you, and the miner gets penalised.\n\n"
+            "Our ContentFilter checks every response before delivery. Harmful content is "
+            "replaced entirely — the original is never shown.\n\n"
+            "On the incentive side: validators run adversarial safety probes as ~10% of scoring queries. "
+            "Miners that fail receive a safety score of zero, applied as a multiplier to total reward. "
+            "Zero safety = zero emission, regardless of response quality.\n\n"
+            "Miners have a direct economic incentive to handle sensitive topics responsibly."
         ),
     },
 ]
@@ -498,23 +579,23 @@ class SupportHandler:
     def _feedback_acknowledgment(self, category: str, ticket_id: str) -> str:
         messages = {
             FeedbackCategory.BUG_REPORT.value: (
-                f"Thanks for the bug report! 🐛 I've logged it as ticket **#{ticket_id}**. "
+                f"Thanks for the bug report! 🐛 I've logged it as ticket #{ticket_id}. "
                 "Our team will investigate and get back to you. Your help makes Nori better!"
             ),
             FeedbackCategory.FEATURE_REQUEST.value: (
-                f"Ooh, love the idea! 💡 Saved as ticket **#{ticket_id}**. "
+                f"Ooh, love the idea! 💡 Saved as ticket #{ticket_id}. "
                 "I'll make sure the team sees this. Feature requests like yours shape where Nori goes next!"
             ),
             FeedbackCategory.QUESTION.value: (
-                f"Got your question — logged as ticket **#{ticket_id}**. "
+                f"Got your question — logged as ticket #{ticket_id}. "
                 "I'll get you an answer as soon as possible! 😊"
             ),
             FeedbackCategory.COMPLAINT.value: (
-                f"I'm sorry you had a bad experience. 😔 Your feedback is logged as ticket **#{ticket_id}**. "
+                f"I'm sorry you had a bad experience. 😔 Your feedback is logged as ticket #{ticket_id}. "
                 "This matters to us and I'll make sure someone looks into it promptly."
             ),
             FeedbackCategory.GENERAL_FEEDBACK.value: (
-                f"Thanks for sharing! 💙 Logged as ticket **#{ticket_id}**. "
+                f"Thanks for sharing! 💙 Logged as ticket #{ticket_id}. "
                 "Every bit of feedback helps us make Nori better for everyone."
             ),
         }
@@ -523,7 +604,7 @@ class SupportHandler:
     def _ticket_acknowledgment(self, question: str, ticket_id: str) -> str:
         return (
             f"I don't have an instant answer for that one, but I've logged your question as "
-            f"ticket **#{ticket_id}**. 📋\n\n"
+            f"ticket #{ticket_id}. 📋\n\n"
             "Our team will get back to you within 24-48 hours. "
             "Is there anything else I can help with in the meantime? 😊"
         )
