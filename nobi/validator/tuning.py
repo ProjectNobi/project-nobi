@@ -32,11 +32,18 @@ class ScoringTuner:
         "multi_turn": {"quality": 0.50, "memory": 0.40, "reliability": 0.10},
     }
 
-    # Thresholds
-    LOW_DIFFERENTIATION_STD = 0.05   # Below this, scores are too similar
+    # Thresholds — calibrated for 256-neuron network (20 validators + 236 miners)
+    LOW_DIFFERENTIATION_STD = 0.08   # Raised from 0.05: 236 miners need wider spread to meaningfully rank
     SPIKE_THRESHOLD = 2.5            # Z-score for spike detection
-    SIMILARITY_THRESHOLD = 0.02      # Scores closer than this are "identical"
+    SIMILARITY_THRESHOLD = 0.015     # Tightened from 0.02: reduces false-positive clustering at scale
     MIN_ROUNDS_FOR_ANALYSIS = 5      # Need at least this many rounds
+
+    # Quality floor — miners scoring below this get zero reward
+    # Prevents garbage responses from accumulating positive moving-average scores
+    QUALITY_FLOOR = 0.10             # Responses below 10% quality get zeroed out
+
+    # Anti-gaming entropy threshold — raised for larger miner sets
+    LOW_ENTROPY_WARNING = 0.5        # Raised from 0.3: 236 miners → higher expected entropy floor
 
     def __init__(self, db_path: str = "~/.nobi/scoring_history.db"):
         self.db_path = os.path.expanduser(db_path)

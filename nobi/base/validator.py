@@ -16,6 +16,7 @@ from nobi.base.neuron import BaseNeuron
 from nobi.base.utils.weight_utils import (
     process_weights_for_netuid,
     convert_weights_and_uids_for_emit,
+    WeightHardening,
 )
 from nobi.utils.config import add_validator_args
 
@@ -36,6 +37,15 @@ class BaseValidatorNeuron(BaseNeuron):
         self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)
         self.dendrite = bt.Dendrite(wallet=self.wallet)
         bt.logging.info(f"Dendrite: {self.dendrite}")
+
+        # Weight commit-reveal hardening (mainnet-critical)
+        hotkey_str = (
+            self.wallet.hotkey.ss58_address
+            if hasattr(self.wallet, "hotkey") and self.wallet.hotkey
+            else ""
+        )
+        self.weight_hardening = WeightHardening(validator_hotkey=hotkey_str)
+        bt.logging.info("[WeightHardening] Initialized weight commit-reveal hardening.")
 
         bt.logging.info("Building validation weights.")
         self.scores = np.zeros(self.metagraph.n, dtype=np.float32)
@@ -149,8 +159,29 @@ class BaseValidatorNeuron(BaseNeuron):
             metagraph=self.metagraph,
         )
 
+        # ── Weight Commit-Reveal Hardening ──────────────────────────────────
+        # 1. Check for stale weights (same vector N epochs in a row)
+        if self.weight_hardening.check_stale():
+            bt.logging.warning(
+                "[WeightHardening] STALE WEIGHTS DETECTED — "
+                f"identical weight vector set for {self.weight_hardening.stale_threshold} "
+                "consecutive epochs. This reduces validator trust. "
+                "Ensure your scoring pipeline is updating correctly."
+            )
+
+        # 2. Apply fingerprint + salt obfuscation, obtain commit hash
+        hardened_weights, salt, commit_hash = self.weight_hardening.harden(
+            processed_weights
+        )
+        bt.logging.info(
+            f"[WeightHardening] Epoch={self.weight_hardening._epoch} "
+            f"commit_hash={commit_hash[:16]}… "
+            f"salt_prefix={salt.hex()[:8]}…"
+        )
+        # ────────────────────────────────────────────────────────────────────
+
         (uint_uids, uint_weights) = convert_weights_and_uids_for_emit(
-            uids=processed_weight_uids, weights=processed_weights
+            uids=processed_weight_uids, weights=hardened_weights
         )
 
         result, msg = self.subtensor.set_weights(
@@ -163,7 +194,9 @@ class BaseValidatorNeuron(BaseNeuron):
             version_key=self.spec_version,
         )
         if result is True:
-            bt.logging.info("set_weights on chain successfully!")
+            bt.logging.info(
+                f"set_weights on chain successfully! commit_hash={commit_hash[:16]}…"
+            )
         else:
             bt.logging.error("set_weights failed", msg)
 

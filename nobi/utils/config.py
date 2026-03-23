@@ -101,7 +101,7 @@ def add_validator_args(cls, parser):
     parser.add_argument("--neuron.name", type=str, default="validator")
     parser.add_argument(
         "--neuron.timeout", type=float,
-        help="The timeout for each forward call in seconds.", default=30,
+        help="The timeout for each forward call in seconds.", default=35,
     )
     parser.add_argument(
         "--neuron.num_concurrent_forwards", type=int,
@@ -109,7 +109,10 @@ def add_validator_args(cls, parser):
     )
     parser.add_argument(
         "--neuron.sample_size", type=int,
-        help="The number of miners to query in a single step.", default=10,
+        help="The number of miners to query in a single step. "
+             "Scaled for 256-neuron network (20 validators + 236 miners): "
+             "50 miners/step → each miner sampled every ~4.7 steps on average.",
+        default=50,
     )
     parser.add_argument(
         "--neuron.disable_set_weights", action="store_true",
@@ -117,7 +120,11 @@ def add_validator_args(cls, parser):
     )
     parser.add_argument(
         "--neuron.moving_average_alpha", type=float,
-        help="Moving average alpha parameter.", default=0.1,
+        help="Moving average alpha parameter. "
+             "Set to 0.05 for 256-neuron network: with sample_size=50 and 236 miners, "
+             "each miner is sampled every ~4.7 steps. alpha=0.05 gives ~50%% score "
+             "retention per full cycle, preventing catastrophic decay between samples.",
+        default=0.05,
     )
     parser.add_argument(
         "--neuron.axon_off", "--axon_off", action="store_true",

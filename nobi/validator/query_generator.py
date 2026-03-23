@@ -64,15 +64,74 @@ HOBBIES = [
     "board games", "martial arts", "baking", "woodworking",
 ]
 
+# Additional vocabulary pools added for 256-miner anti-caching diversity
+FEELINGS = [
+    "stuck in a rut", "burned out", "overwhelmed but hopeful", "cautiously optimistic",
+    "restless", "quietly content", "unexpectedly nostalgic", "scattered but okay",
+    "low-key anxious", "surprisingly energized",
+]
+
+LIFE_GOALS = [
+    "build a stronger morning routine", "stop procrastinating on creative projects",
+    "reconnect with old friends", "spend less time on my phone",
+    "learn something completely new every month", "get my finances in order",
+    "be kinder to myself", "find a hobby that truly relaxes me",
+    "improve my sleep", "say no more often",
+]
+
+HYPOTHETICALS = [
+    ("you could only eat one cuisine for the rest of your life", "What would you choose and why?"),
+    ("you had a free Saturday with absolutely no obligations", "How would you spend it?"),
+    ("you could instantly master one skill", "What skill would you pick and how would you use it?"),
+    ("money wasn't a concern for one year", "What would you focus on?"),
+    ("you had to give your younger self one piece of advice", "What would it be?"),
+    ("you could live in any era of history for a month", "Which era and why?"),
+    ("you had to redesign your daily routine from scratch", "What would you keep and what would you change?"),
+]
+
+REFLECTIVE_PROMPTS = [
+    "What's one thing you wish people understood better about you?",
+    "When do you feel most like yourself?",
+    "What does a perfect day look like for you?",
+    "What's something small that consistently makes you happy?",
+    "If you could change one habit starting today, what would it be?",
+    "What's something you've learned about yourself recently?",
+    "What's a goal you keep putting off — and why?",
+    "How do you recharge when you're feeling drained?",
+    "What's something you're quietly proud of?",
+    "What kind of support do you find most helpful when things are hard?",
+]
+
+PRACTICAL_PROBLEMS = [
+    ("I always say yes to things and end up overcommitted", "how to start setting limits"),
+    ("I can't stop checking my phone every few minutes", "strategies to break the habit"),
+    ("I struggle to fall asleep before midnight", "building a better wind-down routine"),
+    ("I start projects but never finish them", "completing what I start"),
+    ("I feel guilty whenever I take time for myself", "why rest matters and how to embrace it"),
+    ("I can't seem to stick to any budget", "simple money management approaches"),
+    ("I get paralyzed by too many choices", "making decisions more easily"),
+    ("I feel disconnected from the people I care about", "rebuilding meaningful connections"),
+]
+
 
 def generate_single_turn_query() -> str:
-    """Generate a unique, unpredictable single-turn test query."""
+    """Generate a unique, unpredictable single-turn test query.
+
+    Uses 9 template families (up from 5) to harden against response caching at scale.
+    With 236 miners the chance any two miners see the same query variant is negligible.
+    """
     template = random.choice([
         _mood_query,
         _topic_query,
         _situation_query,
         _advice_query,
         _creative_query,
+        # --- new template families for 256-miner diversity ---
+        _feeling_query,
+        _life_goal_query,
+        _hypothetical_query,
+        _reflective_query,
+        _practical_problem_query,
     ])
     return template()
 
@@ -129,6 +188,48 @@ def _creative_query() -> str:
     return random.choice(templates)
 
 
+def _feeling_query() -> str:
+    feeling = random.choice(FEELINGS)
+    follow_up = random.choice([
+        "Any thoughts on that?",
+        "Have you ever felt that way?",
+        "What would you suggest?",
+        "How do I make sense of it?",
+        "What usually helps in situations like this?",
+    ])
+    return f"Honestly, I've been feeling {feeling} lately. {follow_up}"
+
+
+def _life_goal_query() -> str:
+    goal = random.choice(LIFE_GOALS)
+    framing = random.choice([
+        f"I really want to {goal}. Where do I even start?",
+        f"One of my goals is to {goal}. What's the best first step?",
+        f"I've been trying to {goal} but keep falling back into old patterns. Ideas?",
+    ])
+    return framing
+
+
+def _hypothetical_query() -> str:
+    condition, question = random.choice(HYPOTHETICALS)
+    opener = random.choice(["Hypothetically,", "Just wondering —", "Random question:"])
+    return f"{opener} if {condition}, {question}"
+
+
+def _reflective_query() -> str:
+    return random.choice(REFLECTIVE_PROMPTS)
+
+
+def _practical_problem_query() -> str:
+    problem, topic = random.choice(PRACTICAL_PROBLEMS)
+    framing = random.choice([
+        f"I have a problem: {problem}. Any advice on {topic}?",
+        f"Something I'm dealing with: {problem}. Would love help with {topic}.",
+        f"Struggling with something — {problem}. Can you help me think through {topic}?",
+    ])
+    return framing
+
+
 def generate_multi_turn_scenario() -> Dict:
     """
     Generate a unique multi-turn scenario with randomized details.
@@ -141,13 +242,15 @@ def generate_multi_turn_scenario() -> Dict:
     mood = random.choice(MOODS)
     situation = random.choice(SITUATIONS)
 
-    # Pick a random scenario template
+    # Pick a random scenario template — 7 families (up from 5) for 256-miner diversity
     template = random.choice([
         _scenario_name_career_hobby,
         _scenario_pet_hobby,
         _scenario_situation_preference,
         _scenario_family_event,
         _scenario_goal_context,
+        _scenario_life_goal_reflection,
+        _scenario_practical_challenge,
     ])
 
     return template(name=name, career=career, hobby=hobby,
@@ -228,4 +331,42 @@ def _scenario_goal_context(name, career, **kw) -> Dict:
         "test_query": "How should I adjust my routine this week?",
         "memory_keywords": [name.lower(), goal[2], frequency.split()[0]],
         "description": f"Goal ({goal[0]}) + routine ({frequency})",
+    }
+
+
+def _scenario_life_goal_reflection(name, **kw) -> Dict:
+    """New scenario: personal life goal + recent progress update."""
+    goal = random.choice(LIFE_GOALS)
+    obstacle = random.choice([
+        "I keep getting distracted", "I'm not sure where to start",
+        "I lose motivation after a few days", "life keeps getting in the way",
+    ])
+    time_frame = random.choice(["this month", "this week", "recently", "over the past few weeks"])
+    return {
+        "setup": [
+            {"role": "user", "content": f"I'm {name}. I've been trying to {goal} {time_frame}."},
+            {"role": "user", "content": f"The challenge is {obstacle}."},
+        ],
+        "test_query": "What small step could I take tomorrow to make progress?",
+        "memory_keywords": [name.lower(), goal.split()[-1], obstacle.split()[-1]],
+        "description": f"Life goal ({goal}) + obstacle ({obstacle})",
+    }
+
+
+def _scenario_practical_challenge(name, **kw) -> Dict:
+    """New scenario: real-life challenge + personal context."""
+    problem, topic = random.choice(PRACTICAL_PROBLEMS)
+    time_suffered = random.choice(["for weeks", "for a while now", "lately", "ever since I can remember"])
+    coping = random.choice([
+        "I've tried a few things", "I haven't found anything that sticks",
+        "I've been ignoring it", "I've read about it but can't apply it",
+    ])
+    return {
+        "setup": [
+            {"role": "user", "content": f"I'm {name} and I have a problem: {problem}."},
+            {"role": "user", "content": f"I've been dealing with this {time_suffered}. {coping}."},
+        ],
+        "test_query": f"Can you give me a concrete plan for {topic}?",
+        "memory_keywords": [name.lower(), topic.split()[-1], time_suffered.split()[-1]],
+        "description": f"Practical challenge ({topic}) for {name}",
     }

@@ -91,6 +91,21 @@ def reward(
     # Reliability score based on latency
     reliability_score = _score_reliability(latency)
 
+    # Quality floor enforcement: miners below minimum quality threshold get zero.
+    # Applied to quality_score (not final) so reliability cannot rescue garbage responses.
+    # Threshold from ScoringTuner.QUALITY_FLOOR (default 0.10).
+    if _TUNING_AVAILABLE:
+        tuner = _get_tuner()
+        _quality_floor = getattr(tuner, "QUALITY_FLOOR", 0.10) if tuner else 0.10
+    else:
+        _quality_floor = 0.10
+
+    if quality_score < _quality_floor:
+        bt.logging.debug(
+            f"[QualityFloor] quality={quality_score:.3f} < {_quality_floor} → 0.0"
+        )
+        return 0.0
+
     if test_type == "multi_turn" and memory_keywords:
         memory_recall_score = _score_memory_recall(response, memory_keywords)
         memory_integration_score = _score_memory_integration(
@@ -412,6 +427,116 @@ def _score_reliability(latency: float) -> float:
         return 0.2
 
 
+def diversity_score(
+    responses: List[str],
+    similarity_threshold: float = 0.85,
+    high_similarity_threshold: float = 0.95,
+    diversity_bonus: float = 0.05,
+) -> np.ndarray:
+    """
+    Miner Diversity Scoring — penalise monoculture and reward unique responses.
+
+    Algorithm
+    ---------
+    1. **Response similarity detection** — char-level 3-gram Jaccard similarity
+       detects near-duplicate responses; miners in duplicate pairs are penalised.
+    2. **Model fingerprinting** — responses with very similar (length, vocabulary)
+       buckets suggest the same underlying model; adds a compounded penalty.
+    3. **Diversity bonus** — miners whose response is unique *and* substantive
+       (≥ 20 words) receive a small additive score boost.
+
+    Parameters
+    ----------
+    responses:
+        List of raw response strings from miners.
+    similarity_threshold:
+        Jaccard similarity above which responses are near-duplicates.
+    high_similarity_threshold:
+        Stricter threshold; triggers maximum copy penalty.
+    diversity_bonus:
+        Additive bonus (added on top of 1.0) for unique, substantive responses.
+
+    Returns
+    -------
+    np.ndarray of float multipliers, one per response, in [0.3, 1.05].
+    1.0 = neutral (no penalty, no bonus).
+    """
+    n = len(responses)
+    if n == 0:
+        return np.array([], dtype=np.float32)
+    if n == 1:
+        return np.ones(1, dtype=np.float32)
+
+    multipliers = np.ones(n, dtype=np.float64)
+
+    # ── 1. Build char 3-gram sets ────────────────────────────────────────
+    def _ngrams(text: str, size: int = 3) -> set:
+        t = text.lower().strip()
+        if len(t) < size:
+            return {t} if t else set()
+        return {t[i:i + size] for i in range(len(t) - size + 1)}
+
+    def _jaccard_sim(a: set, b: set) -> float:
+        if not a and not b:
+            return 1.0
+        if not a or not b:
+            return 0.0
+        return len(a & b) / len(a | b)
+
+    ngram_sets = [_ngrams(r) for r in responses]
+
+    copy_counts = np.zeros(n, dtype=np.int32)
+    high_copy_counts = np.zeros(n, dtype=np.int32)
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            sim = _jaccard_sim(ngram_sets[i], ngram_sets[j])
+            if sim >= similarity_threshold:
+                copy_counts[i] += 1
+                copy_counts[j] += 1
+            if sim >= high_similarity_threshold:
+                high_copy_counts[i] += 1
+                high_copy_counts[j] += 1
+
+    # ── 2. Model fingerprint — (length-bucket, vocab-bucket) ─────────────
+    from collections import defaultdict as _defaultdict
+
+    def _fp(text: str) -> tuple:
+        words = text.lower().split()
+        return (len(text) // 50, len(set(words)) // 5)
+
+    fingerprints = [_fp(r) for r in responses]
+    fp_counts: dict = _defaultdict(int)
+    for fp in fingerprints:
+        fp_counts[fp] += 1
+
+    # ── 3. Apply penalties + bonus ────────────────────────────────────────
+    for i in range(n):
+        # Copy penalty
+        if high_copy_counts[i] > 0:
+            multipliers[i] = min(multipliers[i], 0.30)
+        elif copy_counts[i] >= 2:
+            multipliers[i] = min(multipliers[i], 0.50)
+        elif copy_counts[i] == 1:
+            multipliers[i] = min(multipliers[i], 0.70)
+
+        # Model fingerprint penalty
+        same_model_count = fp_counts[fingerprints[i]]
+        if same_model_count >= max(3, n // 2):
+            multipliers[i] = min(multipliers[i], 0.80)
+
+        # Diversity bonus — unique + substantive
+        if copy_counts[i] == 0 and len(responses[i].split()) >= 20:
+            multipliers[i] = min(1.0 + diversity_bonus, multipliers[i] + diversity_bonus)
+
+    mean_mult = float(np.mean(multipliers))
+    penalised = int(np.sum(multipliers < 1.0))
+    bt.logging.debug(
+        f"[DiversityScore] n={n} penalised={penalised} mean_mult={mean_mult:.3f}"
+    )
+    return multipliers.astype(np.float32)
+
+
 def get_rewards(
     self,
     query: str,
@@ -445,12 +570,29 @@ def get_rewards(
         diversity_penalties = compute_diversity_penalties(responses)
         rewards = rewards * np.array(diversity_penalties)
 
-        # Log entropy for monitoring
+        # Log entropy for monitoring — threshold raised for 256-neuron network
         entropy = compute_entropy(responses)
-        if entropy < 0.3:
+        tuner = _get_tuner()
+        entropy_threshold = getattr(tuner, "LOW_ENTROPY_WARNING", 0.5) if tuner else 0.5
+        if entropy < entropy_threshold:
             bt.logging.warning(
-                f"[Anti-Gaming] Low response entropy ({entropy:.2f}) — "
+                f"[Anti-Gaming] Low response entropy ({entropy:.2f} < {entropy_threshold}) — "
                 "miners may be copying each other"
             )
+
+    # Quality floor enforcement — miners below threshold get zero
+    # Prevents garbage responses from accumulating score in moving average
+    if _TUNING_AVAILABLE:
+        tuner = _get_tuner()
+        quality_floor = getattr(tuner, "QUALITY_FLOOR", 0.10) if tuner else 0.10
+    else:
+        quality_floor = 0.10
+
+    rewards = np.where(rewards < quality_floor, 0.0, rewards)
+
+    # Apply miner diversity scoring (model fingerprint + uniqueness bonus)
+    if len(responses) > 1:
+        div_multipliers = diversity_score(responses)
+        rewards = rewards * div_multipliers
 
     return rewards
