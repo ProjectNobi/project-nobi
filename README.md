@@ -166,7 +166,7 @@ Full guide: **[VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)**
 | Phase | Status | Highlights |
 |-------|--------|------------|
 | **0. Foundation** | ✅ Complete | Protocol, miner, validator, memory, scoring, 500 simulated-node stress test |
-| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅ — 1,506 tests passing |
+| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅, safety scoring ✅, content filter ✅, age verification ✅, dependency monitor ✅ — 1,622 tests passing |
 | **2. Mainnet Launch** | ⏳ Q3 2026 | Subnet registration, subnet routing, public beta, community staking |
 | **3. Growth** | ⏳ Q4 2026+ | Mobile app, 50+ languages, plugin ecosystem, governance |
 | **4. Scale** | ⏳ 2027+ | 100K+ users, decentralized governance, federated privacy |
@@ -242,6 +242,11 @@ cd webapp && npx vercel --prod
 - **Encryption at rest:** AES-128 (Fernet, PBKDF2 100K iterations) — server-side, protects stored data
 - **End-to-end TEE encryption:** Code-complete, deploying to production (AMD SEV-SNP / NVIDIA CC)
 - **Browser-side memory extraction:** Code-complete, available in web app
+- **Content safety:** ContentFilter (dual-stage: pre-LLM user check + post-LLM response check) — wired into bot, miner, group handler
+- **Safety scoring:** Adversarial safety probes in validator pipeline — miners failing safety = zero emissions
+- **GDPR compliance:** Full module — /forget, /export, /memories, right to access/erasure/portability/rectification/restriction
+- **Age verification:** DOB-based gate + behavioral minor detection (15 patterns) — 18+ enforced on /start
+- **Dependency detection:** DependencyMonitor with 4-level intervention system (MILD → MODERATE → SEVERE → CRITICAL)
 - **Infrastructure:** PM2, Docker, systemd
 
 ---

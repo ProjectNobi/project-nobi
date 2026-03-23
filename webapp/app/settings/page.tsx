@@ -189,7 +189,7 @@ export default function SettingsPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
               Nori is a personal AI companion built by Project Nobi on
               Bittensor (Subnet 272). Your conversations are private, your
-              memories are encrypted, and you&apos;re always in control of your
+              memories are encrypted at rest (AES-128, server-side), and you&apos;re always in control of your
               data.
             </p>
             <div className="flex flex-wrap gap-3">

@@ -12,7 +12,7 @@ const FEATURES = [
     icon: "🔒",
     title: "Privacy First",
     description:
-      "Your memories are encrypted and stored securely. Export or delete them anytime — you're always in control.",
+      "Your memories are encrypted at rest (AES-128, server-side) and stored securely. Export or delete them anytime — you're always in control.",
   },
   {
     icon: "🌍",

@@ -1236,7 +1236,7 @@ async def cmd_terms(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_data_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """GDPR formal data subject request menu (/data-request)."""
+    """GDPR formal data subject request menu (/data_request)."""
     keyboard = [
         [InlineKeyboardButton("📋 Access my data (Art. 15)", callback_data="gdpr_access")],
         [InlineKeyboardButton("🗑️ Delete my data (Art. 17)", callback_data="gdpr_erasure_prompt")],
@@ -1294,7 +1294,7 @@ async def cmd_privacy(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "  • /memories — see what I know\n"
         "  • /export — download all your data (Art. 20)\n"
         "  • /forget — delete everything (Art. 17)\n"
-        "  • /data-request — formal GDPR data subject request\n\n"
+        "  • /data_request — formal GDPR data subject request\n\n"
         "Questions? privacy@projectnobi.ai\n"
         "Full policy: projectnobi.ai/privacy"
     )
@@ -1667,7 +1667,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text(
                 "🔒 *Processing Restricted (GDPR Art. 18)*\n\n"
                 "I will no longer extract new memories or run analytics on your data.\n\n"
-                "You can lift this restriction anytime via /data-request.",
+                "You can lift this restriction anytime via /data_request.",
                 parse_mode="Markdown",
             )
         except Exception as e:
@@ -2641,7 +2641,7 @@ def main():
     app.add_handler(CommandHandler("privacy", cmd_privacy))
     app.add_handler(CommandHandler("agree", cmd_agree))
     app.add_handler(CommandHandler("data_request", cmd_data_request))
-    app.add_handler(CommandHandler("data-request", cmd_data_request))
+    # Note: Telegram commands cannot contain hyphens — /data_request is the valid form
 
     # Buttons
     app.add_handler(CallbackQueryHandler(handle_callback))

@@ -58,7 +58,7 @@ const FEATURES = [
     icon: "🔒",
     title: "Privacy First",
     description:
-      "Your memories are private and encrypted. Built on Bittensor's decentralised network — no surveillance, no ads.",
+      "Your memories are private and encrypted at rest (AES-128, server-side). Built on Bittensor's decentralised network — no surveillance, no ads.",
   },
 ];
 

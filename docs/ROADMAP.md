@@ -240,7 +240,13 @@ The community model significantly simplifies legal requirements compared to a su
 - ✅ GDPR compliance module + memory encryption review complete
 - ✅ Emission burn automation (burn_emissions.py) operational
 - ✅ React Native mobile app scaffold started (Phase 3 milestone started early)
-- ✅ 1,506 tests passing (up from 1,089 at Phase 0 completion)
+- ✅ ContentFilter integration — wired into bot, miner, and group handler (dual-stage: pre-LLM + post-LLM)
+- ✅ Safety scoring — adversarial safety probes wired into validator reward pipeline (miners failing safety = zero emissions)
+- ✅ DependencyMonitor — 4-level intervention system (MILD → MODERATE → SEVERE → CRITICAL) integrated into bot
+- ✅ Age verification — DOB-based gate + behavioral minor detection (15 patterns); under-18 permanently blocked
+- ✅ Onboarding UX — mandatory age gate on /start, warm-adult tone calibration, periodic AI-disclosure reminders
+- ✅ Privacy language hardened — all marketing uses "encrypted at rest (AES-128, server-side)"; miner plaintext processing explicitly disclosed
+- ✅ 1,622 tests passing (up from 1,089 at Phase 0 completion)
 - 🔲 External miner onboarding (ongoing)
 - 🔲 Protocol security review (next priority)
 - 🔲 Rate limiting / DDoS protection

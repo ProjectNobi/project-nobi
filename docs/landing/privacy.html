@@ -33,7 +33,7 @@
     <p class="date">Last updated: March 20, 2026</p>
 
     <div class="highlight">
-        <strong>The short version:</strong> Your data is encrypted, you own it, and you can delete it anytime. We don't sell your data. Ever.
+        <strong>The short version:</strong> Your data is encrypted at rest (AES-128, server-side), you own it, and you can delete it anytime. We don't sell your data. Ever.
     </div>
 
     <p>This Privacy Policy explains how Project Nobi ("we", "us", "our") collects, uses, stores, and protects your personal data. This policy complies with <strong>GDPR Articles 13 &amp; 14</strong>, <strong>UK GDPR</strong>, <strong>CCPA</strong>, and <strong>COPPA</strong>.</p>
@@ -109,10 +109,11 @@
     <h3>5.1 Decentralised Storage (Bittensor Network)</h3>
     <p>Nori operates on the Bittensor decentralised AI network. Messages may be processed by network participants ("miners") to generate AI responses. Data transmitted to miners is:</p>
     <ul>
-        <li>Encrypted (AES-128)</li>
+        <li>Encrypted (AES-128) in transit</li>
         <li>Stripped of personal identity (no name, email, or account details)</li>
         <li>Transmitted using pseudonymous identifiers only</li>
     </ul>
+    <p><strong>Honest disclosure:</strong> Miners decrypt conversation content during response generation — they process message text in order to produce AI responses. Stored memories remain encrypted at rest (AES-128, server-side). End-to-end TEE encryption (which prevents miners from seeing plaintext) is <strong>code-complete and deploying to production</strong> — it is not yet live for all users.</p>
 
     <h2>6. Data Sharing</h2>
     <table>
