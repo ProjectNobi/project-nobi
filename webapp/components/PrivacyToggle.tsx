@@ -64,9 +64,9 @@ export default function PrivacyToggle({ onChange, compact = false }: PrivacyTogg
           `}
           aria-label={settings.enabled ? "Privacy mode on — click to disable" : "Privacy mode off — click to enable"}
         >
-          {settings.enabled ? "🔒" : "🔓"}
+          {settings.enabled ? "🔒" : "🛡️"}
           <span className="hidden sm:inline">
-            {settings.enabled ? "Private" : "Privacy"}
+            {settings.enabled ? "Private" : "Standard"}
           </span>
         </button>
 
