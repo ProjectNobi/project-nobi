@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   icons: {
     icon: "/nori-avatar.svg",
   },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: "cover",
+  },
 };
 
 export default function RootLayout({

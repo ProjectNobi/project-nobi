@@ -122,7 +122,7 @@ export default function ChatInput({ onSend, onSendImage, isLoading }: ChatInputP
   };
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3">
+    <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
       <div className="max-w-3xl mx-auto flex items-end gap-3">
         {onSendImage && (
           <>
