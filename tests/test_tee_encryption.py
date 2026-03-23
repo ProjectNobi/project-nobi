@@ -488,3 +488,544 @@ def test_encryption_scheme_constant():
     payload = encrypt_payload("test", "")
     assert payload["encryption_scheme"] == "aes-256-gcm-v1"
     assert payload["encryption_scheme"] == ENCRYPTION_SCHEME
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# PHASE 2: HPKE Key Wrapping Tests
+# ═════════════════════════════════════════════════════════════════════════════
+
+from nobi.privacy.tee_encryption import (
+    generate_tee_keypair,
+    wrap_session_key,
+    unwrap_session_key,
+    ENCRYPTION_SCHEME_HPKE,
+)
+
+
+# ─── 1. Keypair generation ───────────────────────────────────────────────────
+
+def test_generate_tee_keypair_sizes():
+    """generate_tee_keypair returns exactly 32 bytes for each key."""
+    priv, pub = generate_tee_keypair()
+    assert len(priv) == 32, f"Private key must be 32 bytes, got {len(priv)}"
+    assert len(pub) == 32, f"Public key must be 32 bytes, got {len(pub)}"
+
+
+def test_generate_tee_keypair_uniqueness():
+    """Each call to generate_tee_keypair produces unique keys."""
+    priv1, pub1 = generate_tee_keypair()
+    priv2, pub2 = generate_tee_keypair()
+    assert priv1 != priv2, "Private keys must be unique"
+    assert pub1 != pub2, "Public keys must be unique"
+
+
+def test_generate_tee_keypair_types():
+    """generate_tee_keypair returns bytes objects."""
+    priv, pub = generate_tee_keypair()
+    assert isinstance(priv, bytes)
+    assert isinstance(pub, bytes)
+
+
+def test_keypair_private_not_equal_public():
+    """Private key and public key are different (sanity check)."""
+    priv, pub = generate_tee_keypair()
+    assert priv != pub, "Private key and public key must differ"
+
+
+# ─── 2. HPKE wrap/unwrap roundtrip ──────────────────────────────────────────
+
+def test_wrap_unwrap_roundtrip():
+    """wrap_session_key + unwrap_session_key recovers the original session key."""
+    priv, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+
+    wrapped = wrap_session_key(session_key, pub)
+    recovered = unwrap_session_key(wrapped, priv)
+
+    assert recovered == session_key
+
+
+def test_wrap_output_is_string():
+    """wrap_session_key returns a string."""
+    _, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+    wrapped = wrap_session_key(session_key, pub)
+    assert isinstance(wrapped, str)
+
+
+def test_wrap_output_is_base64url():
+    """wrap_session_key output is valid base64url."""
+    _, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+    wrapped = wrap_session_key(session_key, pub)
+    # Should decode without error
+    decoded = base64.urlsafe_b64decode(wrapped.encode("ascii"))
+    assert len(decoded) == 92  # 32 + 12 + 48
+
+
+def test_wrap_produces_unique_blobs():
+    """Each wrap_session_key call produces a unique blob (ephemeral keys)."""
+    _, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+    wrapped1 = wrap_session_key(session_key, pub)
+    wrapped2 = wrap_session_key(session_key, pub)
+    assert wrapped1 != wrapped2, "Each wrap must use a different ephemeral key"
+
+
+def test_wrap_unwrap_multiple_keys():
+    """wrap/unwrap works correctly for multiple independent keypairs."""
+    for _ in range(5):
+        priv, pub = generate_tee_keypair()
+        session_key = generate_session_key()
+        wrapped = wrap_session_key(session_key, pub)
+        recovered = unwrap_session_key(wrapped, priv)
+        assert recovered == session_key
+
+
+# ─── 3. Wrong private key rejection ─────────────────────────────────────────
+
+def test_wrong_private_key_fails():
+    """unwrap_session_key fails when using the wrong private key."""
+    from cryptography.exceptions import InvalidTag
+    priv1, pub1 = generate_tee_keypair()
+    priv2, _pub2 = generate_tee_keypair()
+    session_key = generate_session_key()
+
+    wrapped = wrap_session_key(session_key, pub1)  # wrapped for priv1
+
+    with pytest.raises((InvalidTag, Exception)):
+        unwrap_session_key(wrapped, priv2)  # try to unwrap with priv2
+
+
+def test_wrong_private_key_zero_bytes_fails():
+    """unwrap_session_key fails with zeroed private key."""
+    from cryptography.exceptions import InvalidTag
+    _, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+    wrapped = wrap_session_key(session_key, pub)
+
+    wrong_priv = bytes(32)  # all zeros
+    with pytest.raises((InvalidTag, Exception)):
+        unwrap_session_key(wrapped, wrong_priv)
+
+
+# ─── 4. Tamper detection on wrapped key ─────────────────────────────────────
+
+def test_tamper_wrapped_key_ephemeral_pubkey():
+    """Tampering with the ephemeral public key in the blob causes failure."""
+    from cryptography.exceptions import InvalidTag
+    priv, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+    wrapped = wrap_session_key(session_key, pub)
+
+    # Flip a byte in the ephemeral public key section (first 32 bytes)
+    blob = bytearray(base64.urlsafe_b64decode(wrapped.encode("ascii")))
+    blob[5] ^= 0xFF
+    tampered = base64.urlsafe_b64encode(bytes(blob)).decode("ascii")
+
+    with pytest.raises((InvalidTag, Exception)):
+        unwrap_session_key(tampered, priv)
+
+
+def test_tamper_wrapped_key_nonce():
+    """Tampering with the nonce section causes failure."""
+    from cryptography.exceptions import InvalidTag
+    priv, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+    wrapped = wrap_session_key(session_key, pub)
+
+    # Flip a byte in the nonce section (bytes 32-43)
+    blob = bytearray(base64.urlsafe_b64decode(wrapped.encode("ascii")))
+    blob[35] ^= 0xFF
+    tampered = base64.urlsafe_b64encode(bytes(blob)).decode("ascii")
+
+    with pytest.raises((InvalidTag, Exception)):
+        unwrap_session_key(tampered, priv)
+
+
+def test_tamper_wrapped_key_ciphertext():
+    """Tampering with the ciphertext+tag section causes failure."""
+    from cryptography.exceptions import InvalidTag
+    priv, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+    wrapped = wrap_session_key(session_key, pub)
+
+    # Flip a byte in the wrapped key section (bytes 44-91)
+    blob = bytearray(base64.urlsafe_b64decode(wrapped.encode("ascii")))
+    blob[50] ^= 0xFF
+    tampered = base64.urlsafe_b64encode(bytes(blob)).decode("ascii")
+
+    with pytest.raises((InvalidTag, Exception)):
+        unwrap_session_key(tampered, priv)
+
+
+def test_tamper_truncated_blob_fails():
+    """Truncated wrapped key blob raises ValueError."""
+    priv, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+    wrapped = wrap_session_key(session_key, pub)
+
+    blob = base64.urlsafe_b64decode(wrapped.encode("ascii"))
+    truncated = base64.urlsafe_b64encode(blob[:50]).decode("ascii")
+
+    with pytest.raises(ValueError):
+        unwrap_session_key(truncated, priv)
+
+
+# ─── 5. Full pipeline with HPKE ─────────────────────────────────────────────
+
+def test_full_hpke_pipeline():
+    """Full pipeline: keygen → encrypt with HPKE → decrypt with HPKE → plaintext matches."""
+    priv, pub = generate_tee_keypair()
+    message = "Ultra secret user message — only TEE can read this"
+    context = "User context: Alice, prefers metric units"
+
+    # Validator side: encrypt with HPKE
+    payload = encrypt_payload(message, context, miner_pubkey=pub)
+
+    assert payload["encrypted"] is True
+    assert payload["encryption_scheme"] == ENCRYPTION_SCHEME_HPKE
+
+    # Miner TEE side: decrypt with private key
+    recovered_msg, recovered_ctx = decrypt_payload(
+        payload["encrypted_message"],
+        payload["encrypted_context"],
+        payload["key_id"],
+        miner_privkey=priv,
+    )
+
+    assert recovered_msg == message
+    assert recovered_ctx == context
+
+
+def test_hpke_payload_scheme_is_hpke():
+    """encrypt_payload with miner_pubkey sets HPKE scheme."""
+    _, pub = generate_tee_keypair()
+    payload = encrypt_payload("test", "ctx", miner_pubkey=pub)
+    assert payload["encryption_scheme"] == ENCRYPTION_SCHEME_HPKE
+    assert payload["encryption_scheme"] == "aes-256-gcm-hpke-v1"
+
+
+def test_hpke_key_id_is_longer():
+    """Phase 2 key_id (wrapped blob) is longer than Phase 1 (raw key)."""
+    _, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+
+    phase1_key_id = encode_key(session_key)
+    wrapped = wrap_session_key(session_key, pub)
+
+    assert len(wrapped) > len(phase1_key_id)
+    # Phase 1: 44 chars (32 bytes → base64url), Phase 2: 124 chars (92 bytes → base64url)
+    assert len(phase1_key_id) == 44
+    assert len(wrapped) == 124
+
+
+# ─── 6. Backward compatibility: Phase 1 still works ─────────────────────────
+
+def test_phase1_encrypt_payload_no_pubkey():
+    """encrypt_payload without miner_pubkey uses Phase 1 scheme."""
+    payload = encrypt_payload("test message", "context")
+    assert payload["encryption_scheme"] == ENCRYPTION_SCHEME
+    assert payload["encryption_scheme"] == "aes-256-gcm-v1"
+
+
+def test_phase1_decrypt_payload_no_privkey():
+    """decrypt_payload without miner_privkey works for Phase 1 payloads."""
+    message = "backward compatible message"
+    context = "backward compatible context"
+    payload = encrypt_payload(message, context)  # Phase 1, no pubkey
+    recovered_msg, recovered_ctx = decrypt_payload(
+        payload["encrypted_message"],
+        payload["encrypted_context"],
+        payload["key_id"],
+        miner_privkey=None,  # Phase 1 fallback
+    )
+    assert recovered_msg == message
+    assert recovered_ctx == context
+
+
+def test_phase1_decrypt_payload_with_privkey_fails():
+    """Phase 1 key_id (44 chars) fails if we try to unwrap it with a private key."""
+    priv, _pub = generate_tee_keypair()
+    payload = encrypt_payload("test", "")  # Phase 1, short key_id
+
+    with pytest.raises(Exception):
+        # Phase 1 key_id is too short to be an HPKE blob — should raise ValueError
+        decrypt_payload(
+            payload["encrypted_message"],
+            payload["encrypted_context"],
+            payload["key_id"],
+            miner_privkey=priv,  # Will try to unwrap Phase 1 key as HPKE blob
+        )
+
+
+def test_both_phases_same_payload_encryption():
+    """Both Phase 1 and Phase 2 use the same AES-256-GCM for the payload."""
+    priv, pub = generate_tee_keypair()
+    message = "same message"
+    context = "same context"
+
+    payload_p1 = encrypt_payload(message, context)            # Phase 1
+    payload_p2 = encrypt_payload(message, context, miner_pubkey=pub)  # Phase 2
+
+    # Both are encrypted
+    assert payload_p1["encrypted"] is True
+    assert payload_p2["encrypted"] is True
+
+    # Both can be decrypted to the same plaintext
+    msg1, ctx1 = decrypt_payload(
+        payload_p1["encrypted_message"],
+        payload_p1["encrypted_context"],
+        payload_p1["key_id"],
+    )
+    msg2, ctx2 = decrypt_payload(
+        payload_p2["encrypted_message"],
+        payload_p2["encrypted_context"],
+        payload_p2["key_id"],
+        miner_privkey=priv,
+    )
+    assert msg1 == msg2 == message
+    assert ctx1 == ctx2 == context
+
+
+# ─── 7. MinerKeyManager tests ────────────────────────────────────────────────
+
+import tempfile
+import shutil
+from nobi.privacy.miner_keys import MinerKeyManager
+
+
+def test_miner_key_manager_create():
+    """MinerKeyManager creates a keypair on first run."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = MinerKeyManager(key_dir=tmpdir)
+        assert len(manager.get_public_key_bytes()) == 32
+        assert len(manager.get_private_key()) == 32
+
+
+def test_miner_key_manager_pubkey_b64():
+    """MinerKeyManager.get_public_key_b64() returns a valid base64url string."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = MinerKeyManager(key_dir=tmpdir)
+        pub_b64 = manager.get_public_key_b64()
+        assert isinstance(pub_b64, str)
+        # 32 bytes → 44 chars in base64url (with padding)
+        decoded = base64.urlsafe_b64decode(pub_b64.encode("ascii"))
+        assert len(decoded) == 32
+
+
+def test_miner_key_manager_save_and_load():
+    """MinerKeyManager persists keypair to disk and reloads correctly."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager1 = MinerKeyManager(key_dir=tmpdir)
+        pub1 = manager1.get_public_key_bytes()
+        priv1 = manager1.get_private_key()
+
+        # Create a second instance — should load from disk
+        manager2 = MinerKeyManager(key_dir=tmpdir)
+        pub2 = manager2.get_public_key_bytes()
+        priv2 = manager2.get_private_key()
+
+        assert pub1 == pub2, "Public key must be consistent across loads"
+        assert priv1 == priv2, "Private key must be consistent across loads"
+
+
+def test_miner_key_manager_consistent_keys():
+    """MinerKeyManager returns the same keys each call within a session."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = MinerKeyManager(key_dir=tmpdir)
+        assert manager.get_public_key_bytes() == manager.get_public_key_bytes()
+        assert manager.get_private_key() == manager.get_private_key()
+
+
+def test_miner_key_manager_key_files_exist():
+    """MinerKeyManager creates key files on disk."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = MinerKeyManager(key_dir=tmpdir)
+        assert manager.public_key_exists()
+        import pathlib
+        key_dir = pathlib.Path(tmpdir)
+        assert (key_dir / "tee_private.key").exists()
+        assert (key_dir / "tee_public.key").exists()
+
+
+def test_miner_key_manager_file_permissions():
+    """Private key file has restrictive permissions (0600)."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = MinerKeyManager(key_dir=tmpdir)
+        import pathlib, stat
+        priv_path = pathlib.Path(tmpdir) / "tee_private.key"
+        mode = stat.S_IMODE(os.stat(priv_path).st_mode)
+        assert mode == 0o600, f"Private key file must be 0600, got {oct(mode)}"
+
+
+def test_miner_key_manager_rotate():
+    """MinerKeyManager.rotate_keypair() generates new keys."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = MinerKeyManager(key_dir=tmpdir)
+        pub1 = manager.get_public_key_bytes()
+        priv1 = manager.get_private_key()
+
+        manager.rotate_keypair()
+
+        pub2 = manager.get_public_key_bytes()
+        priv2 = manager.get_private_key()
+
+        assert pub1 != pub2, "Rotated public key must differ"
+        assert priv1 != priv2, "Rotated private key must differ"
+
+
+def test_miner_key_manager_wrap_unwrap_integration():
+    """MinerKeyManager keys work with wrap_session_key/unwrap_session_key."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = MinerKeyManager(key_dir=tmpdir)
+        session_key = generate_session_key()
+
+        wrapped = wrap_session_key(session_key, manager.get_public_key_bytes())
+        recovered = unwrap_session_key(wrapped, manager.get_private_key())
+
+        assert recovered == session_key
+
+
+# ─── 8. Mixed scenario tests ─────────────────────────────────────────────────
+
+def test_mixed_miners_hpke_and_plaintext():
+    """Validators can send HPKE to some miners and plaintext to others."""
+    priv, pub = generate_tee_keypair()
+    message = "Test message for mixed scenario"
+
+    # Miner A: HPKE-capable
+    payload_a = encrypt_payload(message, "", miner_pubkey=pub)
+    assert payload_a["encryption_scheme"] == ENCRYPTION_SCHEME_HPKE
+    msg_a, _ = decrypt_payload(
+        payload_a["encrypted_message"], payload_a["encrypted_context"],
+        payload_a["key_id"], miner_privkey=priv
+    )
+    assert msg_a == message
+
+    # Miner B: No HPKE (Phase 1 fallback)
+    payload_b = encrypt_payload(message, "")
+    assert payload_b["encryption_scheme"] == ENCRYPTION_SCHEME
+    msg_b, _ = decrypt_payload(
+        payload_b["encrypted_message"], payload_b["encrypted_context"],
+        payload_b["key_id"]
+    )
+    assert msg_b == message
+
+
+def test_hpke_payload_not_decryptable_without_privkey():
+    """An HPKE-wrapped payload cannot be decrypted without the miner private key."""
+    priv, pub = generate_tee_keypair()
+    other_priv, _other_pub = generate_tee_keypair()
+    message = "Secret message"
+
+    payload = encrypt_payload(message, "", miner_pubkey=pub)
+
+    # Correct private key works
+    msg, _ = decrypt_payload(
+        payload["encrypted_message"], payload["encrypted_context"],
+        payload["key_id"], miner_privkey=priv
+    )
+    assert msg == message
+
+    # Wrong private key fails
+    from cryptography.exceptions import InvalidTag
+    with pytest.raises((InvalidTag, Exception)):
+        decrypt_payload(
+            payload["encrypted_message"], payload["encrypted_context"],
+            payload["key_id"], miner_privkey=other_priv
+        )
+
+
+def test_protocol_tee_pubkey_field_default():
+    """CompanionRequest has tee_pubkey field defaulting to empty string."""
+    from nobi.protocol import CompanionRequest
+    req = CompanionRequest(message="hello")
+    assert hasattr(req, "tee_pubkey")
+    assert req.tee_pubkey == ""
+
+
+def test_protocol_tee_pubkey_field_set():
+    """CompanionRequest tee_pubkey field can be set and retrieved."""
+    from nobi.protocol import CompanionRequest
+    _, pub = generate_tee_keypair()
+    pub_b64 = base64.urlsafe_b64encode(pub).decode("ascii")
+    req = CompanionRequest(message="test")
+    req.tee_pubkey = pub_b64
+    assert req.tee_pubkey == pub_b64
+
+
+def test_full_hpke_end_to_end_with_key_manager():
+    """
+    Full end-to-end test with MinerKeyManager simulating the real flow:
+    1. Miner starts up → MinerKeyManager generates/loads keypair
+    2. Miner advertises public key (tee_pubkey field in response)
+    3. Validator caches the public key
+    4. Validator encrypts next query with HPKE using cached key
+    5. Miner receives encrypted synapse, uses private key to unwrap
+    6. Miner decrypts message → plaintext matches original
+    """
+    from nobi.protocol import CompanionRequest
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Step 1: Miner starts up
+        miner_keys = MinerKeyManager(key_dir=tmpdir)
+
+        # Step 2: Miner advertises public key
+        advertised_pubkey_b64 = miner_keys.get_public_key_b64()
+        assert len(advertised_pubkey_b64) == 44  # base64url of 32 bytes
+
+        # Step 3: Validator caches the key
+        cached_pub_bytes = base64.urlsafe_b64decode(advertised_pubkey_b64.encode("ascii"))
+
+        # Step 4: Validator builds HPKE-encrypted synapse
+        original_message = "What's the meaning of life?"
+        original_context = "User is a philosophy student"
+        payload = encrypt_payload(original_message, original_context, miner_pubkey=cached_pub_bytes)
+
+        synapse = CompanionRequest(
+            message="[encrypted]",
+            user_id="user_e2e_test",
+            encrypted=payload["encrypted"],
+            encryption_scheme=payload["encryption_scheme"],
+            encrypted_message=payload["encrypted_message"],
+            encrypted_context=payload["encrypted_context"],
+            key_id=payload["key_id"],
+        )
+
+        # Verify it's Phase 2
+        assert synapse.encryption_scheme == ENCRYPTION_SCHEME_HPKE
+
+        # Step 5+6: Miner receives synapse, unwraps and decrypts
+        recovered_msg, recovered_ctx = decrypt_payload(
+            synapse.encrypted_message,
+            synapse.encrypted_context,
+            synapse.key_id,
+            miner_privkey=miner_keys.get_private_key(),
+        )
+
+        assert recovered_msg == original_message
+        assert recovered_ctx == original_context
+
+
+def test_wrap_session_key_invalid_pubkey_length():
+    """wrap_session_key raises ValueError for invalid pubkey length."""
+    session_key = generate_session_key()
+    with pytest.raises(ValueError):
+        wrap_session_key(session_key, b"tooshort")
+
+
+def test_unwrap_session_key_empty_input():
+    """unwrap_session_key raises ValueError for empty input."""
+    priv, _ = generate_tee_keypair()
+    with pytest.raises(ValueError):
+        unwrap_session_key("", priv)
+
+
+def test_unwrap_session_key_invalid_privkey_length():
+    """unwrap_session_key raises ValueError for invalid private key length."""
+    _, pub = generate_tee_keypair()
+    session_key = generate_session_key()
+    wrapped = wrap_session_key(session_key, pub)
+    with pytest.raises(ValueError):
+        unwrap_session_key(wrapped, b"wrong_length")

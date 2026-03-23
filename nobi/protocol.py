@@ -47,10 +47,16 @@ class CompanionRequest(bt.Synapse):
     # When encrypted=True, the miner receives only ciphertext — no plaintext user data.
     # Non-TEE miners see encrypted=False and continue receiving plaintext (backward compat).
     encrypted: bool = False                 # Whether payload is encrypted
-    encryption_scheme: str = ""            # e.g., "aes-256-gcm-v1"
+    encryption_scheme: str = ""            # e.g., "aes-256-gcm-v1" or "aes-256-gcm-hpke-v1"
     encrypted_message: str = ""            # base64url: "<nonce>.<ciphertext+tag>"
     encrypted_context: str = ""            # base64url: "<nonce>.<ciphertext+tag>" (memory context)
-    key_id: str = ""                       # Session key (Phase 1: plaintext; Phase 2: TEE-wrapped)
+    key_id: str = ""                       # Session key (Phase 1: plaintext b64; Phase 2: HPKE-wrapped blob)
+
+    # === Phase 6: HPKE Key Advertisement (miner → validator) ===
+    # Miner populates tee_pubkey in their response so the validator can cache it.
+    # Validator uses this on subsequent queries to HPKE-wrap the session key.
+    # This field is set by the miner, not the validator.
+    tee_pubkey: str = ""                   # Miner's X25519 TEE public key (base64url, 44 chars)
 
     def deserialize(self) -> str:
         """Returns the response string."""

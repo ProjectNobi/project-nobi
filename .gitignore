@@ -45,3 +45,8 @@ scripts/chutes_keys.txt
 scripts/deploy_256_state.json
 scripts/server_config.json
 scripts/.env.deploy
+# TEE private keys — NEVER commit these
+.nobi/tee_keys/
+*.key
+tee_private.key
+tee_public.key

@@ -24,6 +24,14 @@ try:
 except ImportError:
     OpenAI = None
 
+# Phase 2: HPKE key wrapping — miner key manager
+try:
+    from nobi.privacy.miner_keys import MinerKeyManager as _MinerKeyManager
+    _MINER_KEY_MANAGER_AVAILABLE = True
+except ImportError:
+    _MinerKeyManager = None
+    _MINER_KEY_MANAGER_AVAILABLE = False
+
 
 COMPANION_SYSTEM_PROMPT = """IMPORTANT SYSTEM FACTS — READ BEFORE RESPONDING:
 
@@ -108,6 +116,20 @@ class Miner(BaseMinerNeuron):
             )
             self.specialization = "general"
         bt.logging.info(f"Miner specialization: {self.specialization}")
+
+        # Phase 2: Initialize TEE key manager for HPKE key wrapping
+        self.key_manager = None
+        if _MINER_KEY_MANAGER_AVAILABLE:
+            try:
+                self.key_manager = _MinerKeyManager()
+                bt.logging.info(
+                    f"TEE key manager initialized — "
+                    f"public key: {self.key_manager.get_public_key_b64()[:16]}..."
+                )
+            except Exception as e:
+                bt.logging.warning(
+                    f"TEE key manager init failed (non-fatal, HPKE disabled): {e}"
+                )
 
         # Set up LLM client (Chutes low-cost first, OpenRouter as fallback)
         chutes_key = os.environ.get("CHUTES_API_KEY", "")
@@ -386,15 +408,23 @@ class Miner(BaseMinerNeuron):
 
     async def forward(self, synapse: CompanionRequest) -> CompanionRequest:
         """Process an incoming CompanionRequest and generate a response."""
-        # Phase 5: TEE Encryption — decrypt if payload is encrypted
+        # Phase 5/6: TEE Encryption — decrypt if payload is encrypted
         if getattr(synapse, "encrypted", False):
             try:
                 from nobi.privacy.tee_encryption import decrypt_payload
+                # Phase 2: use miner's TEE private key for HPKE unwrapping if available
+                _miner_privkey = (
+                    self.key_manager.get_private_key()
+                    if self.key_manager is not None
+                    else None
+                )
                 plaintext_message, plaintext_context = decrypt_payload(
                     encrypted_message=synapse.encrypted_message,
                     encrypted_context=synapse.encrypted_context,
                     key_id=synapse.key_id,
+                    miner_privkey=_miner_privkey,
                 )
+                del _miner_privkey  # Clear reference immediately
                 # Overwrite with decrypted values — from here on, processing is identical
                 synapse.message = plaintext_message
                 # Context will be picked up via preferences override below
@@ -440,6 +470,11 @@ class Miner(BaseMinerNeuron):
         synapse.response = response
         synapse.confidence = 0.8 if self.client else 0.2
         synapse.miner_specialization = self.specialization
+
+        # Phase 2: Advertise TEE public key so validator can cache it for HPKE wrapping
+        if self.key_manager is not None:
+            synapse.tee_pubkey = self.key_manager.get_public_key_b64()
+
         synapse.memory_context = [
             {"type": m.get("type", ""), "content": m.get("content", "")}
             for m in memory_entries

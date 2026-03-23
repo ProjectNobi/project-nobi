@@ -39,6 +39,55 @@ from nobi.mining.specialization import (
 _step_counter = 0
 _turn_counter = 0  # Track conversation turns for periodic decay
 
+# ─── Miner TEE Public Key Cache (Phase 2: HPKE key wrapping) ─────────────────
+# Maps miner UID → base64url-encoded X25519 public key
+# Populated when miners include tee_pubkey in their responses
+_miner_pubkey_cache: dict = {}  # uid (int) → pubkey_b64 (str)
+
+
+def cache_miner_pubkey(uid: int, tee_pubkey_b64: str) -> None:
+    """
+    Cache a miner's TEE public key for HPKE key wrapping.
+
+    Called after receiving a response from the miner that includes tee_pubkey.
+
+    Args:
+        uid: Miner's UID on the metagraph
+        tee_pubkey_b64: Base64url-encoded X25519 public key (44 chars)
+    """
+    import base64
+    if not tee_pubkey_b64:
+        return
+    try:
+        raw = base64.urlsafe_b64decode(tee_pubkey_b64.encode("ascii"))
+        if len(raw) != 32:
+            bt.logging.warning(
+                f"[HPKE] Miner {uid} sent invalid tee_pubkey length {len(raw)}, ignoring"
+            )
+            return
+        _miner_pubkey_cache[uid] = tee_pubkey_b64
+        bt.logging.debug(f"[HPKE] Cached TEE pubkey for miner {uid}: {tee_pubkey_b64[:16]}...")
+    except Exception as e:
+        bt.logging.warning(f"[HPKE] Failed to cache pubkey for miner {uid}: {e}")
+
+
+def get_miner_pubkey_bytes(uid: int) -> bytes | None:
+    """
+    Get cached miner TEE public key bytes for HPKE wrapping.
+
+    Returns:
+        32-byte X25519 public key, or None if not cached yet
+    """
+    import base64
+    pubkey_b64 = _miner_pubkey_cache.get(uid)
+    if not pubkey_b64:
+        return None
+    try:
+        return base64.urlsafe_b64decode(pubkey_b64.encode("ascii"))
+    except Exception:
+        return None
+
+
 # ─── Miner Router (persistent across forward calls) ─────────────────────────
 _miner_router: MinerRouter | None = None
 _ROUTER_STATE_PATH = os.path.expanduser("~/.nobi/miner_router_state.json")
@@ -159,39 +208,52 @@ async def _query_single_miner(dendrite, axon, synapse, timeout):
         responses = await dendrite(
             axons=[axon],
             synapse=synapse,
-            deserialize=True,
+            deserialize=False,  # Get raw synapse to read tee_pubkey
             timeout=timeout,
         )
         latency = time.monotonic() - t_start
-        response = responses[0] if responses else ""
-        if not isinstance(response, str) or not response:
-            response = ""
-        return response, latency
+        raw = responses[0] if responses else None
+
+        # Phase 2: Cache the miner's TEE public key if advertised
+        if raw is not None:
+            tee_pubkey = getattr(raw, "tee_pubkey", "")
+            if tee_pubkey:
+                # We don't have UID here, caller handles caching
+                # Return tee_pubkey alongside response so caller can cache it
+                response = raw.response if isinstance(getattr(raw, "response", None), str) else ""
+                return response, latency, tee_pubkey
+
+        response = raw.response if raw and isinstance(getattr(raw, "response", None), str) else ""
+        return response, latency, ""
     except Exception as e:
         latency = time.monotonic() - t_start
         bt.logging.debug(f"Miner query failed: {e}")
-        return "", latency
+        return "", latency, ""
 
 
-def _build_synapse_for_miner(query: str, user_id: str, query_type: str,
-                              context: str = "") -> "CompanionRequest":
+def _build_synapse_for_miner(
+    query: str,
+    user_id: str,
+    query_type: str,
+    context: str = "",
+    miner_uid: int = None,
+) -> "CompanionRequest":
     """
     Build a CompanionRequest synapse, encrypting if TEE encryption is available.
 
     Phase 5: If the cryptography library is available, all validator queries
     are encrypted with AES-256-GCM before being sent over the wire.
-    Non-TEE miners still work — they simply ignore the encrypted fields
-    and the encrypted=False flag means they'll use the plaintext message field.
 
-    In Phase 1, we encrypt for ALL miners (not just TEE-capable ones), since
-    the validator test queries don't need to know if a miner is TEE or not —
-    the miner's forward() will decrypt transparently.
+    Phase 6 (HPKE): If the miner's TEE public key is cached, the session key
+    is HPKE-wrapped so only the miner's TEE enclave can unwrap it.
+    Falls back to Phase 1 (plaintext key_id) if no pubkey is cached yet.
 
     Args:
         query: The query text
         user_id: User identifier
         query_type: Query category
         context: Optional memory context to also encrypt
+        miner_uid: Miner's UID for HPKE pubkey lookup (Phase 2)
 
     Returns:
         CompanionRequest with either plaintext or encrypted fields
@@ -199,7 +261,19 @@ def _build_synapse_for_miner(query: str, user_id: str, query_type: str,
     try:
         from nobi.privacy.tee_encryption import encrypt_payload, is_available
         if is_available():
-            payload = encrypt_payload(query, context)
+            # Phase 2: use cached miner pubkey for HPKE wrapping if available
+            miner_pubkey = None
+            if miner_uid is not None:
+                miner_pubkey = get_miner_pubkey_bytes(miner_uid)
+
+            payload = encrypt_payload(query, context, miner_pubkey=miner_pubkey)
+
+            if miner_pubkey is not None:
+                bt.logging.debug(
+                    f"[HPKE] Built Phase 2 encrypted synapse for miner {miner_uid} "
+                    f"(scheme={payload['encryption_scheme']})"
+                )
+
             return CompanionRequest(
                 message="[encrypted]",  # Plaintext field set to non-sensitive marker
                 user_id=user_id,
@@ -233,11 +307,18 @@ async def _forward_single_turn(self, miner_uids):
     )
 
     # Task 1: Per-miner latency — query all miners in parallel, track individual timing
-    synapse = _build_synapse_for_miner(query, fake_user_id, query_type)
-    bt.logging.info(
-        f"[TEE] Query encrypted={getattr(synapse, 'encrypted', False)}, "
-        f"scheme='{getattr(synapse, 'encryption_scheme', '')}'"
-    )
+    # Phase 2: Build per-miner synapses (each may have different HPKE pubkey)
+    synapses = [
+        _build_synapse_for_miner(query, fake_user_id, query_type, miner_uid=int(uid))
+        for uid in miner_uids
+    ]
+    # Log encryption scheme for first synapse (representative)
+    if synapses:
+        _sample = synapses[0]
+        bt.logging.info(
+            f"[TEE] Query encrypted={getattr(_sample, 'encrypted', False)}, "
+            f"scheme='{getattr(_sample, 'encryption_scheme', '')}'"
+        )
     tasks = [
         _query_single_miner(
             self.dendrite,
@@ -245,19 +326,22 @@ async def _forward_single_turn(self, miner_uids):
             synapse,
             self.config.neuron.timeout,
         )
-        for uid in miner_uids
+        for uid, synapse in zip(miner_uids, synapses)
     ]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     processed = []
     latencies = []
-    for r in results:
+    for uid, r in zip(miner_uids, results):
         if isinstance(r, Exception):
             processed.append("")
             latencies.append(self.config.neuron.timeout)
         else:
             processed.append(r[0])
             latencies.append(r[1])
+            # Phase 2: Cache miner TEE pubkey if advertised
+            if r[2]:
+                cache_miner_pubkey(int(uid), r[2])
 
     rewards = get_rewards(
         self, query=query, responses=processed,
@@ -344,7 +428,13 @@ async def _forward_multi_turn(self, miner_uids):
                    f"({len(failed_uids)} failed), query_type={query_type}: "
                    f"'{scenario['test_query']}'")
 
-    synapse = _build_synapse_for_miner(scenario["test_query"], test_user_id, query_type)
+    # Phase 2: Build per-miner synapses with HPKE wrapping if pubkey is cached
+    synapses_multi = [
+        _build_synapse_for_miner(
+            scenario["test_query"], test_user_id, query_type, miner_uid=int(uid)
+        )
+        for uid in active_uids
+    ]
     tasks = [
         _query_single_miner(
             self.dendrite,
@@ -352,7 +442,7 @@ async def _forward_multi_turn(self, miner_uids):
             synapse,
             self.config.neuron.timeout,
         )
-        for uid in active_uids
+        for uid, synapse in zip(active_uids, synapses_multi)
     ]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -374,6 +464,9 @@ async def _forward_multi_turn(self, miner_uids):
             else:
                 all_responses.append(r[0])
                 all_latencies.append(r[1])
+                # Phase 2: Cache miner TEE pubkey if advertised
+                if r[2]:
+                    cache_miner_pubkey(int(uid), r[2])
 
     # Step 3: Score with memory keywords
     rewards = get_rewards(
