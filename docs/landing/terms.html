@@ -109,8 +109,10 @@
     </ul>
 
     <h2>8. Data Handling and Privacy</h2>
-    <p>Your privacy is core to how we built Nori. All conversation data is encrypted using <strong>AES-128 encryption</strong>. You own your data and can export or delete it at any time.</p>
-    <p>See our full <a href="/privacy">Privacy Policy</a> for complete details on data collection, encryption, your rights, and GDPR/CCPA compliance.</p>
+    <p>Your privacy is core to how we built Nori. All conversation data is encrypted at rest using <strong>AES-128 encryption</strong> (server-side). Data in transit is protected by <strong>TLS 1.3</strong>. You own your data and can export or delete it at any time.</p>
+    <p><strong>Honest disclosure:</strong> Miners on the Bittensor network process your conversation content during response generation. End-to-end TEE encryption (where miners cannot see plaintext) is code-complete and deploying to production.</p>
+    <p><strong>Compliance architecture:</strong> All legal and compliance data (consent records, age verification, audit trail) is stored on Project Nobi's own infrastructure — never on miners. Your data rights (access, erasure, portability under GDPR) can always be fulfilled regardless of the decentralised network state. Project Nobi is the data controller.</p>
+    <p>See our full <a href="/privacy.html">Privacy Policy</a> for complete details on data collection, encryption, your rights, and GDPR/CCPA compliance.</p>
 
     <h2>9. Limitation of Liability</h2>
     <p>The service is provided "as is" without warranties of any kind. To the maximum extent permitted by law, Project Nobi's total liability to you shall not exceed the greater of: (a) amounts paid by you in the 12 months preceding the claim, or (b) £100 GBP. We are not liable for indirect, incidental, or consequential damages.</p>

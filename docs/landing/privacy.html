@@ -115,6 +115,17 @@
     </ul>
     <p><strong>Honest disclosure:</strong> Miners decrypt conversation content during response generation — they process message text in order to produce AI responses. Stored memories remain encrypted at rest (AES-128, server-side). End-to-end TEE encryption (which prevents miners from seeing plaintext) is <strong>code-complete and deploying to production</strong> — it is not yet live for all users.</p>
 
+    <h3>5.2 Data Architecture: Decentralised AI, Centralised Compliance</h3>
+    <p>The AI inference layer (miners generating responses) is decentralised across the Bittensor network. However, <strong>all legal and compliance data is stored centrally on Project Nobi's own infrastructure</strong> — never on miners.</p>
+    <p>This includes:</p>
+    <ul>
+        <li><strong>Consent records</strong> — your Terms of Service and Privacy Policy acceptance, with timestamps and policy versions</li>
+        <li><strong>Age verification</strong> — your 18+ confirmation status (date of birth is NOT stored)</li>
+        <li><strong>Audit trail</strong> — all data access, deletion, and consent change events (append-only, immutable)</li>
+        <li><strong>Conversation history backups</strong> — maintained on our servers for GDPR request fulfilment</li>
+    </ul>
+    <p>This architecture ensures that your data rights (access, erasure, portability) can <strong>always be fulfilled</strong> regardless of the state of the decentralised network. GDPR requires a data controller — that is Project Nobi. We will always operate the application layer and at least one validator to ensure legal compliance.</p>
+
     <h2>6. Data Sharing</h2>
     <table>
         <tr><th>Recipient</th><th>Purpose</th><th>Safeguards</th></tr>

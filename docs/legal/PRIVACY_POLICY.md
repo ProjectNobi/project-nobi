@@ -124,6 +124,17 @@ We take reasonable steps to ensure that miners participating in the network meet
 - Monitoring: Automated security monitoring and alerting
 - Backups: Regular encrypted backups with tested restore procedures
 
+### 5.4 Data Architecture: Decentralised AI, Centralised Compliance
+
+The AI inference layer (miners generating responses) is decentralised across the Bittensor network. However, **all legal and compliance data is stored centrally on Project Nobi's own infrastructure** — never on miners. This includes:
+
+- **Consent records** — your Terms of Service and Privacy Policy acceptance, with timestamps and policy versions
+- **Age verification** — your 18+ confirmation status (date of birth is NOT stored)
+- **Audit trail** — all data access, deletion, and consent change events (append-only, immutable)
+- **Conversation history backups** — maintained on our servers for GDPR request fulfilment
+
+This architecture ensures that your data rights (access, erasure, portability) can **always be fulfilled** regardless of the state of the decentralised network. GDPR requires a data controller — that is Project Nobi. We will always operate the application layer and at least one validator to ensure legal compliance.
+
 ---
 
 ## 6. Data Sharing

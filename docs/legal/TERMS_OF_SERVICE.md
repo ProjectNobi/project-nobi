@@ -156,9 +156,12 @@ Your privacy is foundational to how we built Nori. All conversation data is encr
 ### 8.2 Decentralised Processing
 Nori operates on the Bittensor decentralised AI network. This means:
 - Your messages may be processed by network participants ("miners") to generate responses
-- Messages sent to miners are processed without your personal identity
-- Data transmitted to the network is encrypted and does not include personally identifiable information
-- We do not control the individual miners on the Bittensor network but we do govern the quality standards through our validation system
+- Messages sent to miners are processed using pseudonymous identifiers (no name, email, or account details)
+- **Honest disclosure:** Miners process your conversation content during response generation. End-to-end TEE encryption (where miners cannot see plaintext) is code-complete and deploying to production.
+- We govern quality and safety standards through our validation system, including adversarial safety probes
+
+### 8.2.1 Data Architecture: Decentralised AI, Centralised Compliance
+All legal and compliance data (consent records, age verification, audit trail) is stored on Project Nobi's own infrastructure — never on miners. Your data rights (access, erasure, portability under GDPR) can always be fulfilled regardless of the decentralised network state. Project Nobi is the data controller under GDPR.
 
 ### 8.3 Your Controls
 You have full control over your data:
