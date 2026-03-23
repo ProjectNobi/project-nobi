@@ -1251,15 +1251,26 @@ async def chat_encrypted(req: EncryptedChatRequest, request: Request = None):
         # We have the decrypted message — call LLM normally
         user_content = plaintext_message
     else:
-        # Device-key path: no plaintext available server-side
-        # Provide a helpful response acknowledging the privacy mode
-        system += (
-            "\n\n[PRIVACY MODE: The user's message is end-to-end encrypted on-device. "
-            "You do not have the plaintext. Acknowledge that you received their message "
-            "but explain you need them to disable privacy mode or set a shared passphrase "
-            "for you to process their message. Be warm and helpful about it.]"
-        )
-        user_content = "[Encrypted message — device-key privacy mode active]"
+        # Device-key path: server can't decrypt (by design — that's the privacy!)
+        # Graceful degradation: use the normal chat flow with server-side memory
+        # Local memory extraction already happened in the browser — those encrypted
+        # memories are stored. For the response, we use server-side context.
+        #
+        # In the future (TEE deployed), this blob would be forwarded to a TEE miner
+        # who CAN decrypt it. For now, fall back to using any available context.
+        logger.info(f"[Privacy] Device-key encryption — falling back to context-based response for {user_id}")
+        
+        # Try to get context from server-side memory for a meaningful response
+        fallback_context = ""
+        try:
+            fallback_context = memory.get_smart_context(user_id, "general conversation")
+        except Exception:
+            pass
+        
+        if fallback_context:
+            system += f"\n\n== CONTEXT FROM MEMORY ==\n{fallback_context}"
+        
+        user_content = "The user sent a message with privacy mode enabled. Respond warmly based on what you know about them from previous conversations. Ask them what's on their mind."
 
     messages = [{"role": "system", "content": system}]
 
