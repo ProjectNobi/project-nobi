@@ -1681,7 +1681,7 @@ async def cmd_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def _safe_edit(query, text: str, **kwargs):
     """Edit message, silently ignoring 'message not modified' errors (duplicate taps)."""
     try:
-        await _safe_edit(query, text, **kwargs)
+        await query.edit_message_text(text, **kwargs)
     except BadRequest as e:
         if "Message is not modified" not in str(e):
             raise
