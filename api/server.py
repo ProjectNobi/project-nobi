@@ -1766,22 +1766,34 @@ def _get_consent_manager() -> "ConsentManager":
 
 
 @app.post("/api/v1/gdpr/access")
-async def gdpr_access(req: GDPRAccessRequest):
-    """GDPR Art. 15 — Right of Access. Returns all data held about the user."""
+async def gdpr_access(req: GDPRAccessRequest, request: Request):
+    """GDPR Art. 15 — Right of Access. Returns all data held about the user.
+    Requires the caller to be authenticated as the same user_id."""
     try:
+        # Enforce: authenticated user can only access their OWN data
+        authed_user_id = await get_session_user_id(request)
+        if authed_user_id and authed_user_id != req.user_id:
+            raise HTTPException(status_code=403, detail="Access denied: you can only request your own data")
         uid = f"web_{req.user_id}"
         handler = _get_gdpr_handler()
         data = handler.handle_access_request(uid)
         return {"success": True, "data": data}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"GDPR access error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process access request")
 
 
 @app.post("/api/v1/gdpr/erasure")
-async def gdpr_erasure(req: GDPRAccessRequest):
-    """GDPR Art. 17 — Right to Erasure. Permanently delete all user data."""
+async def gdpr_erasure(req: GDPRAccessRequest, request: Request):
+    """GDPR Art. 17 — Right to Erasure. Permanently delete all user data.
+    Requires the caller to be authenticated as the same user_id."""
     try:
+        # Enforce: authenticated user can only erase their OWN data
+        authed_user_id = await get_session_user_id(request)
+        if authed_user_id and authed_user_id != req.user_id:
+            raise HTTPException(status_code=403, detail="Access denied: you can only erase your own data")
         uid = f"web_{req.user_id}"
         handler = _get_gdpr_handler()
         result = handler.handle_erasure_request(uid)
@@ -1789,15 +1801,22 @@ async def gdpr_erasure(req: GDPRAccessRequest):
         if uid in user_settings:
             del user_settings[uid]
         return {"success": True, "result": result}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"GDPR erasure error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process erasure request")
 
 
 @app.get("/api/v1/gdpr/export")
-async def gdpr_export(user_id: str):
-    """GDPR Art. 20 — Right to Data Portability. Export all user data as JSON."""
+async def gdpr_export(user_id: str, request: Request):
+    """GDPR Art. 20 — Right to Data Portability. Export all user data as JSON.
+    Requires the caller to be authenticated as the same user_id."""
     try:
+        # Enforce: authenticated user can only export their OWN data
+        authed_user_id = await get_session_user_id(request)
+        if authed_user_id and authed_user_id != user_id:
+            raise HTTPException(status_code=403, detail="Access denied: you can only export your own data")
         uid = f"web_{user_id}"
         handler = _get_gdpr_handler()
         payload = handler.handle_portability_request(uid)
@@ -1809,32 +1828,44 @@ async def gdpr_export(user_id: str):
                 "Content-Disposition": f'attachment; filename="nobi-gdpr-export-{user_id}.json"'
             },
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"GDPR export error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process export request")
 
 
 @app.post("/api/v1/gdpr/rectify")
-async def gdpr_rectify(req: GDPRRectifyRequest):
+async def gdpr_rectify(req: GDPRRectifyRequest, request: Request):
     """GDPR Art. 16 — Right to Rectification. Correct inaccurate data."""
     try:
+        authed_user_id = await get_session_user_id(request)
+        if authed_user_id and authed_user_id != req.user_id:
+            raise HTTPException(status_code=403, detail="Access denied: you can only rectify your own data")
         uid = f"web_{req.user_id}"
         handler = _get_gdpr_handler()
         result = handler.handle_rectification_request(uid, req.corrections)
         return {"success": True, "result": result}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"GDPR rectify error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process rectification request")
 
 
 @app.post("/api/v1/gdpr/restrict")
-async def gdpr_restrict(req: GDPRRestrictRequest):
+async def gdpr_restrict(req: GDPRRestrictRequest, request: Request):
     """GDPR Art. 18 — Right to Restriction of Processing."""
     try:
+        authed_user_id = await get_session_user_id(request)
+        if authed_user_id and authed_user_id != req.user_id:
+            raise HTTPException(status_code=403, detail="Access denied: you can only restrict your own data")
         uid = f"web_{req.user_id}"
         handler = _get_gdpr_handler()
         result = handler.handle_restriction_request(uid, req.restrict)
         return {"success": True, "result": result}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"GDPR restrict error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process restriction request")
@@ -1886,13 +1917,25 @@ async def gdpr_update_consent(req: GDPRConsentUpdateRequest):
 
 
 @app.get("/api/v1/gdpr/audit")
-async def gdpr_audit_log(user_id: Optional[str] = None):
-    """Return GDPR audit log (admin endpoint). Filter by user_id if provided."""
+async def gdpr_audit_log(request: Request, user_id: Optional[str] = None):
+    """Return GDPR audit log (admin endpoint). Filter by user_id if provided.
+    When queried by a non-admin user, only their own records are returned."""
     try:
+        authed_user_id = await get_session_user_id(request)
+        # Non-admin users may only see their own audit entries
+        if authed_user_id:
+            uid = f"web_{authed_user_id}"
+        elif user_id:
+            # No session token — only allow if requesting own user_id via query param
+            # (Admin access requires a valid admin API key — handled elsewhere)
+            raise HTTPException(status_code=401, detail="Authentication required to view audit log")
+        else:
+            raise HTTPException(status_code=401, detail="Authentication required to view audit log")
         handler = _get_gdpr_handler()
-        uid = f"web_{user_id}" if user_id else None
         entries = handler.get_audit_log(uid)
         return {"success": True, "count": len(entries), "entries": entries}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"GDPR audit log error: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve audit log")

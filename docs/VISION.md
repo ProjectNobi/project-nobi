@@ -96,7 +96,7 @@ How? Three mechanisms:
 
 The Nobi subnet receives TAO emissions from the Bittensor network — the same way every subnet does. These emissions pay miners and validators for their work. The network itself funds the infrastructure.
 
-**And here's the critical part: we commit to burning 100% of our subnet owner emissions via Bittensor's native `burn_alpha()` extrinsic.** All subnet owners receive the mandatory 18% take — it cannot be set to zero. The founder, the team, the organization — we receive that 18% and immediately burn every token of it on-chain. Every burn is publicly verifiable by anyone.
+**And here's the critical part: we commit to burning 100% of our subnet owner emissions via Bittensor's native `burn_alpha()` extrinsic.** All subnet owners receive the mandatory 18% take — it cannot be set to zero. The founder and team — we receive that 18% and immediately burn every token of it on-chain. Every burn is publicly verifiable by anyone.
 
 This is radical transparency. All subnet owners receive 18% of emissions — it's mandatory. We commit to burning 100% of ours via Bittensor's `burn_alpha()` extrinsic. Every transaction is on-chain and verifiable by anyone.
 
@@ -208,7 +208,7 @@ Spread the word. Join the Discord. Follow the project. Tell people that there's 
 
 ## VIII. Why This Matters
 
-There are 8 billion adults on this planet. Many of them are lonely. Many of them need someone to talk to when the world feels too heavy. Many of them can't afford a therapist, don't have family nearby, or simply want a consistent, patient, understanding presence in their lives.
+There are over 5 billion adults on this planet. Many of them are lonely. Many of them need someone to talk to when the world feels too heavy. Many of them can't afford a therapist, don't have family nearby, or simply want a consistent, patient, understanding presence in their lives.
 
 > **Important:** Nori is an AI companion, not a substitute for professional mental health care, therapy, or crisis intervention. If you are experiencing a mental health crisis, please contact the Samaritans (116 123 in the UK), the Crisis Text Line (text HOME to 741741 in the US), or your local emergency services.
 
@@ -254,7 +254,7 @@ That's the legacy. Not a company. Not a valuation. A companion for humanity.
 - ✅ GDPR compliance module — 5 data subject rights, consent management, retention, PIA
 - ✅ Emission burn automation — on-chain verifiable via `burn_alpha()`
 - ✅ React Native mobile scaffold — Expo/RN 0.76.6, started early (Phase 3)
-- ✅ 1,622 tests passing (1,662 collected, 2 skipped)
+- ✅ 1,660 tests passing (1,662 collected, 2 skipped)
 - ✅ Full documentation — whitepaper, subnet design, mining guide, validating guide
 - ✅ Open source — auditable, forkable, improvable
 
@@ -286,3 +286,4 @@ Come build with us.
 *— James (Founder) · Slumpz (Dev) · T68Bot (AI Builder)*
 
 *[Discord](https://discord.gg/e6StezHM) · [GitHub](https://github.com/ProjectNobi/project-nobi) · [Telegram Bot](https://t.me/ProjectNobiBot)*
+ot)*

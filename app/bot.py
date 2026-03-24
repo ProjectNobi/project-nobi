@@ -978,19 +978,40 @@ class CompanionBot:
 
             logger.info(f"[Routing] Used {used_model or 'unknown'} for user {user_id}")
 
-            # Save response
+            # ── Content Safety: check bot response FIRST, before saving to memory ─
+            # IMPORTANT: safety check MUST run before memory save to prevent harmful
+            # content ever being persisted to the database, even transiently.
+            response_safety = self.content_filter.check_bot_response(user_id, message, response)
+            if not response_safety.is_safe:
+                logger.warning(f"[Safety] Bot response blocked (level={response_safety.level.value}, "
+                               f"category={response_safety.category}) for user {user_id}")
+            # Whether blocked or just disclaimed, response_safety.response is the final text
+            response = response_safety.response
+
+            # Cancel subnet task if still running (direct API won the race)
+            if subnet_task and not subnet_task.done():
+                subnet_task.cancel()
+            elif subnet_task and subnet_task.done():
+                try:
+                    subnet_resp = subnet_task.result()
+                    if subnet_resp:
+                        logger.info(f"[Routing] Subnet also responded (direct API was faster)")
+                except Exception:
+                    pass
+
+            # Save sanitized response (after safety filter)
             try:
                 self.memory.save_conversation_turn(user_id, "assistant", response)
             except Exception as e:
                 logger.warning(f"Save response error: {e}")
 
-            # Phase B: Update adapter after each conversation turn
+            # Phase B: Update adapter after each conversation turn (with sanitized response)
             try:
                 self.adapter_manager.update_adapter_from_conversation(user_id, message, response)
             except Exception as e:
                 logger.debug(f"Adapter update error: {e}")
 
-            # Record personality metrics (non-blocking, best-effort)
+            # Record personality metrics (non-blocking, best-effort, with sanitized response)
             try:
                 self.personality_tuner.analyze_conversation(message, response)
             except Exception as e:
@@ -1014,30 +1035,6 @@ class CompanionBot:
                         break
             except Exception as e:
                 logger.debug(f"Auto-feedback error: {e}")
-
-            # Cancel subnet task if still running (direct API won the race)
-            if subnet_task and not subnet_task.done():
-                subnet_task.cancel()
-            elif subnet_task and subnet_task.done():
-                try:
-                    subnet_resp = subnet_task.result()
-                    if subnet_resp:
-                        logger.info(f"[Routing] Subnet also responded (direct API was faster)")
-                except Exception:
-                    pass
-
-            # ── Content Safety: check bot response before sending to user ─────
-            response_safety = self.content_filter.check_bot_response(user_id, message, response)
-            if not response_safety.is_safe:
-                logger.warning(f"[Safety] Bot response blocked (level={response_safety.level.value}, "
-                               f"category={response_safety.category}) for user {user_id}")
-                # Overwrite saved response with the safe replacement
-                try:
-                    self.memory.save_conversation_turn(user_id, "assistant", response_safety.response)
-                except Exception:
-                    pass
-            # Whether blocked or just disclaimed, response_safety.response is the final text
-            response = response_safety.response
 
             # ── Emotional topic AI disclaimer ────────────────────────────────
             # Append a gentle AI reminder when the user message touches on
@@ -1777,6 +1774,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         except Exception as e:
             logger.warning(f"[Onboarding] Memory store failed: {e}")
+
+        # Store initial 30-day re-verification timestamp so the periodic check activates
+        _store_re_verification_ts(user_id)
+        _store_age_verified(user_id)
 
         # Step 3: Show instructions + start chatting
         await _safe_edit(query, 
@@ -2559,7 +2560,14 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 logger.warning(f"Memory store from image failed: {e}")
 
-    # Save conversation turn
+    # Safety-filter image response before saving to memory
+    try:
+        image_safety = companion.content_filter.check_bot_response(user_id, caption or "", response)
+        response = image_safety.response
+    except Exception:
+        pass
+
+    # Save conversation turn (with safety-filtered response)
     try:
         caption_text = f"[Photo] {caption}" if caption else "[Photo shared]"
         companion.memory.save_conversation_turn(user_id, "user", caption_text)
@@ -2870,20 +2878,40 @@ async def _handle_support_message(update: Update, user_id: str) -> bool:
 
     # ── Age re-verification flow ──
     if flow == "age_reverification" and step == "confirm":
-        companion._conv_state.pop(user_id, None)
         resp = text.strip().lower()
-        if resp in ("yes", "y", "yeah", "yep", "i am", "i am 18", "i'm 18", "confirm"):
+        _YES_RESPONSES = ("yes", "y", "yeah", "yep", "i am", "i am 18", "i'm 18",
+                          "confirm", "ok", "okay", "sure", "correct", "absolutely", "of course")
+        _NO_RESPONSES = ("no", "n", "nope", "not 18", "under 18", "i'm not", "i am not",
+                         "i'm under", "i am under", "minor", "underage")
+        if any(resp == r or resp.startswith(r) for r in _YES_RESPONSES):
+            companion._conv_state.pop(user_id, None)
             _store_re_verification_ts(user_id)
             await update.message.reply_text(
                 "Thanks for confirming! Continuing... 😊"
             )
-        else:
+        elif any(r in resp for r in _NO_RESPONSES):
+            companion._conv_state.pop(user_id, None)
             _block_minor(user_id)
             await update.message.reply_text(
                 "⛔ Nori is only available to users aged 18 and over. "
                 "If you're under 18, we must restrict your access. "
                 "Please reach out to a trusted adult for support."
             )
+        else:
+            # Ambiguous — re-ask (keep state active, limit to 3 retries)
+            retry_count = companion._conv_state.get(user_id, {}).get("retries", 0) + 1
+            if retry_count >= 3:
+                companion._conv_state.pop(user_id, None)
+                _block_minor(user_id)
+                await update.message.reply_text(
+                    "⛔ We couldn't confirm your age. For safety, your access has been restricted.\n\n"
+                    "If this is an error, please contact: legal@projectnobi.ai"
+                )
+            else:
+                companion._conv_state[user_id] = {"flow": "age_reverification", "step": "confirm", "retries": retry_count}
+                await update.message.reply_text(
+                    "Please confirm: are you 18 or older? (Reply Yes or No)"
+                )
         return True
 
     # ── Behavioral age flag flow ──

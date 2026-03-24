@@ -315,11 +315,11 @@ class TestHandleMessageBlockedMinor(unittest.IsolatedAsyncioTestCase):
 class TestPeriodicAIReminder(unittest.TestCase):
     """Test periodic AI reminder configuration."""
 
-    def test_reminder_interval_is_25(self):
-        """AI reminder should trigger every 25 interactions."""
+    def test_reminder_interval_is_50(self):
+        """AI reminder should trigger every 50 interactions."""
         from nobi.safety.dependency_monitor import _REMINDER_EVERY_N
-        assert _REMINDER_EVERY_N == 25, \
-            f"_REMINDER_EVERY_N should be 25, got {_REMINDER_EVERY_N}"
+        assert _REMINDER_EVERY_N == 50, \
+            f"_REMINDER_EVERY_N should be 50, got {_REMINDER_EVERY_N}"
 
     def test_ai_reminder_messages_mention_nori(self):
         """AI reminder messages should mention Nori."""

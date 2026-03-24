@@ -179,7 +179,7 @@ class GDPRHandler:
                 result["data"]["subscription"] = dict(sub) if sub else None
 
                 usage = bill_conn.execute(
-                    "SELECT * FROM usage_tracking WHERE user_id = ? ORDER BY date DESC LIMIT 90",
+                    "SELECT * FROM usage WHERE user_id = ? ORDER BY date DESC LIMIT 90",
                     (user_id,),
                 ).fetchall()
                 result["data"]["usage_records"] = [dict(r) for r in usage]
@@ -231,7 +231,25 @@ class GDPRHandler:
         mem_conn = self._memory_conn()
         if mem_conn:
             try:
-                r = mem_conn.execute("DELETE FROM memories WHERE user_id = ?", (user_id,))
+                # SAFETY: preserve minor-block flag before erasure so blocked minors
+                # cannot bypass the 18+ gate by deleting their data (CRITICAL safety requirement)
+                _MINOR_BLOCK_CONTENT = "user_blocked_minor"
+                minor_block_rows = []
+                try:
+                    rows = mem_conn.execute(
+                        "SELECT * FROM memories WHERE user_id = ? AND content = ?",
+                        (user_id, _MINOR_BLOCK_CONTENT),
+                    ).fetchall()
+                    if rows:
+                        minor_block_rows = rows
+                        logger.info(f"[GDPR:Erasure] Preserving minor-block flag for {user_id}")
+                except Exception:
+                    pass
+
+                r = mem_conn.execute(
+                    "DELETE FROM memories WHERE user_id = ? AND content != ?",
+                    (user_id, _MINOR_BLOCK_CONTENT),
+                )
                 deleted["memories"] = r.rowcount
                 r = mem_conn.execute("DELETE FROM conversations WHERE user_id = ?", (user_id,))
                 deleted["conversations"] = r.rowcount
@@ -256,7 +274,7 @@ class GDPRHandler:
             try:
                 r = bill_conn.execute("DELETE FROM subscriptions WHERE user_id = ?", (user_id,))
                 deleted["subscriptions"] = r.rowcount
-                r = bill_conn.execute("DELETE FROM usage_tracking WHERE user_id = ?", (user_id,))
+                r = bill_conn.execute("DELETE FROM usage WHERE user_id = ?", (user_id,))
                 deleted["usage_records"] = r.rowcount
                 bill_conn.commit()
             except Exception as e:

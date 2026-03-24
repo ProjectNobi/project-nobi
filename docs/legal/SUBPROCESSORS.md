@@ -65,11 +65,11 @@ A subprocessor is a third-party company that Project Nobi engages to process per
 | **DPA Status** | Covered by Google Cloud DPA |
 | **Privacy Policy** | https://policies.google.com/privacy |
 
-### 6. ElevenLabs (Premium TTS — when configured)
+### 6. ElevenLabs (TTS — when configured)
 | Field | Details |
 |-------|---------|
 | **Company** | ElevenLabs, Inc. |
-| **Purpose** | Premium text-to-speech synthesis — higher quality voice replies for premium tier users |
+| **Purpose** | Text-to-speech synthesis — voice replies for all users (no premium tiers) |
 | **Data Processed** | Nori's response text |
 | **Data Location** | United States |
 | **DPA Status** | Data Processing Agreement available upon request |

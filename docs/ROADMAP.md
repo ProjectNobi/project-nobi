@@ -136,14 +136,17 @@ The community model significantly simplifies legal requirements compared to a su
 | Phase | Recommendation | Cost | Rationale |
 |-------|---------------|------|-----------|
 | Now → Mainnet | No entity needed | £0 | Open source project run by individuals. MIT license protects contributors. Founder named as GDPR data controller (acceptable for small projects). |
-| Mainnet → Growth | UK Community Interest Company (CIC) | ~£50 | Personal liability shield, GDPR-compliant entity, "for community benefit" structure with asset lock, aligns with mission. Cheap and simple. |
+| Mainnet → Growth | UK Community Interest Company (CIC) or Ireland Company Limited by Guarantee (CLG) | ~£50–€50 | Personal liability shield, GDPR-compliant entity, "for community benefit" structure with asset lock, aligns with mission. Decision pending legal review. |
 | Scale (100K+ users) | Foundation (UK/Swiss) | Variable | Maximum credibility, formal governance structure, international recognition. Evaluate when scale justifies it. |
 
-**Why a CIC over a Ltd:**
-- Explicitly "for community benefit" — legally enshrined, not just a promise
+**Entity options under evaluation:**
+- **UK CIC**: Explicitly "for community benefit" — legally enshrined, asset lock, ~£50 to register, simpler governance
+- **Ireland CLG**: EU-based, GDPR/AI Act compliance from day one, broader international recognition
+- Final decision will be made with legal counsel before mainnet registration
+
+**Why either option over a standard Ltd:**
 - Asset lock: if dissolved, assets go to another community purpose, never to founders
-- Costs ~£50 to register vs ~£500+ for Ltd
-- Simpler governance, lighter reporting requirements
+- "For community benefit" or equivalent — legally enshrined, not just a promise
 - Aligns perfectly with "no profit, no subscriptions, community-owned" model
 
 **What a CIC protects against:**
@@ -254,7 +257,7 @@ The community model significantly simplifies legal requirements compared to a su
   - Phase 4: TEE passthrough to Chutes TEE models (DeepSeek-V3.1-TEE, Qwen3-TEE)
 - ✅ Browser-side memory extraction — code-complete, available in web app
 - ✅ Privacy language precision audit — "encrypted at rest (AES-128, server-side)" vs "E2E TEE (AES-256-GCM)" precision enforced across all docs and marketing
-- ✅ 1,622 tests passing (1,662 collected, 2 skipped — up from 1,089 at Phase 0 completion)
+- ✅ 1,660 tests passing (1,662 collected, 2 skipped — up from 1,089 at Phase 0 completion)
 - 🔲 External miner onboarding (ongoing)
 - 🔲 Protocol security review (next priority)
 - 🔲 Rate limiting / DDoS protection

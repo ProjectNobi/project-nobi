@@ -166,7 +166,7 @@ Full guide: **[VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)**
 | Phase | Status | Highlights |
 |-------|--------|------------|
 | **0. Foundation** | ✅ Complete | Protocol, miner, validator, memory, scoring, 500 simulated-node stress test |
-| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅, safety scoring ✅, content filter ✅, age verification ✅, dependency monitor ✅, TEE encryption ✅, mobile scaffold ✅ — 1,622 tests passing |
+| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅, safety scoring ✅, content filter ✅, age verification ✅, dependency monitor ✅, TEE encryption ✅, mobile scaffold ✅ — 1,660 tests passing |
 | **2. Mainnet Launch** | ⏳ Q3 2026 | Subnet registration, subnet routing, public beta, community staking |
 | **3. Growth** | ⏳ Q4 2026+ | Mobile app, 50+ languages, plugin ecosystem, governance |
 | **4. Scale** | ⏳ 2027+ | 100K+ users, decentralized governance, federated privacy |

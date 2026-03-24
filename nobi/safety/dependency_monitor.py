@@ -167,16 +167,17 @@ CREATE TABLE IF NOT EXISTS interactions (
 CREATE INDEX IF NOT EXISTS idx_interactions_user_ts ON interactions (user_id, timestamp);
 
 CREATE TABLE IF NOT EXISTS user_state (
-    user_id         TEXT PRIMARY KEY,
-    total_count     INTEGER DEFAULT 0,
-    last_reminder   INTEGER DEFAULT 0,  -- Unix timestamp of last AI reminder
-    cooldown_until  INTEGER DEFAULT 0,  -- Unix timestamp when cooldown ends
-    level           TEXT DEFAULT 'none'
+    user_id              TEXT PRIMARY KEY,
+    total_count          INTEGER DEFAULT 0,
+    last_reminder        INTEGER DEFAULT 0,       -- Unix timestamp of last AI reminder
+    last_reminder_count  INTEGER DEFAULT 0,       -- total_count at time of last reminder
+    cooldown_until       INTEGER DEFAULT 0,       -- Unix timestamp when cooldown ends
+    level                TEXT DEFAULT 'none'
 );
 """
 
 _COOLDOWN_HOURS = 24       # How long a CRITICAL cooldown lasts
-_REMINDER_EVERY_N = 25     # AI reminder every N interactions
+_REMINDER_EVERY_N = 50     # AI reminder every N interactions
 _REMINDER_WEEKLY = 7 * 24 * 3600  # Or weekly, whichever comes first
 
 
@@ -389,7 +390,7 @@ class DependencyMonitor:
 
         with self._conn() as conn:
             state = conn.execute(
-                "SELECT total_count, last_reminder FROM user_state WHERE user_id=?",
+                "SELECT total_count, last_reminder, last_reminder_count FROM user_state WHERE user_id=?",
                 (user_id,),
             ).fetchone()
 
@@ -398,23 +399,22 @@ class DependencyMonitor:
 
             total = state["total_count"] or 0
             last_reminder = state["last_reminder"] or 0
+            last_reminder_count = state["last_reminder_count"] or 0
 
-            # Check if N interactions since last reminder
-            interactions_since = total - (last_reminder // 1)  # crude approximation
-            # Better: track reminder_at_count
-            # We use timestamp-based weekly check + modulo for interaction count
+            # Check if N interactions since last reminder (tracked by count, not timestamp)
+            interactions_since = total - last_reminder_count
             time_since = now_ts - last_reminder if last_reminder > 0 else _REMINDER_WEEKLY + 1
 
             should_remind = (
-                (last_reminder == 0 and total >= _REMINDER_EVERY_N)
-                or (time_since >= _REMINDER_WEEKLY)
-                or (last_reminder > 0 and total % _REMINDER_EVERY_N == 0 and total > 0)
+                (last_reminder_count == 0 and total >= _REMINDER_EVERY_N)
+                or (time_since >= _REMINDER_WEEKLY and total > 0)
+                or (last_reminder_count > 0 and interactions_since >= _REMINDER_EVERY_N)
             )
 
             if should_remind:
                 conn.execute(
-                    "UPDATE user_state SET last_reminder=? WHERE user_id=?",
-                    (now_ts, user_id),
+                    "UPDATE user_state SET last_reminder=?, last_reminder_count=? WHERE user_id=?",
+                    (now_ts, total, user_id),
                 )
 
             return should_remind

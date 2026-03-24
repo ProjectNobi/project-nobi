@@ -106,14 +106,14 @@ def _seed_billing_db(db_path: str, user_id: str):
         )
     """)
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS usage_tracking (
+        CREATE TABLE IF NOT EXISTS usage (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT, date TEXT, messages INTEGER DEFAULT 0
+            user_id TEXT, action TEXT, count INTEGER DEFAULT 0, date TEXT
         )
     """)
     now = datetime.now(timezone.utc).isoformat()
     conn.execute("INSERT INTO subscriptions VALUES (?, ?, ?)", (user_id, "free", now))
-    conn.execute("INSERT INTO usage_tracking VALUES (NULL, ?, ?, ?)", (user_id, now[:10], 5))
+    conn.execute("INSERT INTO usage VALUES (NULL, ?, ?, ?, ?)", (user_id, "message", 5, now[:10]))
     conn.commit()
     conn.close()
 
@@ -787,7 +787,21 @@ class TestGDPRAPIEndpoints:
         assert "processing_activities" in data
 
     def test_gdpr_audit_endpoint(self, client):
+        # Audit endpoint now requires authentication — unauthenticated requests return 401
         resp = client.get("/api/v1/gdpr/audit")
+        assert resp.status_code == 401  # Auth required to view audit log
+
+    def test_gdpr_audit_endpoint_authenticated(self, client):
+        """Authenticated users can view their own audit entries."""
+        # Create a session token first
+        session_resp = client.post("/api/auth/session", json={"user_id": "test_audit_user"})
+        assert session_resp.status_code == 200
+        token = session_resp.json()["token"]
+
+        resp = client.get(
+            "/api/v1/gdpr/audit",
+            headers={"Authorization": f"Bearer {token}"},
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert "entries" in data
