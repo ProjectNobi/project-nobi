@@ -14,6 +14,14 @@ import time
 import logging
 from collections import defaultdict
 
+# Load .env from project root (ensures env vars are set when run via PM2)
+try:
+    from dotenv import load_dotenv as _load_dotenv
+    _env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    _load_dotenv(_env_path, override=False)
+except ImportError:
+    pass
+
 import discord
 from discord.ext import commands
 from discord import app_commands
