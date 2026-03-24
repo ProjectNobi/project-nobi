@@ -38,7 +38,9 @@ except ImportError:
 BOT_TOKEN = os.environ.get("NOBI_DISCORD_TOKEN", "")
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
+_CHUTES_MODEL_RAW = os.environ.get("CHUTES_MODEL", "MiniMaxAI/MiniMax-M2.5-TEE")
+# Extract primary model from auto-route chain (first model before comma)
+CHUTES_MODEL = _CHUTES_MODEL_RAW.split(",")[0].split(":")[0].strip()
 
 logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",

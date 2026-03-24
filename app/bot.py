@@ -89,17 +89,17 @@ CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
 # Smart fallback chain — tries models in order until one responds
 # Chutes auto-routing: comma-separated models with :latency picks lowest TTFT automatically
 # Handles 429s internally — no manual fallback needed
-CHUTES_AUTO_MODEL = (
-    "deepseek-ai/DeepSeek-V3.1-TEE,"
-    "deepseek-ai/DeepSeek-V3,"
-    "openai/gpt-oss-120b-TEE,"
-    "chutesai/Mistral-Small-3.2-24B-Instruct-2506"
+CHUTES_AUTO_MODEL = CHUTES_MODEL if "," in CHUTES_MODEL else (
+    "MiniMaxAI/MiniMax-M2.5-TEE,"
+    "moonshotai/Kimi-K2.5-TEE,"
+    "deepseek-ai/DeepSeek-V3.2-TEE"
     ":latency"
 )
 # Legacy fallback list (used only if auto-routing fails entirely)
 CHUTES_FALLBACK_MODELS = [
-    "deepseek-ai/DeepSeek-V3.1-TEE",
-    "deepseek-ai/DeepSeek-V3",
+    "MiniMaxAI/MiniMax-M2.5-TEE",
+    "moonshotai/Kimi-K2.5-TEE",
+    "deepseek-ai/DeepSeek-V3.2-TEE",
     "openai/gpt-oss-120b-TEE",
     "chutesai/Mistral-Small-3.2-24B-Instruct-2506",
 ]

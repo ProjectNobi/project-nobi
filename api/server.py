@@ -52,11 +52,13 @@ except ImportError:
 
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE")
+_CHUTES_MODEL_RAW = os.environ.get("CHUTES_MODEL", "MiniMaxAI/MiniMax-M2.5-TEE")
+# Extract primary model from auto-route chain
+CHUTES_MODEL = _CHUTES_MODEL_RAW.split(",")[0].split(":")[0].strip()
 CHUTES_FALLBACK_MODELS = [
-    "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",
-    "deepseek-ai/DeepSeek-V3.1-TEE",
-    "chutesai/Mistral-Small-3.2-24B-Instruct-2506",
+    "MiniMaxAI/MiniMax-M2.5-TEE",
+    "moonshotai/Kimi-K2.5-TEE",
+    "deepseek-ai/DeepSeek-V3.2-TEE",
 ]
 DB_PATH = os.environ.get("NOBI_DB_PATH", "~/.nobi/webapp_memories.db")
 BILLING_DB_PATH = os.environ.get("NOBI_BILLING_DB_PATH", "~/.nobi/billing.db")
