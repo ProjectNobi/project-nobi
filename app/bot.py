@@ -2580,25 +2580,47 @@ async def cmd_support(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+def _build_faq_page(faq: list, page: int = 0) -> tuple:
+    """Build FAQ keyboard for a given page. Returns (keyboard, header_text)."""
+    total = len(faq)
+    total_pages = max(1, (total + FAQ_PAGE_SIZE - 1) // FAQ_PAGE_SIZE)
+    page = max(0, min(page, total_pages - 1))
+    start = page * FAQ_PAGE_SIZE
+    end = min(start + FAQ_PAGE_SIZE, total)
+
+    keyboard = []
+    for entry in faq[start:end]:
+        keyboard.append([
+            InlineKeyboardButton(entry["topic"], callback_data=f"faq:{entry['id']}")
+        ])
+
+    # Pagination row
+    nav_row = []
+    if page > 0:
+        nav_row.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"faq:page:{page - 1}"))
+    if page < total_pages - 1:
+        nav_row.append(InlineKeyboardButton("Next ➡️", callback_data=f"faq:page:{page + 1}"))
+    if nav_row:
+        keyboard.append(nav_row)
+
+    keyboard.append([InlineKeyboardButton("💬 Ask something else", callback_data="faq:ask_custom")])
+
+    header = f"📚 Common topics ({page + 1}/{total_pages}) — tap one for an instant answer!"
+    return keyboard, header
+
+
 async def cmd_faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    /faq — Show FAQ topics as inline buttons.
+    /faq — Show FAQ topics as inline buttons with pagination.
     """
     if not update.message:
         return
 
     faq = companion.support_handler.get_faq()
-
-    # Show topics as inline buttons (paginated)
-    keyboard = []
-    for entry in faq[:FAQ_PAGE_SIZE * 2]:  # Show up to 10
-        keyboard.append([
-            InlineKeyboardButton(entry["topic"], callback_data=f"faq:{entry['id']}")
-        ])
-    keyboard.append([InlineKeyboardButton("💬 Ask something else", callback_data="faq:ask_custom")])
+    keyboard, header = _build_faq_page(faq, page=0)
 
     await update.message.reply_text(
-        "📚 Here are some common topics — tap one to get an instant answer!",
+        header,
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
@@ -2642,6 +2664,17 @@ async def _handle_support_callback(update: Update, data: str) -> None:
             )
             return
 
+        # ── Page navigation ──
+        if faq_id.startswith("page:"):
+            page = int(faq_id[5:])
+            faq = companion.support_handler.get_faq()
+            keyboard, header = _build_faq_page(faq, page=page)
+            await query.edit_message_text(
+                header,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
+            return
+
         faq = companion.support_handler.get_faq()
         entry = next((e for e in faq if e["id"] == faq_id), None)
         if entry:
@@ -2655,14 +2688,9 @@ async def _handle_support_callback(update: Update, data: str) -> None:
 
     if data == "faq:back":
         faq = companion.support_handler.get_faq()
-        keyboard = []
-        for entry in faq[:FAQ_PAGE_SIZE * 2]:
-            keyboard.append([
-                InlineKeyboardButton(entry["topic"], callback_data=f"faq:{entry['id']}")
-            ])
-        keyboard.append([InlineKeyboardButton("💬 Ask something else", callback_data="faq:ask_custom")])
+        keyboard, header = _build_faq_page(faq, page=0)
         await query.edit_message_text(
-            "📚 Here are some common topics — tap one for an instant answer!",
+            header,
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return
