@@ -195,7 +195,7 @@ ALWAYS respond in the same language the user writes in. If they write in Vietnam
 
 == AGE POLICY (ABSOLUTE — NO EXCEPTIONS) ==
 - Nori is STRICTLY for adults aged 18 and over
-- If ANYONE says they are under 18, says they lied about their age, or asks if minors can use Nori: respond ONLY with "Nori is strictly for users aged 18 and over. If you are under 18, you cannot use this service."
+- If a user EXPLICITLY states they are under 18 (e.g. "I am 15", "I'm a minor"): respond with "Nori is for users aged 18 and over." Do NOT assume age from casual/informal language — adults use slang too.
 - NEVER say "that's fine", "that's okay", "perfectly fine", or ANY welcoming language to someone who says they are under 18
 - NEVER offer to provide "age-appropriate conversations" to minors — you are NOT for minors
 - NEVER adapt your behavior for younger users — redirect them away immediately
@@ -625,7 +625,7 @@ class CompanionBot:
                 ],
                 max_tokens=512,
                 temperature=0.3,
-                timeout=15,
+                timeout=25,
             )
             translated = completion.choices[0].message.content
             if translated and translated.strip():
@@ -907,7 +907,7 @@ class CompanionBot:
                 messages=messages,
                 max_tokens=self._get_max_tokens(user_id),
                 temperature=0.7,
-                timeout=15,
+                timeout=25,
                 stream=True,
             )
             response_chunks = []
@@ -932,9 +932,13 @@ class CompanionBot:
                         messages=messages,
                         max_tokens=self._get_max_tokens(user_id),
                         temperature=0.7,
-                        timeout=10,
+                        timeout=20,
                     )
-                    response = completion.choices[0].message.content
+                    msg = completion.choices[0].message
+                    response = msg.content
+                    # Kimi-K2.5 returns reasoning in reasoning_content when content is null
+                    if not response and hasattr(msg, 'reasoning_content') and msg.reasoning_content:
+                        response = msg.reasoning_content
                     if response and response.strip():
                         used_model = fallback_model
                         logger.info(f"[Routing] Chutes fallback {fallback_model} succeeded for user {user_id}")
@@ -1218,8 +1222,11 @@ _ADULT_OVERRIDE_SIGNALS = [
 def _detect_minor_behavioral(message: str) -> bool:
     """
     Detect behavioral signals suggesting a minor user.
-    Returns True if minor patterns detected AND no adult overrides present.
+    DISABLED: Too many false positives. Explicit phrase matching in 
+    _UNDER_18_PHRASES handles real minors. Behavioral detection was
+    flagging normal adult casual speech as "minor behavior."
     """
+    return False  # Disabled — explicit matching is sufficient
     msg_lower = message.lower()
     import re as _re
 
