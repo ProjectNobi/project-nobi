@@ -155,14 +155,14 @@ class ReminderManager:
 
 _NOW_PATTERNS = [
     # "in X minutes/hours/days" OR "for X minutes/hours/days" OR "timer X minutes"
-    (re.compile(r"\b(?:in|for)\s+(\d+)\s+minute", re.I), "minutes"),
-    (re.compile(r"\b(?:in|for)\s+(\d+)\s+hour", re.I), "hours"),
-    (re.compile(r"\b(?:in|for)\s+(\d+)\s+day", re.I), "days"),
+    (re.compile(r"\b(?:in|for)\s+(\d+)\s+min(?:ute)?s?", re.I), "minutes"),
+    (re.compile(r"\b(?:in|for)\s+(\d+)\s+hours?", re.I), "hours"),
+    (re.compile(r"\b(?:in|for)\s+(\d+)\s+days?", re.I), "days"),
     (re.compile(r"\b(?:in|for)\s+half\s+an?\s+hour", re.I), "half_hour"),
     (re.compile(r"\b(?:in|for)\s+an?\s+hour", re.I), "one_hour"),
-    # "timer 10 minutes"
-    (re.compile(r"\btimer\s+(\d+)\s+minute", re.I), "minutes"),
-    (re.compile(r"\btimer\s+(\d+)\s+hour", re.I), "hours"),
+    # "timer 10 minutes/mins"
+    (re.compile(r"\btimer\s+(\d+)\s+min(?:ute)?s?", re.I), "minutes"),
+    (re.compile(r"\btimer\s+(\d+)\s+hours?", re.I), "hours"),
 ]
 
 _TIME_OF_DAY = re.compile(
