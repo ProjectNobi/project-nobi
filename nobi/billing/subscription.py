@@ -414,8 +414,8 @@ class SubscriptionManager:
                 "image": "image analyses",
             }.get(action, action)
             reason = (
-                f"You've used all {limit} {friendly_action} for today on the {tier_name} plan! "
-                f"Upgrade for more 😊"
+                f"You've used all {limit} {friendly_action} for today. "
+                f"Limits reset at midnight UTC — come back then! 😊"
             )
             return False, reason
 
@@ -436,8 +436,8 @@ class SubscriptionManager:
 
         if current_count >= limit:
             return False, (
-                f"You've reached the {limit} memory limit on the {tier_config['name']} plan! "
-                f"Upgrade for more memory slots 😊"
+                f"You've reached the {limit} memory limit. "
+                f"Use /forget to clear old memories and make room! 😊"
             )
 
         return True, "ok"

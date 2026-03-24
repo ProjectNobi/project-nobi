@@ -235,7 +235,7 @@ class TestLimits:
         allowed, reason = billing.check_limits("user1", "message")
         assert allowed is False
         assert "300" in reason
-        assert "Upgrade" in reason
+        assert "midnight" in reason.lower() or "reset" in reason.lower()
 
     def test_free_voice_limit(self, billing):
         """Free tier: 5 voice/day."""

@@ -233,13 +233,12 @@ WELCOME_MESSAGES = [
 TOS_SUMMARY = (
     "📋 Terms of Service Summary\n\n"
     "• Nori is an AI companion — not a doctor, lawyer, or financial advisor\n"
-    "• You must be 18+ to use this service\n"
-    "• You must be at least 18 years old. Users under 18 are not permitted.\n"
+    "• You must be at least 18 years old — users under 18 are not permitted\n"
     "• Your data is encrypted at rest (AES-128, server-side) and you can delete it anytime\n"
     "• We don't sell your personal data\n"
     "• Don't use Nori for illegal activities or to harm others\n"
     "• Governing law: England and Wales\n\n"
-    "Full Terms of Service: projectnobi.ai/terms\n"
+    "Full Terms of Service: projectnobi.ai/terms\n\n"
     "Questions? legal@projectnobi.ai"
 )
 
@@ -272,12 +271,28 @@ HELP_MESSAGE = (
     "The more we talk, the better I understand you.\n\n"
     "Note: Nori is designed for adults aged 18 and over.\n"
     "I'm an AI — not a therapist, doctor, or substitute for professional support.\n\n"
-    "Commands:\n"
-    "/memories — see what I remember\n"
+    "Memory & Data:\n"
+    "/memories — see what I remember about you\n"
     "/forget — delete everything and start fresh\n"
     "/export — download your memories as a file\n"
-    "/import — restore memories from a file\n"
-    "/privacy — your data rights\n"
+    "/import — restore memories from a backup\n\n"
+    "Privacy & Rights:\n"
+    "/privacy — your data rights & consent status\n"
+    "/privacy_mode — on-device privacy options\n"
+    "/data_request — formal GDPR data subject request\n"
+    "/terms — Terms of Service\n\n"
+    "Features:\n"
+    "/voice — toggle voice replies on/off\n"
+    "/language — change language (20+ supported)\n"
+    "/proactive — toggle check-in messages on/off\n\n"
+    "Account & Usage:\n"
+    "/plan — your usage stats\n"
+    "/limits — rate limits & today's usage\n"
+    "/subscribe — about the free service\n\n"
+    "Support:\n"
+    "/feedback — send bug reports or suggestions\n"
+    "/support — get help from the team\n"
+    "/faq — common questions\n"
     "/help — this message"
 )
 
@@ -626,7 +641,7 @@ class CompanionBot:
     def _get_max_tokens(self, user_id: str) -> int:
         """Get max response tokens based on user's subscription tier."""
         try:
-            tier = self.billing.get_user_tier(user_id)
+            tier = self.billing.get_tier(user_id)
             from nobi.billing.subscription import TIERS
             return TIERS.get(tier, {}).get("max_tokens", 512)
         except Exception:
@@ -1327,7 +1342,7 @@ async def cmd_data_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("❌ Cancel", callback_data="gdpr_cancel")],
     ]
     await update.message.reply_text(
-        "📜 *GDPR Data Subject Request*\n\n"
+        "📜 GDPR Data Subject Request\n\n"
         "You have the right to:\n"
         "• Access all data we hold about you\n"
         "• Have it deleted permanently\n"
@@ -1336,7 +1351,6 @@ async def cmd_data_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Responses are provided within 30 days as required by GDPR Art. 12.\n\n"
         "What would you like to do?",
         reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode="Markdown",
     )
 
 
@@ -1367,12 +1381,12 @@ async def cmd_privacy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reconsent_note = "\n⚠️ Our privacy policy has been updated — please review and re-confirm." if requires_reconsent else ""
 
     msg = (
-        "🔒 *Your Privacy & Data Rights*\n\n"
+        "🔒 Your Privacy & Data Rights\n\n"
         + PRIVACY_SUMMARY
-        + "\n\n*Your Current Consent Status:*\n"
+        + "\n\nYour Current Consent Status:\n"
         + "\n".join(consent_lines)
         + reconsent_note
-        + "\n\n*Your Rights (GDPR):*\n"
+        + "\n\nYour Rights (GDPR):\n"
         "  • /memories — see what I know\n"
         "  • /export — download all your data (Art. 20)\n"
         "  • /forget — delete everything (Art. 17)\n"
@@ -1380,7 +1394,7 @@ async def cmd_privacy(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Questions? privacy@projectnobi.ai\n"
         "Full policy: projectnobi.ai/privacy"
     )
-    await update.message.reply_text(msg, parse_mode="Markdown")
+    await update.message.reply_text(msg)
 
 
 async def cmd_privacy_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1449,7 +1463,10 @@ async def cmd_memories(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lines.append(f"{emoji} {m['content']}")
 
     lines.append("\nI pick these up naturally from our chats — no need to do anything special 😊")
-    await update.message.reply_text("\n".join(lines))
+    text = "\n".join(lines)
+    if len(text) > 4000:
+        text = text[:4000] + "\n\n... and more! Use the web app to browse all memories."
+    await update.message.reply_text(text)
 
 
 async def cmd_forget(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1508,19 +1525,28 @@ async def cmd_import(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.document:
         await update.message.reply_text(
             "To import memories, send me a JSON file with this command!\n\n"
-            "Just attach the .json file you got from /export and send it with the caption /import"
+            "Attach the .json file you got from /export and send it with the caption /import"
+        )
+        return
+
+    # Guard against oversized files (5 MB max)
+    MAX_IMPORT_BYTES = 5 * 1024 * 1024
+    doc = update.message.document
+    if doc.file_size and doc.file_size > MAX_IMPORT_BYTES:
+        await update.message.reply_text(
+            "That file is too large (max 5 MB). Please send a valid Nori export file."
         )
         return
 
     try:
-        file = await update.message.document.get_file()
+        file = await doc.get_file()
         raw = await file.download_as_bytearray()
         data = json.loads(raw.decode("utf-8"))
 
-        if data.get("version") != "nobi-memory-v2":
+        if data.get("version") not in ("nobi-memory-v1", "nobi-memory-v2"):
             await update.message.reply_text(
-                "Hmm, that doesn't look like a Nobi memory export file. "
-                "Make sure you're using a file from /export! 🤔"
+                "Hmm, that doesn't look like a Nori memory export file. "
+                "Make sure you're using a file downloaded from /export! 🤔"
             )
             return
 
@@ -1553,24 +1579,34 @@ async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = companion._user_id(update)
     usage = companion.billing.get_usage(user_id)
 
-    tier = usage["tier"].title()
-    badge = {"free": "🆓", "plus": "⭐", "pro": "🚀"}.get(usage["tier"], "")
-
     def _fmt_limit(current, limit):
         if limit == -1:
             return f"{current} / ∞"
         return f"{current} / {limit}"
 
+    # Fetch memory count separately (not in get_usage)
+    mem_count = 0
+    try:
+        mem_count = companion.memory.get_user_memory_count(user_id)
+    except Exception:
+        pass
+
+    tier_config = {}
+    try:
+        tier_config = companion.billing.get_tier_config(user_id)
+    except Exception:
+        pass
+    mem_limit = tier_config.get("memory_slots", MEMORY_SLOTS)
+
     lines = [
-        f"{badge} Your Plan: {tier}\n",
-        f"📊 Today's Usage:",
+        "🆓 Nori — Free for Everyone\n",
+        "📊 Today's Usage:",
         f"  💬 Messages: {_fmt_limit(usage['messages_today'], usage['messages_limit'])}",
         f"  🎤 Voice: {_fmt_limit(usage['voice_today'], usage['voice_limit'])}",
         f"  📷 Images: {_fmt_limit(usage['image_today'], usage['image_limit'])}",
+        f"  🧠 Memories: {_fmt_limit(mem_count, mem_limit)}",
+        "\n💡 All features are free — powered by Bittensor network emissions.",
     ]
-
-    if usage["tier"] == "free":
-        lines.append("\n💡 All features are free! 🎉")
 
     await update.message.reply_text("\n".join(lines))
 
@@ -1805,7 +1841,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             convs = len(data.get("data", {}).get("conversation_history", []))
             profile = data.get("data", {}).get("profile")
             lines = [
-                "📋 *Your Data (GDPR Art. 15)*\n",
+                "📋 Your Data (GDPR Art. 15)\n",
                 f"• Memories: {mems}",
                 f"• Conversation turns: {convs}",
                 f"• Profile: {'Yes' if profile else 'None'}",
@@ -1813,7 +1849,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"\nRequest logged. Deadline: {data.get('deadline', 'N/A')[:10]}",
                 "\nUse /export to download the full dataset.",
             ]
-            await query.edit_message_text("\n".join(lines), parse_mode="Markdown")
+            await query.edit_message_text("\n".join(lines))
         except Exception as e:
             logger.error(f"GDPR access callback error: {e}")
             await query.edit_message_text("Something went wrong. Try again or email privacy@projectnobi.ai")
@@ -1826,7 +1862,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ]
         ]
         await query.edit_message_text(
-            "⚠️ *Permanent Deletion (GDPR Art. 17)*\n\n"
+            "⚠️ Permanent Deletion (GDPR Art. 17)\n\n"
             "This will permanently delete:\n"
             "• All your memories\n"
             "• Your conversation history\n"
@@ -1834,7 +1870,6 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Your consent records\n\n"
             "This cannot be undone. Are you sure?",
             reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown",
         )
 
     elif query.data == "gdpr_export":
@@ -1862,10 +1897,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             handler = GDPRHandler()
             result = handler.handle_restriction_request(user_id, restrict=True)
             await query.edit_message_text(
-                "🔒 *Processing Restricted (GDPR Art. 18)*\n\n"
+                "🔒 Processing Restricted (GDPR Art. 18)\n\n"
                 "I will no longer extract new memories or run analytics on your data.\n\n"
                 "You can lift this restriction anytime via /data_request.",
-                parse_mode="Markdown",
             )
         except Exception as e:
             logger.error(f"GDPR restrict callback error: {e}")
@@ -2045,16 +2079,22 @@ async def cmd_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         _voice_enabled_users.add(user_id)
         _save_voice_users(_voice_enabled_users)
-        # Install gTTS if needed
+        # Install gTTS if needed (non-blocking)
         try:
             from gtts import gTTS  # noqa: F401
         except ImportError:
+            import asyncio
             import subprocess
-            subprocess.run(["pip", "install", "--break-system-packages", "-q", "gTTS"], capture_output=True)
+            await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: subprocess.run(
+                    ["pip", "install", "--break-system-packages", "-q", "gTTS"],
+                    capture_output=True,
+                ),
+            )
             try:
                 import importlib
                 import sys
-                # Force reimport after install
                 if "gtts" in sys.modules:
                     importlib.reload(sys.modules["gtts"])
                 else:
@@ -2404,6 +2444,20 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle document uploads — route /import files sent as document with caption.
+    Users can also send the file directly after typing /import.
+    """
+    if not update.message or not update.message.document:
+        return
+
+    caption = (update.message.caption or "").strip().lower()
+    # If user sent a document with /import caption, treat as import
+    if caption in ("/import", "import"):
+        await cmd_import(update, context)
+
+
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Handle photo messages — analyze with vision model, extract memories, respond.
@@ -2631,15 +2685,30 @@ async def cmd_limits(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user_id = companion._user_id(update)
-    usage = companion.billing.get_usage(user_id)
-    tier = companion.billing.get_tier_config(user_id)
+    try:
+        usage = companion.billing.get_usage(user_id)
+        tier = companion.billing.get_tier_config(user_id)
+    except Exception as e:
+        logger.error(f"cmd_limits error: {e}")
+        await update.message.reply_text("Couldn't fetch usage stats right now — try again in a moment!")
+        return
+
+    # Fetch memory count separately
+    mem_count = 0
+    try:
+        mem_count = companion.memory.get_user_memory_count(user_id)
+    except Exception:
+        pass
+
+    def _fmt(current, limit):
+        return f"{current} / ∞" if limit == -1 else f"{current} / {limit}"
 
     await update.message.reply_text(
         f"📊 Your Usage Today\n\n"
-        f"💬 Messages: {usage.get('messages_today', 0)}/{tier['messages_per_day']}\n"
-        f"🎙️ Voice: {usage.get('voice_today', 0)}/{tier['voice_per_day']}\n"
-        f"📷 Images: {usage.get('image_today', 0)}/{tier['image_per_day']}\n"
-        f"🧠 Memories: {usage.get('memory_count', '?')}/{tier['memory_slots']}\n\n"
+        f"💬 Messages: {_fmt(usage.get('messages_today', 0), tier['messages_per_day'])}\n"
+        f"🎙️ Voice: {_fmt(usage.get('voice_today', 0), tier['voice_per_day'])}\n"
+        f"📷 Images: {_fmt(usage.get('image_today', 0), tier['image_per_day'])}\n"
+        f"🧠 Memories: {_fmt(mem_count, tier['memory_slots'])}\n\n"
         f"All features are free! Limits help us maintain quality for everyone."
     )
 
@@ -2653,9 +2722,18 @@ async def _handle_support_callback(update: Update, data: str) -> None:
 
     user_id = companion._user_id(update)
 
-    # ── FAQ entry ──
+    # ── FAQ callbacks ──
     if data.startswith("faq:"):
         faq_id = data[4:]
+
+        if faq_id == "back":
+            faq = companion.support_handler.get_faq()
+            keyboard, header = _build_faq_page(faq, page=0)
+            await query.edit_message_text(
+                header,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
+            return
 
         if faq_id == "ask_custom":
             companion._conv_state[user_id] = {"flow": "support", "step": "question"}
@@ -2666,7 +2744,10 @@ async def _handle_support_callback(update: Update, data: str) -> None:
 
         # ── Page navigation ──
         if faq_id.startswith("page:"):
-            page = int(faq_id[5:])
+            try:
+                page = int(faq_id[5:])
+            except ValueError:
+                page = 0
             faq = companion.support_handler.get_faq()
             keyboard, header = _build_faq_page(faq, page=page)
             await query.edit_message_text(
@@ -2675,24 +2756,17 @@ async def _handle_support_callback(update: Update, data: str) -> None:
             )
             return
 
+        # ── Show specific FAQ entry ──
         faq = companion.support_handler.get_faq()
         entry = next((e for e in faq if e["id"] == faq_id), None)
         if entry:
-            text = f"**{entry['topic']}**\n\n{entry['answer']}"
-            # Remove markdown for Telegram
-            text = text.replace("**", "").replace("__", "").replace("```", "")
+            text = f"{entry['topic']}\n\n{entry['answer']}"
+            # Truncate if too long for Telegram (4096 limit minus button space)
+            if len(text) > 3900:
+                text = text[:3900] + "...\n\n(Full answer on projectnobi.ai/faq.html)"
             # Add back button
             kb = [[InlineKeyboardButton("⬅️ Back to topics", callback_data="faq:back")]]
             await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(kb))
-        return
-
-    if data == "faq:back":
-        faq = companion.support_handler.get_faq()
-        keyboard, header = _build_faq_page(faq, page=0)
-        await query.edit_message_text(
-            header,
-            reply_markup=InlineKeyboardMarkup(keyboard),
-        )
         return
 
     # ── Feedback category selection ──
@@ -2927,6 +3001,9 @@ def main():
 
     # Photo messages: vision analysis → respond → extract memories
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+
+    # Document messages: handle /import via file attachment
+    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
 
     # Global error handler
     app.add_error_handler(error_handler)
