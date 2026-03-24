@@ -14,6 +14,14 @@ import asyncio
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
+# Load .env from project root (ensures env vars are set when run via PM2)
+try:
+    from dotenv import load_dotenv as _load_dotenv
+    _env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    _load_dotenv(_env_path, override=True)
+except ImportError:
+    pass
+
 from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field

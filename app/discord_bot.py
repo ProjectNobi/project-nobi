@@ -18,7 +18,7 @@ from collections import defaultdict
 try:
     from dotenv import load_dotenv as _load_dotenv
     _env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
-    _load_dotenv(_env_path, override=False)
+    _load_dotenv(_env_path, override=True)
 except ImportError:
     pass
 
