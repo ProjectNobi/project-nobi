@@ -30,7 +30,7 @@ class ApiClient {
    * Ensure we have a valid session token. Creates one if needed.
    * Returns the Bearer token string.
    */
-  private async ensureSession(userId: string): Promise<string> {
+  async ensureSession(userId: string): Promise<string> {
     if (this.sessionToken) return this.sessionToken;
 
     // Deduplicate concurrent session creation requests

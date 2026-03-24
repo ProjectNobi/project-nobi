@@ -184,9 +184,20 @@ export async function sendEncryptedChat(
   request: EncryptedChatRequest,
   keySet?: CryptoKeySet
 ): Promise<{ response: string; memories_used: string[] }> {
+  // Ensure we have a session token for auth
+  const { default: apiClient } = await import("./api");
+  const userId = request.user_id || "";
+  // @ts-ignore — ensureSession is private but we need it for encrypted chat
+  const token = userId ? await apiClient.ensureSession(userId) : null;
+
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const res = await fetch(`${API_BASE_URL}/api/v1/chat/encrypted`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(request),
   });
 
