@@ -744,26 +744,37 @@ class TestGDPRAPIEndpoints:
         except Exception:
             pytest.skip("TestClient not available or server import failed")
 
+    def _get_auth_header(self, client, user_id: str) -> dict:
+        """Create a session and return the Authorization header."""
+        session_resp = client.post("/api/auth/session", json={"user_id": user_id})
+        assert session_resp.status_code == 200
+        token = session_resp.json()["token"]
+        return {"Authorization": f"Bearer {token}"}
+
     def test_gdpr_access_endpoint(self, client):
-        resp = client.post("/api/v1/gdpr/access", json={"user_id": "test_api"})
+        headers = self._get_auth_header(client, "test_api")
+        resp = client.post("/api/v1/gdpr/access", json={"user_id": "test_api"}, headers=headers)
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
         assert "data" in data
 
     def test_gdpr_erasure_endpoint(self, client):
-        resp = client.post("/api/v1/gdpr/erasure", json={"user_id": "test_erase"})
+        headers = self._get_auth_header(client, "test_erase")
+        resp = client.post("/api/v1/gdpr/erasure", json={"user_id": "test_erase"}, headers=headers)
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
 
     def test_gdpr_export_endpoint(self, client):
-        resp = client.get("/api/v1/gdpr/export", params={"user_id": "test_export"})
+        headers = self._get_auth_header(client, "test_export")
+        resp = client.get("/api/v1/gdpr/export", params={"user_id": "test_export"}, headers=headers)
         assert resp.status_code == 200
         assert resp.headers.get("content-type", "").startswith("application/json")
 
     def test_gdpr_restrict_endpoint(self, client):
-        resp = client.post("/api/v1/gdpr/restrict", json={"user_id": "test_restrict", "restrict": True})
+        headers = self._get_auth_header(client, "test_restrict")
+        resp = client.post("/api/v1/gdpr/restrict", json={"user_id": "test_restrict", "restrict": True}, headers=headers)
         assert resp.status_code in (200, 500)  # 500 ok if consent DB not available in test
 
     def test_gdpr_get_consent_endpoint(self, client):

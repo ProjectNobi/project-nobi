@@ -225,8 +225,9 @@ class SessionResponse(BaseModel):
 
 async def get_session_user_id(request: Request) -> Optional[str]:
     """
-    Extract user_id from session token (preferred) or body (fallback, deprecated).
-    Returns user_id if authenticated, or None if using legacy fallback.
+    Extract user_id from session token.
+    Returns user_id if authenticated, or None if no Bearer header present.
+    Raises 401 if a Bearer token is present but invalid.
     """
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
@@ -238,7 +239,21 @@ async def get_session_user_id(request: Request) -> Optional[str]:
                 return session["user_id"]
             else:
                 raise HTTPException(status_code=401, detail="Invalid or expired session token")
-    return None  # Caller falls back to user_id from body with a warning
+    return None
+
+
+async def require_session_user_id(request: Request) -> str:
+    """
+    Require a valid session token. Returns user_id or raises 401.
+    Use this for all data endpoints that access user-specific data.
+    """
+    user_id = await get_session_user_id(request)
+    if user_id is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Create a session via POST /api/auth/session first."
+        )
+    return user_id
 
 
 def _check_csrf(request: Request) -> None:
@@ -449,18 +464,8 @@ async def chat(req: ChatRequest, request: Request = None):
     if not llm_client:
         raise HTTPException(status_code=503, detail="LLM not configured")
 
-    # Prefer session token auth; fall back to user_id from body (deprecated)
-    authed_user_id = None
-    if request:
-        try:
-            authed_user_id = await get_session_user_id(request)
-        except HTTPException:
-            raise
-    if authed_user_id:
-        resolved_user_id = authed_user_id
-    else:
-        logger.warning(f"[SECURITY] /api/chat called without session token for user {req.user_id} — using body fallback (deprecated)")
-        resolved_user_id = req.user_id
+    # Require session token auth
+    resolved_user_id = await require_session_user_id(request)
 
     user_id = f"web_{resolved_user_id}"
     message = req.message.strip()
@@ -596,8 +601,9 @@ async def chat(req: ChatRequest, request: Request = None):
 # ─── Memories ────────────────────────────────────────────────
 
 @app.get("/api/memories")
-async def get_memories(user_id: str, search: Optional[str] = None, limit: int = 50):
-    uid = f"web_{user_id}"
+async def get_memories(user_id: str, search: Optional[str] = None, limit: int = 50, request: Request = None):
+    authed = await require_session_user_id(request)
+    uid = f"web_{authed}"
     try:
         if search:
             results = memory.recall(uid, search, limit=limit)
@@ -628,8 +634,9 @@ async def get_memories(user_id: str, search: Optional[str] = None, limit: int = 
 
 
 @app.delete("/api/memories/{memory_id}")
-async def delete_memory(memory_id: str, user_id: str):
-    uid = f"web_{user_id}"
+async def delete_memory(memory_id: str, user_id: str, request: Request = None):
+    authed = await require_session_user_id(request)
+    uid = f"web_{authed}"
     try:
         conn = memory._conn
         conn.execute("DELETE FROM memories WHERE id = ? AND user_id = ?", (memory_id, uid))
@@ -669,8 +676,9 @@ async def import_memories(request: Request):
 
 
 @app.delete("/api/memories/all")
-async def forget_all(user_id: str):
-    uid = f"web_{user_id}"
+async def forget_all(user_id: str, request: Request = None):
+    authed = await require_session_user_id(request)
+    uid = f"web_{authed}"
     try:
         conn = memory._conn
         conn.execute("DELETE FROM memories WHERE user_id = ?", (uid,))
@@ -686,8 +694,9 @@ async def forget_all(user_id: str):
 # ─── Settings ────────────────────────────────────────────────
 
 @app.post("/api/settings")
-async def save_settings(req: SettingsRequest):
-    uid = f"web_{req.user_id}"
+async def save_settings(req: SettingsRequest, request: Request = None):
+    authed = await require_session_user_id(request)
+    uid = f"web_{authed}"
     if uid not in user_settings:
         user_settings[uid] = {}
 
@@ -704,8 +713,9 @@ async def save_settings(req: SettingsRequest):
 
 
 @app.get("/api/settings")
-async def get_settings(user_id: str):
-    uid = f"web_{user_id}"
+async def get_settings(user_id: str, request: Request = None):
+    authed = await require_session_user_id(request)
+    uid = f"web_{authed}"
     return {"settings": user_settings.get(uid, {})}
 
 
@@ -829,12 +839,13 @@ async def get_subscription(user_id: str):
 
 
 @app.post("/api/subscription/cancel")
-async def cancel_subscription(req: CancelRequest):
+async def cancel_subscription(req: CancelRequest, request: Request = None):
     """Cancel user's subscription."""
     if not billing:
         raise HTTPException(status_code=503, detail="Billing not initialized")
 
-    uid = f"web_{req.user_id}"
+    authed = await require_session_user_id(request)
+    uid = f"web_{authed}"
     success = billing.cancel(uid)
 
     if not success:
@@ -1144,21 +1155,8 @@ async def chat_encrypted(req: EncryptedChatRequest, request: Request = None):
     if not llm_client:
         raise HTTPException(status_code=503, detail="LLM not configured")
 
-    # Prefer session token auth
-    authed_user_id = None
-    if request:
-        try:
-            authed_user_id = await get_session_user_id(request)
-        except HTTPException:
-            raise
-    if authed_user_id:
-        resolved_user_id = authed_user_id
-    else:
-        logger.warning(
-            f"[SECURITY] /api/v1/chat/encrypted called without session token for user "
-            f"{req.user_id} — using body fallback (deprecated)"
-        )
-        resolved_user_id = req.user_id
+    # Require session token auth
+    resolved_user_id = await require_session_user_id(request)
 
     user_id = f"web_{resolved_user_id}"
 
@@ -1337,16 +1335,7 @@ async def store_encrypted_memories(req: EncryptedMemorySyncRequest, request: Req
     Only the client (with the private key) can decrypt these memories.
     Count metadata is stored for monitoring without revealing content.
     """
-    authed_user_id = None
-    if request:
-        try:
-            authed_user_id = await get_session_user_id(request)
-        except HTTPException:
-            raise
-    if authed_user_id:
-        resolved_user_id = authed_user_id
-    else:
-        resolved_user_id = req.user_id
+    resolved_user_id = await require_session_user_id(request)
 
     user_id = f"web_{resolved_user_id}"
 
@@ -1771,7 +1760,7 @@ async def gdpr_access(req: GDPRAccessRequest, request: Request):
     Requires the caller to be authenticated as the same user_id."""
     try:
         # Enforce: authenticated user can only access their OWN data
-        authed_user_id = await get_session_user_id(request)
+        authed_user_id = await require_session_user_id(request)
         if authed_user_id and authed_user_id != req.user_id:
             raise HTTPException(status_code=403, detail="Access denied: you can only request your own data")
         uid = f"web_{req.user_id}"
@@ -1791,7 +1780,7 @@ async def gdpr_erasure(req: GDPRAccessRequest, request: Request):
     Requires the caller to be authenticated as the same user_id."""
     try:
         # Enforce: authenticated user can only erase their OWN data
-        authed_user_id = await get_session_user_id(request)
+        authed_user_id = await require_session_user_id(request)
         if authed_user_id and authed_user_id != req.user_id:
             raise HTTPException(status_code=403, detail="Access denied: you can only erase your own data")
         uid = f"web_{req.user_id}"
@@ -1814,7 +1803,7 @@ async def gdpr_export(user_id: str, request: Request):
     Requires the caller to be authenticated as the same user_id."""
     try:
         # Enforce: authenticated user can only export their OWN data
-        authed_user_id = await get_session_user_id(request)
+        authed_user_id = await require_session_user_id(request)
         if authed_user_id and authed_user_id != user_id:
             raise HTTPException(status_code=403, detail="Access denied: you can only export your own data")
         uid = f"web_{user_id}"
@@ -1839,7 +1828,7 @@ async def gdpr_export(user_id: str, request: Request):
 async def gdpr_rectify(req: GDPRRectifyRequest, request: Request):
     """GDPR Art. 16 — Right to Rectification. Correct inaccurate data."""
     try:
-        authed_user_id = await get_session_user_id(request)
+        authed_user_id = await require_session_user_id(request)
         if authed_user_id and authed_user_id != req.user_id:
             raise HTTPException(status_code=403, detail="Access denied: you can only rectify your own data")
         uid = f"web_{req.user_id}"
@@ -1857,7 +1846,7 @@ async def gdpr_rectify(req: GDPRRectifyRequest, request: Request):
 async def gdpr_restrict(req: GDPRRestrictRequest, request: Request):
     """GDPR Art. 18 — Right to Restriction of Processing."""
     try:
-        authed_user_id = await get_session_user_id(request)
+        authed_user_id = await require_session_user_id(request)
         if authed_user_id and authed_user_id != req.user_id:
             raise HTTPException(status_code=403, detail="Access denied: you can only restrict your own data")
         uid = f"web_{req.user_id}"
@@ -1921,7 +1910,7 @@ async def gdpr_audit_log(request: Request, user_id: Optional[str] = None):
     """Return GDPR audit log (admin endpoint). Filter by user_id if provided.
     When queried by a non-admin user, only their own records are returned."""
     try:
-        authed_user_id = await get_session_user_id(request)
+        authed_user_id = await require_session_user_id(request)
         # Non-admin users may only see their own audit entries
         if authed_user_id:
             uid = f"web_{authed_user_id}"
