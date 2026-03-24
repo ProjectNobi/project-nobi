@@ -85,6 +85,28 @@ def _fetch_weather_sync(city: str) -> str:
             f"Wind: {wind_kmph} km/h {wind_dir}\n"
             f"Visibility: {visibility} km"
         )
+
+        # Add forecast if available (tomorrow + day after)
+        forecasts = data.get("weather", [])
+        if len(forecasts) > 1:
+            result += "\n\n[Forecast]"
+            for day in forecasts[1:3]:  # tomorrow + day after
+                date = day.get("date", "?")
+                max_c = day.get("maxtempC", "?")
+                min_c = day.get("mintempC", "?")
+                max_f = day.get("maxtempF", "?")
+                min_f = day.get("mintempF", "?")
+                hourly = day.get("hourly", [{}])
+                # Use midday condition as representative
+                mid = hourly[len(hourly)//2] if hourly else {}
+                desc = mid.get("weatherDesc", [{}])
+                fcst_cond = desc[0].get("value", "?") if desc else "?"
+                rain = mid.get("chanceofrain", "?")
+                result += (
+                    f"\n{date}: {fcst_cond}, {min_c}-{max_c}°C / {min_f}-{max_f}°F"
+                    f", rain chance: {rain}%"
+                )
+
         return result
 
     except (KeyError, IndexError, TypeError) as e:
