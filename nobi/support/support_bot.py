@@ -516,6 +516,30 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         ),
     },
     {
+        "id": "tao_emissions_subsidy",
+        "topic": "Aren't TAO emissions just a permanent subsidy? Who pays for it?",
+        "keywords": ["emissions", "subsidy", "dilution", "inflation", "who pays", "TAO", "block reward", "bitcoin", "cost", "forever funding", "community pays"],
+        "answer": (
+            "This gets to the heart of why Bittensor exists.\n\n"
+            "Bitcoin miners earn block rewards — funded by inflation that dilutes "
+            "every holder. Nobody calls that a 'subsidy.' It's the network paying "
+            "for security. Holders accept dilution because mining makes Bitcoin "
+            "more valuable than the dilution costs. That's the social contract.\n\n"
+            "Bittensor is the same contract, applied to AI.\n\n"
+            "Bitcoin: emissions fund miners who secure the network.\n"
+            "Bittensor: emissions fund miners who provide useful AI services.\n\n"
+            "Every subnet receives TAO because the community stakes on them, not "
+            "because they charge end users. That's how the network is designed. "
+            "The mechanism IS the model.\n\n"
+            "So the real question isn't 'who pays for emissions?' — it's "
+            "'Is Nobi a good use of emissions compared to other subnets?'\n\n"
+            "We believe bringing millions of everyday users into Bittensor — people "
+            "who've never heard of TAO — makes the network more valuable than another "
+            "infrastructure subnet that only serves developers. That's our thesis. "
+            "The community decides via staking whether they agree."
+        ),
+    },
+    {
         "id": "why_not_charge_like_chutes",
         "topic": "Other subnets like Chutes charge users. Why doesn't Nobi?",
         "keywords": ["chutes", "charge", "revenue", "B2B", "inference", "pay", "cost of production", "why free", "make money"],
