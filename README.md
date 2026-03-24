@@ -84,8 +84,9 @@ Miners are scored through dynamically generated tests (1,200+ single-turn querie
 - **Reliability** (10%) — Response latency
 
 **Multi-turn tests (60% of rounds):**
-- **Quality + Personality** (60%) — LLM-as-judge
-- **Memory Recall** (30%) — Does it remember user details from earlier messages?
+- **Quality + Personality** (50%) — LLM-as-judge
+- **Memory Integration** (25%) — Contextual use of memory (LLM-as-judge)
+- **Memory Recall** (15%) — Keyword verification: does it remember user details?
 - **Reliability** (10%) — Response latency
 
 Fair, transparent, open source. See [INCENTIVE_MECHANISM.md](docs/INCENTIVE_MECHANISM.md) for full details.
@@ -166,7 +167,7 @@ Full guide: **[VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)**
 | Phase | Status | Highlights |
 |-------|--------|------------|
 | **0. Foundation** | ✅ Complete | Protocol, miner, validator, memory, scoring, 500 simulated-node stress test |
-| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅, safety scoring ✅, content filter ✅, age verification ✅, dependency monitor ✅, TEE encryption ✅, mobile scaffold ✅ — 1,660 tests passing |
+| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅, safety scoring ✅, content filter ✅, age verification ✅, dependency monitor ✅, TEE encryption ✅, mobile scaffold ✅ — 1,661 tests passing |
 | **2. Mainnet Launch** | ⏳ Q3 2026 | Subnet registration, subnet routing, public beta, community staking |
 | **3. Growth** | ⏳ Q4 2026+ | Mobile app, 50+ languages, plugin ecosystem, governance |
 | **4. Scale** | ⏳ 2027+ | 100K+ users, decentralized governance, federated privacy |

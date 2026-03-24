@@ -204,7 +204,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
             "• Base URL: `https://api.projectnobi.ai`\n"
             "• Authentication: API keys (generate in Settings → API Keys)\n"
             "• Endpoints: /api/chat, /api/memories, /api/settings, /api/feedback\n\n"
-            "API access is available on Pro and Enterprise plans. "
+            "API access is free for all users. "
             "See the API docs at https://github.com/ProjectNobi/project-nobi/blob/main/docs/API_REFERENCE.md for full reference."
         ),
     },
@@ -332,7 +332,7 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
             "• Memory search: Complex memory retrieval takes a moment\n"
             "• Model size: Larger models = better quality but slower response\n"
             "• Server load: During peak times, inference can be slower\n\n"
-            "We're constantly optimizing. Pro users get priority routing to the fastest miners. "
+            "We're constantly optimizing. "
             "If you experience persistent slowness, please use /feedback to report it!"
         ),
     },

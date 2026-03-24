@@ -8,6 +8,8 @@
     <meta property="og:title" content="FAQ — Project Nobi">
     <meta property="og:description" content="How is Nobi free? Who pays the miners? Is this sustainable? All your questions answered.">
     <meta property="og:image" content="https://projectnobi.ai/og-image.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://projectnobi.ai/og-image.jpg">
     <meta property="og:url" content="https://projectnobi.ai/faq.html">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
     <link rel="stylesheet" href="style.css">
@@ -571,17 +573,6 @@
           <p>Your memories are <strong>encrypted at rest with AES-128</strong> (server-side encryption — protects stored data). They're distributed across independent miners on the Bittensor network — no single company owns or controls your data.</p>
           <p>Miners process conversation content to generate responses. End-to-end TEE encryption is <strong>code-complete and deploying to production</strong>. Browser-side memory extraction is code-complete and available in the web app.</p>
           <p>You have full control: use <code>/memories</code> to see what Nori knows, <code>/export</code> to download everything, <code>/forget</code> to delete it all permanently. Your data, your choice.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">
-          Can miners read my conversations?
-          <span class="arrow">▼</span>
-        </div>
-        <div class="faq-answer">
-          <p>Miners store encrypted memory blobs — the content is encrypted at rest before it reaches them. This is <strong>server-side encryption</strong>, which protects stored data. During processing, miners do see conversation content to generate responses.</p>
-          <p><strong>End-to-end TEE encryption is code-complete and deploying to production.</strong> This will prevent miners from seeing conversation content. Browser-side memory extraction is also code-complete and available in the web app. We're honest about the current state while actively shipping stronger protections.</p>
         </div>
       </div>
 

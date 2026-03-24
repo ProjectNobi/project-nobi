@@ -3051,11 +3051,15 @@ def main():
 
     async def _proactive_send(user_id: str, message: str):
         """Send a proactive message via Telegram."""
-        # user_id format: "tg_<telegram_id>"
+        # user_id format: "tg_<telegram_id>" — reject group-scoped IDs like "tg_123_group_-456"
         if not user_id.startswith("tg_"):
             return
+        raw = user_id[3:]
+        # Group-scoped IDs contain "_group_" suffix — skip them
+        if "_group_" in raw:
+            return
         try:
-            tg_id = int(user_id[3:])
+            tg_id = int(raw)
             await app.bot.send_message(chat_id=tg_id, text=message)
         except Exception as e:
             err_str = str(e).lower()

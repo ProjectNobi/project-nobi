@@ -218,7 +218,7 @@
 ### 4.3 Behavioral Minor Detection (15 patterns)
 **Overall rating: 🟡 MEDIUM**
 
-- **14 patterns implemented** (not 15 as claimed in spec): `_MINOR_BEHAVIORAL_SIGNALS` has 14 patterns. The spec/docstring says 15. Small discrepancy.
+- **15 patterns implemented** ✅ `_MINOR_BEHAVIORAL_SIGNALS` has 15 patterns (including the explicit age statement pattern `i.?m (\d+) years old`). Matches spec. *(Previous audit count of 14 was incorrect — recounted and confirmed 15.)*
 - **Age extraction**: ✅ Regex extracts explicit age statements ("I'm 14 years old") → triggers block if under 18
 - **Adult overrides**: ✅ Prevents false positives for adults mentioning parents/spouse/job/mortgage
 - **Threshold of 2 signals**: ✅ Reduces false positives — needs 2+ minor signals (without adult overrides)

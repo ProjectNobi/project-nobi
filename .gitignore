@@ -50,3 +50,6 @@ scripts/.env.deploy
 *.key
 tee_private.key
 tee_public.key
+
+# Miner env files — NEVER commit these
+.env.d/

@@ -81,7 +81,7 @@ This is the critical bridge from testnet to mainnet. Everything here must be har
 
 | Task | Status | Priority | Description |
 |------|--------|----------|-------------|
-| Scoring weight calibration | ✅ Done (2026-03-23) | Critical | Final tuning shipped — quality (60-90%) / memory (0-30%) / reliability (10%) calibrated. |
+| Scoring weight calibration | ✅ Done (2026-03-23) | Critical | Final tuning shipped — single-turn: quality 90%/reliability 10%; multi-turn: quality 50%/memory-integration 25%/memory-recall 15%/reliability 10%. |
 | Minimum quality thresholds | 🔲 Planned | Critical | Define and enforce minimum acceptable response quality — miners below threshold earn zero |
 | Weight commit-reveal hardening | ✅ Done (2026-03-23) | High | Weight hardening module shipped — prevents weight copying and manipulation. |
 | Miner diversity incentives | ✅ Done (2026-03-23) | High | Diversity scoring shipped — prevents monoculture (identical prompts/models). |
@@ -257,7 +257,8 @@ The community model significantly simplifies legal requirements compared to a su
   - Phase 4: TEE passthrough to Chutes TEE models (DeepSeek-V3.1-TEE, Qwen3-TEE)
 - ✅ Browser-side memory extraction — code-complete, available in web app
 - ✅ Privacy language precision audit — "encrypted at rest (AES-128, server-side)" vs "E2E TEE (AES-256-GCM)" precision enforced across all docs and marketing
-- ✅ 1,660 tests passing (1,662 collected, 2 skipped — up from 1,089 at Phase 0 completion)
+- ✅ Full compliance audit (2026-03-24) — 8 code bugs fixed (3 CRITICAL: unsafe LLM output saved before safety filter, minor block GDPR erasure bypass, 30-day reverification never triggering); 10 legal items raised for human review; scoring formulas, test counts, and behavioral pattern counts verified
+- ✅ 1,661 tests passing (1,663 collected, 2 skipped — up from 1,089 at Phase 0 completion)
 - 🔲 External miner onboarding (ongoing)
 - 🔲 Protocol security review (next priority)
 - 🔲 Rate limiting / DDoS protection
@@ -619,6 +620,7 @@ The model is inherently sustainable because:
 | 1 | Emission burn automation | Q2 2026 | ✅ Operational (2026-03-23) |
 | 1 | React Native mobile scaffold | Q3 2026 | ✅ Started early (2026-03-23) |
 | 1 | 10K stress test suite | Q2 2026 | ✅ Complete (2026-03-23) |
+| 1 | Full compliance audit (legal, safety, privacy, age) | Q2 2026 | ✅ Complete (2026-03-24) — 8 bugs fixed, 10 legal items flagged for human review |
 | 1 | 10+ external miners | Q2 2026 | 🔲 In Progress |
 | 1 | Security review complete | Q2 2026 | 🔲 Planned |
 | 1 | Registration funds secured | Q2 2026 | 🔲 Planned |
