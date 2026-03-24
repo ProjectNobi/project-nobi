@@ -124,7 +124,7 @@ class LanguageDetector:
 
         # Override: if core says non-English but text clearly looks English (3+ words),
         # trust _looks_english (core often confuses English with Dutch/German)
-        if detected != "en" and len(text.split()) >= 5 and _looks_english(text):
+        if detected != "en" and len(text.split()) >= 3 and _looks_english(text):
             detected = "en"
 
         if user_id:
@@ -247,7 +247,10 @@ def _looks_english(text: str) -> bool:
         r'\b(?:the|is|am|are|was|were|have|has|had|do|does|did|will|would|'
         r'can|could|should|may|might|must|shall|a|an|it|this|that|I|you|'
         r'he|she|we|they|my|your|his|her|our|their|what|how|why|when|where|'
-        r'hello|hi|hey|thanks|yes|no|ok|okay|good|great|nice|love|like)\b',
+        r'hello|hi|hey|thanks|yes|no|ok|okay|good|great|nice|love|like|'
+        r'for|me|my|some|about|please|just|tell|give|want|need|know|think|'
+        r'any|all|but|not|with|from|get|got|been|very|also|more|most|'
+        r'trip|food|help|time|make|new|go|going|come|back|here|there)\b',
         re.IGNORECASE
     )
     matches = english_words.findall(text)
