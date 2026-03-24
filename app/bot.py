@@ -80,6 +80,15 @@ try:
 except ImportError:
     bt = None
 
+# Skills — weather, search, reminders
+from nobi.skills import (
+    fetch_weather, detect_weather_query,
+    search_web, detect_search_query,
+    ReminderManager, detect_reminder_query,
+    parse_reminder_time, extract_reminder_text,
+    format_confirmation, reminder_delivery_loop,
+)
+
 # ─── Config ──────────────────────────────────────────────────
 
 BOT_TOKEN = os.environ.get("NOBI_BOT_TOKEN", "")
@@ -290,6 +299,11 @@ HELP_MESSAGE = (
     "/plan — your usage stats\n"
     "/limits — rate limits & today's usage\n"
     "/subscribe — about the free service\n\n"
+    "Skills (just ask naturally!):\n"
+    "Weather: 'what's the weather in London?'\n"
+    "Search: 'search for best beaches in Antigua'\n"
+    "Reminders: 'remind me to call mum tomorrow at 9am'\n"
+    "/reminders — see your pending reminders\n\n"
     "Support:\n"
     "/feedback — send bug reports or suggestions\n"
     "/support — get help from the team\n"
@@ -347,6 +361,8 @@ class CompanionBot:
         self.feedback_manager = FeedbackManager(db_path="~/.nobi/feedback.db")
         self.support_handler = SupportHandler(feedback_manager=self.feedback_manager)
         self.dependency_monitor = DependencyMonitor(db_path="~/.nobi/dependency.db")
+        # Skills
+        self.reminder_manager = ReminderManager(db_path="~/.nobi/bot_memories.db")
         # Conversation state for multi-step flows: {user_id: {state, data}}
         self._conv_state: Dict[str, Dict] = {}
         self._translation_cache: dict[str, dict[str, str]] = {}  # {lang: {key: translated}}
@@ -757,6 +773,46 @@ class CompanionBot:
                 pass
             return identity_resp
 
+        # ── Skill: Reminders (handle directly — no LLM needed) ──────────────
+        if detect_reminder_query(message):
+            remind_at = parse_reminder_time(message)
+            if remind_at:
+                text = extract_reminder_text(message)
+                try:
+                    self.reminder_manager.store(user_id, text, remind_at)
+                    confirmation = format_confirmation(text, remind_at)
+                    try:
+                        self.memory.save_conversation_turn(user_id, "user", message)
+                        self.memory.save_conversation_turn(user_id, "assistant", confirmation)
+                    except Exception:
+                        pass
+                    return confirmation
+                except Exception as e:
+                    logger.error(f"[Reminders] Store error for user {user_id}: {e}")
+                    # Fall through to LLM if storage fails
+
+        # ── Skill: Weather (inject API result into LLM context) ──────────────
+        _weather_context = ""
+        city = detect_weather_query(message)
+        if city:
+            try:
+                _weather_context = await fetch_weather(city)
+                logger.info(f"[Weather] Fetched for '{city}': {_weather_context[:60]}")
+            except Exception as e:
+                logger.warning(f"[Weather] Fetch failed: {e}")
+
+        # ── Skill: Search (inject search results into LLM context) ───────────
+        _search_context = ""
+        # Only search if no weather match (avoid double-skill on same message)
+        if not city:
+            query = detect_search_query(message)
+            if query:
+                try:
+                    _search_context = await search_web(query)
+                    logger.info(f"[Search] Results for '{query[:40]}': {_search_context[:60]}")
+                except Exception as e:
+                    logger.warning(f"[Search] Fetch failed: {e}")
+
         # Truncate extremely long messages
         if len(message) > 2000:
             message = message[:2000] + "..."
@@ -887,6 +943,20 @@ class CompanionBot:
         system = SYSTEM_PROMPT.format(memory_context=memory_context or "")
         mood_prompt = get_dynamic_prompt(user_id, message, user_mood)
         system = system + "\n\n== PERSONALITY TUNING ==\n" + mood_prompt
+
+        # Inject skill context into system prompt if available
+        if _weather_context:
+            system += (
+                "\n\n== LIVE WEATHER DATA (use this in your response) ==\n"
+                + _weather_context
+                + "\nRespond naturally using this real weather data. Do not say you cannot access weather."
+            )
+        if _search_context:
+            system += (
+                "\n\n== WEB SEARCH RESULTS (use these in your response) ==\n"
+                + _search_context
+                + "\nSummarise these results naturally in your reply. Keep it concise (3 sentences max)."
+            )
         system = build_multilingual_system_prompt(system, detected_lang)
         try:
             adapter_cfg = self.adapter_manager.get_adapter_config(user_id)
@@ -2738,6 +2808,15 @@ async def cmd_limits(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def cmd_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """List pending reminders for the user."""
+    if not update.message:
+        return
+    user_id = companion._user_id(update)
+    text = companion.reminder_manager.format_pending_list(user_id)
+    await update.message.reply_text(text)
+
+
 async def _handle_support_callback(update: Update, data: str) -> None:
     """Handle support/feedback-related callback queries."""
     query = update.callback_query
@@ -3034,6 +3113,7 @@ def main():
     app.add_handler(CommandHandler("agree", cmd_agree))
     app.add_handler(CommandHandler("data_request", cmd_data_request))
     # Note: Telegram commands cannot contain hyphens — /data_request is the valid form
+    app.add_handler(CommandHandler("reminders", cmd_reminders))
 
     # Buttons
     app.add_handler(CallbackQueryHandler(handle_callback))
@@ -3094,6 +3174,25 @@ def main():
         )
         await companion.proactive_scheduler.start(interval_seconds=PROACTIVE_INTERVAL)
         logger.info(f"[Proactive] Scheduler started (interval={PROACTIVE_INTERVAL}s)")
+
+        # ── Reminder delivery loop ──────────────────────────────────────────
+        async def _send_reminder(user_id: str, message: str):
+            """Send a due reminder via Telegram."""
+            if not user_id.startswith("tg_"):
+                return
+            raw = user_id[3:]
+            if "_group_" in raw:
+                return
+            try:
+                tg_id = int(raw)
+                await application.bot.send_message(chat_id=tg_id, text=message)
+            except Exception as e:
+                logger.error(f"[Reminders] Send to {user_id} failed: {e}")
+
+        asyncio.create_task(
+            reminder_delivery_loop(companion.reminder_manager, _send_reminder, interval_seconds=60)
+        )
+        logger.info("[Reminders] Delivery loop started")
 
     async def post_shutdown(application):
         """Stop proactive scheduler on shutdown."""
