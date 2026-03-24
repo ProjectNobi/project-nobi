@@ -516,6 +516,41 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         ),
     },
     {
+        "id": "every_subnet_has_revenue",
+        "topic": "Every other subnet has a revenue source. Why doesn't Nobi?",
+        "keywords": ["revenue source", "every subnet", "other subnets", "no revenue", "conviction", "research subnet", "benchmarking", "investors believe"],
+        "answer": (
+            "Not true. There are research subnets on Bittensor mainnet with zero users "
+            "and zero revenue path. Benchmarking subnets. Academic subnets. They earn "
+            "emissions because stakers believe in the research. Nobody asks them "
+            "'where's your revenue?' or demands 10K DAU in 3 months. They're funded "
+            "on conviction. That's how Bittensor is designed — for every subnet, not just Nobi.\n\n"
+            "The difference: we're the only one that can point to a working product "
+            "on Telegram, Discord, and web, with 1,661 passing tests and MIT-licensed "
+            "code anyone can audit.\n\n"
+            "If conviction-funded subnets with zero users can attract stake, a subnet "
+            "with real users and a real product has a stronger case — not a weaker one.\n\n"
+            "Every staker on every subnet is staking with the belief that the subnet "
+            "will create value. That's not hope — that's how dTAO works."
+        ),
+    },
+    {
+        "id": "alpha_traders_hurt",
+        "topic": "How do you deal with alpha traders? Won't they hurt the subnet?",
+        "keywords": ["alpha trader", "trader", "dump", "sell pressure", "short term", "hurt", "speculator"],
+        "answer": (
+            "Alpha traders exist on every subnet — that's a Bittensor-wide reality, "
+            "not a Nobi-specific problem. We can't control what traders do with the "
+            "alpha token, and we don't try to.\n\n"
+            "What we can control: building a product good enough that long-term stakers "
+            "outweigh short-term traders.\n\n"
+            "And the burn helps — every owner emission we burn via burn_alpha() reduces "
+            "alpha supply permanently. More usage → more emissions → more burns → less supply. "
+            "That's structural deflationary pressure that works in favour of holders, not traders.\n\n"
+            "Traders come and go. Builders stay."
+        ),
+    },
+    {
         "id": "mass_adoption_contradiction",
         "topic": "Isn't 'mass adoption' and 'users won't know about Bittensor' a contradiction?",
         "keywords": ["mass adoption", "contradiction", "users won't know", "bittensor invisible", "don't know bittensor", "don't care about bittensor", "front door"],
