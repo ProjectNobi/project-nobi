@@ -515,6 +515,61 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
             "Disclaimer: Not financial advice. Staking involves risk."
         ),
     },
+    {
+        "id": "staker_mev_risk",
+        "topic": "Won't users who stake get dumped on by degens and leave?",
+        "keywords": ["mev", "dump", "dumped", "degen", "leave", "delete", "bitter", "rug", "front-run"],
+        "answer": (
+            "This is a fair concern — a user loves Nori, wants to support the project, "
+            "buys alpha, gets dumped on, and leaves bitter. It's happened across crypto.\n\n"
+            "But here's the key: staking is never required or even encouraged for normal users. "
+            "Nobi is free. The product works without any token interaction at all.\n\n"
+            "Supporting Nobi doesn't mean buying alpha — it means using Nori, giving feedback, "
+            "spreading the word, or donating via fiat when that's available.\n\n"
+            "The staking layer is for people who understand Bittensor tokenomics and want "
+            "exposure to subnet alpha. That's a different audience from the everyday user "
+            "chatting with their AI companion. We deliberately keep those worlds separate — "
+            "Nori never pushes users toward tokens, never gamifies staking, never creates "
+            "a funnel where someone buys alpha because the app told them to.\n\n"
+            "If someone who understands crypto chooses to stake, that's their informed decision. "
+            "But the millions of normal users we're building for? They'll never need to touch a token."
+        ),
+    },
+    {
+        "id": "why_users_matter",
+        "topic": "If subnets get stake without users, why does having users matter?",
+        "keywords": ["users matter", "stake without users", "speculation", "no users", "why users", "fundamentals", "timeline", "durable"],
+        "answer": (
+            "Right now, subnets get stake on speculation alone — people bet on potential. "
+            "That's early-stage Bittensor. But that won't last forever.\n\n"
+            "As the network matures, stakers will increasingly ask: 'Does this subnet actually "
+            "DO something? Does anyone use it?'\n\n"
+            "When that shift happens — and it will — subnets with zero users and no revenue "
+            "path lose their stake. Subnets with millions of active users don't.\n\n"
+            "Today: speculation drives stake. Nobi can compete on that like anyone else.\n"
+            "Tomorrow: fundamentals drive stake. Nobi is built for that world.\n\n"
+            "We're not saying users = stake today. We're saying users = durable stake "
+            "when the music stops for empty subnets."
+        ),
+    },
+    {
+        "id": "support_without_tokens",
+        "topic": "Can I support Nobi without buying tokens?",
+        "keywords": ["support without", "no tokens", "non-crypto", "help without", "fiat", "donate", "contribute", "support nobi"],
+        "answer": (
+            "Absolutely! You don't need to touch crypto to support Nobi:\n\n"
+            "• Use Nori — every conversation proves the product works and generates "
+            "real usage data that attracts stakers\n"
+            "• Tell friends — word of mouth is the most powerful growth engine\n"
+            "• Give feedback — report bugs, suggest features, help us improve via /feedback\n"
+            "• Contribute code — Nobi is open source (MIT). PRs, issues, and ideas welcome\n"
+            "• Join the community — Discord, Telegram, help answer questions\n"
+            "• Run a miner — earn TAO by providing AI compute\n\n"
+            "A fiat donation gateway (Stripe/Ko-fi) is on the roadmap for after mainnet launch. "
+            "For now, the best support is simply using Nori and sharing it with people "
+            "who'd benefit from a private AI companion."
+        ),
+    },
 ]
 
 # ─── SupportHandler ─────────────────────────────────────────
