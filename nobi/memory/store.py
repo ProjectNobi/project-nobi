@@ -202,6 +202,13 @@ class MemoryManager:
         except sqlite3.OperationalError:
             conn.execute("ALTER TABLE user_profiles ADD COLUMN memory_count_at_last_summary INTEGER DEFAULT 0")
 
+        # source column migration (privacy: tag memories by origin context)
+        try:
+            conn.execute("SELECT source FROM memories LIMIT 1")
+        except sqlite3.OperationalError:
+            conn.execute("ALTER TABLE memories ADD COLUMN source TEXT DEFAULT 'dm'")
+            logger.info("[Migration] Added column memories.source")
+
         # Phase B migrations: encrypted_content, content_hash, encryption_version columns
         for col, default in [
             ("encrypted_content", "''"),
@@ -334,6 +341,7 @@ class MemoryManager:
         encrypted_content: str = "",
         content_hash: str = "",
         encryption_version: int = 0,
+        source: str = "dm",
     ) -> str:
         """
         Store a memory. Returns the memory ID.
@@ -341,6 +349,8 @@ class MemoryManager:
         Phase B: If encrypted_content is provided, store it as-is in the
         encrypted_content column (miner never decrypts). The content field
         is still encrypted locally for backward compat / miner-side use.
+
+        source: origin context — 'dm', 'group', 'web', 'system'
         """
         memory_id = str(uuid.uuid4())[:12]
         now = datetime.now(timezone.utc).isoformat()
@@ -351,8 +361,8 @@ class MemoryManager:
         self._conn.execute(
             """INSERT INTO memories (id, user_id, memory_type, content, importance,
                tags, created_at, updated_at, expires_at,
-               encrypted_content, content_hash, encryption_version)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               encrypted_content, content_hash, encryption_version, source)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 memory_id,
                 user_id,
@@ -366,6 +376,7 @@ class MemoryManager:
                 encrypted_content,  # Phase B: bot-encrypted blob (stored as-is)
                 content_hash,
                 encryption_version,
+                source,
             ),
         )
         self._conn.commit()
@@ -392,6 +403,7 @@ class MemoryManager:
         limit: int = 10,
         return_encrypted: bool = False,
         use_semantic: bool = True,
+        source_filter: Optional[str] = None,
     ) -> List[Dict]:
         """
         Recall memories for a user.
@@ -411,6 +423,7 @@ class MemoryManager:
             limit: Max results to return
             return_encrypted: Return encrypted blobs (Phase B)
             use_semantic: Attempt semantic search (default True)
+            source_filter: If 'dm', exclude memories with source='group'
         """
         engine = self._get_embedding_engine() if use_semantic else None
         has_semantic = engine is not None and query
@@ -426,6 +439,7 @@ class MemoryManager:
                     tags=tags,
                     limit=limit,
                     return_encrypted=return_encrypted,
+                    source_filter=source_filter,
                 )
                 if results is not None:
                     return results
@@ -440,6 +454,7 @@ class MemoryManager:
             tags=tags,
             limit=limit,
             return_encrypted=return_encrypted,
+            source_filter=source_filter,
         )
 
     def _recall_semantic(
@@ -451,6 +466,7 @@ class MemoryManager:
         tags: List[str] = None,
         limit: int = 10,
         return_encrypted: bool = False,
+        source_filter: Optional[str] = None,
     ) -> Optional[List[Dict]]:
         """
         Semantic recall using embedding cosine similarity + hybrid scoring.
@@ -472,6 +488,10 @@ class MemoryManager:
         if memory_type:
             conditions.append("m.memory_type = ?")
             params.append(memory_type)
+
+        # Privacy: DM recall excludes group memories
+        if source_filter == "dm":
+            conditions.append("(m.source IS NULL OR m.source != 'group')")
 
         if tags:
             tag_conditions = []
@@ -579,6 +599,7 @@ class MemoryManager:
         tags: List[str] = None,
         limit: int = 10,
         return_encrypted: bool = False,
+        source_filter: Optional[str] = None,
     ) -> List[Dict]:
         """
         Original keyword-based recall (LIKE matching + importance).
@@ -596,6 +617,10 @@ class MemoryManager:
         if memory_type:
             conditions.append("memory_type = ?")
             params.append(memory_type)
+
+        # Privacy: DM recall excludes group memories
+        if source_filter == "dm":
+            conditions.append("(source IS NULL OR source != 'group')")
 
         if tags:
             tag_conditions = []
@@ -763,12 +788,13 @@ class MemoryManager:
         ]
 
     def extract_memories_from_message(
-        self, user_id: str, message: str, response: str
+        self, user_id: str, message: str, response: str, source: str = "dm",
     ) -> List[str]:
         """
         Auto-extract memorable facts from a conversation turn.
         Uses regex patterns for accuracy. Future: LLM-based extraction.
 
+        source: origin context — 'dm', 'group', 'web', 'system'
         Returns list of memory IDs created.
         """
         import re
@@ -791,6 +817,7 @@ class MemoryManager:
                     mid = self.store(
                         user_id, f"User's name is {name}",
                         memory_type="fact", importance=0.9, tags=["name", "identity"],
+                        source=source,
                     )
                     created.append(mid)
                     break
@@ -808,6 +835,7 @@ class MemoryManager:
                     mid = self.store(
                         user_id, f"User is from/lives in {location}",
                         memory_type="fact", importance=0.8, tags=["location"],
+                        source=source,
                     )
                     created.append(mid)
                     break
@@ -829,6 +857,7 @@ class MemoryManager:
                     mid = self.store(
                         user_id, f"User works as/is: {occupation}",
                         memory_type="fact", importance=0.8, tags=["career", "occupation"],
+                        source=source,
                     )
                     created.append(mid)
                     break
@@ -848,6 +877,7 @@ class MemoryManager:
                     mid = self.store(
                         user_id, f"User {tag}: {pref}",
                         memory_type="preference", importance=0.7, tags=[tag],
+                        source=source,
                     )
                     created.append(mid)
 
@@ -865,6 +895,7 @@ class MemoryManager:
                     mid = self.store(
                         user_id, snippet, memory_type="event",
                         importance=0.8, tags=["life_event"],
+                        source=source,
                     )
                     created.append(mid)
 
@@ -884,6 +915,7 @@ class MemoryManager:
                 mid = self.store(
                     user_id, snippet, memory_type=mtype,
                     importance=imp, tags=tags,
+                    source=source,
                 )
                 created.append(mid)
 
@@ -913,11 +945,13 @@ class MemoryManager:
 
     # ─── Phase 2: LLM-Powered Memory Extraction ─────────────────
 
-    def extract_memories_llm(self, user_id: str, message: str) -> List[str]:
+    def extract_memories_llm(self, user_id: str, message: str, source: str = "dm") -> List[str]:
         """
         Use LLM to extract nuanced memories from a message.
         Falls back to regex extraction if LLM is unavailable.
         Only calls LLM for messages > 20 chars.
+
+        source: origin context — 'dm', 'group', 'web', 'system'
         Returns list of memory IDs created.
         """
         if len(message.strip()) <= 20:
@@ -981,7 +1015,7 @@ class MemoryManager:
                     continue
 
                 mid = self.store(user_id, content, memory_type=mtype,
-                                 importance=importance, tags=tags)
+                                 importance=importance, tags=tags, source=source)
                 created.append(mid)
 
             logger.info(f"[LLM Extract] Created {len(created)} memories for {user_id}")
@@ -1072,7 +1106,8 @@ class MemoryManager:
     # ─── Phase 2: Smart Context Window ─────────────────────────
 
     def get_smart_context(
-        self, user_id: str, current_message: str, max_tokens: int = 800
+        self, user_id: str, current_message: str, max_tokens: int = 800,
+        source_filter: Optional[str] = "dm",
     ) -> str:
         """
         Intelligently select which memories to include in prompt context.
@@ -1130,6 +1165,7 @@ class MemoryManager:
                     user_id=user_id,
                     query=current_message,
                     limit=15,
+                    source_filter=source_filter,
                 )
                 if memories:
                     mem_lines = []
@@ -1145,6 +1181,7 @@ class MemoryManager:
                         user_id=user_id,
                         query="",
                         limit=15,
+                        source_filter=source_filter,
                     )
                     # Filter to high importance and deduplicate
                     existing_contents = {line.split("] ", 1)[-1] if "] " in line else line for line in mem_lines}

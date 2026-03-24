@@ -229,6 +229,7 @@ class GroupHandler:
                 memory_type="context",
                 importance=0.6,
                 tags=["group_fact"],
+                source="group",
             )
         except Exception as e:
             logger.warning(f"[Group] Failed to persist group memory: {e}")
@@ -315,8 +316,8 @@ class GroupHandler:
         group_user_id = f"{user_id}_group_{group_id}"
         try:
             self.memory.save_conversation_turn(group_user_id, "user", message)
-            # Extract memories to the real user_id (memories are universal)
-            self.memory.extract_memories_from_message(group_user_id, message, "")
+            # Extract memories tagged as 'group' source to prevent cross-contamination into DMs
+            self.memory.extract_memories_from_message(group_user_id, message, "", source="group")
         except Exception as e:
             logger.warning(f"[Group] Memory save error: {e}")
 

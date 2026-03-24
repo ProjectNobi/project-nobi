@@ -493,11 +493,11 @@ async def chat(req: ChatRequest, request: Request = None):
         except Exception as e:
             logger.warning(f"Memory recall error: {e}")
 
-    # Save user message + extract memories
+    # Save user message + extract memories (tagged as web source)
     try:
         memory.save_conversation_turn(user_id, "user", message)
-        memory.extract_memories_from_message(user_id, message, "")
-        memory.extract_memories_llm(user_id, message)
+        memory.extract_memories_from_message(user_id, message, "", source="web")
+        memory.extract_memories_llm(user_id, message, source="web")
         memory.summarize_user_profile(user_id)
     except Exception as e:
         logger.warning(f"Memory store error: {e}")
