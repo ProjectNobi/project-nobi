@@ -516,6 +516,30 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         ),
     },
     {
+        "id": "why_not_charge_like_chutes",
+        "topic": "Other subnets like Chutes charge users. Why doesn't Nobi?",
+        "keywords": ["chutes", "charge", "revenue", "B2B", "inference", "pay", "cost of production", "why free", "make money"],
+        "answer": (
+            "Different markets, different models.\n\n"
+            "Chutes provides inference-as-a-service to developers and businesses "
+            "who pay for API access. That's a B2B revenue model serving technical users.\n\n"
+            "Nobi serves everyday consumers who chat with an AI companion. "
+            "Our target users are regular people — many in developing countries — "
+            "who want a private AI friend. Adding a paywall kills adoption in "
+            "exactly the demographics we're building for.\n\n"
+            "That said, Chutes and Nobi are complementary, not competing. "
+            "A consumer-facing subnet that drives millions of inference requests "
+            "and an infrastructure subnet that serves them? That's a self-evolving "
+            "ecosystem. We see collaboration potential there, not conflict.\n\n"
+            "Closer comparisons for our model: Wikipedia (1.7B monthly visitors, "
+            "free, donation-funded), Signal (100M+ users, free, foundation-funded). "
+            "Consumer products serving a public good can sustain without charging "
+            "users — if the mission resonates enough to attract support.\n\n"
+            "The key insight: miners pay their own server costs. We don't pay "
+            "miners — Bittensor does. There's no production cost to pass on to users."
+        ),
+    },
+    {
         "id": "staker_mev_risk",
         "topic": "Won't users who stake get dumped on by degens and leave?",
         "keywords": ["mev", "dump", "dumped", "degen", "leave", "delete", "bitter", "rug", "front-run"],
