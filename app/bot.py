@@ -32,6 +32,7 @@ except ImportError:
     pass
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.error import BadRequest
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -1677,6 +1678,15 @@ async def cmd_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+async def _safe_edit(query, text: str, **kwargs):
+    """Edit message, silently ignoring 'message not modified' errors (duplicate taps)."""
+    try:
+        await _safe_edit(query, text, **kwargs)
+    except BadRequest as e:
+        if "Message is not modified" not in str(e):
+            raise
+
+
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle inline button callbacks."""
     query = update.callback_query
@@ -1711,7 +1721,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("Read Terms of Service", url="https://projectnobi.ai/terms.html")],
             [InlineKeyboardButton("Read Privacy Policy", url="https://projectnobi.ai/privacy.html")],
         ]
-        await query.edit_message_text(
+        await _safe_edit(query, 
             "Thank you for confirming your age.\n\n"
             "Before we start, please review and accept our legal documents:\n\n"
             "📋 Terms of Service: projectnobi.ai/terms.html\n"
@@ -1769,7 +1779,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.warning(f"[Onboarding] Memory store failed: {e}")
 
         # Step 3: Show instructions + start chatting
-        await query.edit_message_text(
+        await _safe_edit(query, 
             "Welcome to Nori! 🤖\n\n"
             "I'm your personal AI companion. I remember our conversations, "
             "learn your preferences, and I'm always here when you need to talk.\n\n"
@@ -1796,14 +1806,14 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "age_deny_minor":
         user_id = f"tg_{query.from_user.id}"
         _block_minor(user_id)
-        await query.edit_message_text(
+        await _safe_edit(query, 
             "We're sorry, Nori is not available to users under 18.\n\n"
             "Please ask a trusted adult for help finding age-appropriate services."
         )
         return
 
     if query.data == "start_chat":
-        await query.edit_message_text(
+        await _safe_edit(query, 
             "Let's go! Just type anything — I'm here to listen.\n\n"
             "You can start with your name, what's on your mind today, or anything at all."
         )
@@ -1818,17 +1828,17 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             deleted = result.get("deleted", {})
             summary = ", ".join(f"{k}: {v}" for k, v in deleted.items() if v)
             logger.info(f"[GDPR/Bot] Erasure for {user_id}: {summary}")
-            await query.edit_message_text(
+            await _safe_edit(query, 
                 "All gone 🫧\n\n"
                 "Clean slate — your data has been permanently deleted (GDPR Art. 17). "
                 "Tell me your name and let's get to know each other again!"
             )
         except Exception as e:
             logger.error(f"Forget/GDPR error: {e}")
-            await query.edit_message_text("Hmm, that didn't work. Try /forget again in a moment.")
+            await _safe_edit(query, "Hmm, that didn't work. Try /forget again in a moment.")
 
     elif query.data == "forget_cancel":
-        await query.edit_message_text("I'm glad 😊 Your memories are safe with me. 💙")
+        await _safe_edit(query, "I'm glad 😊 Your memories are safe with me. 💙")
 
     # ── GDPR Data Subject Request callbacks ──────────────────
     elif query.data == "gdpr_access":
@@ -1849,10 +1859,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"\nRequest logged. Deadline: {data.get('deadline', 'N/A')[:10]}",
                 "\nUse /export to download the full dataset.",
             ]
-            await query.edit_message_text("\n".join(lines))
+            await _safe_edit(query, "\n".join(lines))
         except Exception as e:
             logger.error(f"GDPR access callback error: {e}")
-            await query.edit_message_text("Something went wrong. Try again or email privacy@projectnobi.ai")
+            await _safe_edit(query, "Something went wrong. Try again or email privacy@projectnobi.ai")
 
     elif query.data == "gdpr_erasure_prompt":
         keyboard = [
@@ -1861,7 +1871,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 InlineKeyboardButton("❌ Cancel", callback_data="gdpr_cancel"),
             ]
         ]
-        await query.edit_message_text(
+        await _safe_edit(query, 
             "⚠️ Permanent Deletion (GDPR Art. 17)\n\n"
             "This will permanently delete:\n"
             "• All your memories\n"
@@ -1874,7 +1884,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data == "gdpr_export":
         user_id = f"tg_{query.from_user.id}"
-        await query.edit_message_text("Preparing your export... ⏳")
+        await _safe_edit(query, "Preparing your export... ⏳")
         try:
             from nobi.compliance.gdpr import GDPRHandler
             handler = GDPRHandler()
@@ -1896,17 +1906,17 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             from nobi.compliance.gdpr import GDPRHandler
             handler = GDPRHandler()
             result = handler.handle_restriction_request(user_id, restrict=True)
-            await query.edit_message_text(
+            await _safe_edit(query, 
                 "🔒 Processing Restricted (GDPR Art. 18)\n\n"
                 "I will no longer extract new memories or run analytics on your data.\n\n"
                 "You can lift this restriction anytime via /data_request.",
             )
         except Exception as e:
             logger.error(f"GDPR restrict callback error: {e}")
-            await query.edit_message_text("Something went wrong. Try again or email privacy@projectnobi.ai")
+            await _safe_edit(query, "Something went wrong. Try again or email privacy@projectnobi.ai")
 
     elif query.data == "gdpr_cancel":
-        await query.edit_message_text("Cancelled. Your data is safe. 💙")
+        await _safe_edit(query, "Cancelled. Your data is safe. 💙")
 
 
 async def cmd_nori(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -2729,7 +2739,7 @@ async def _handle_support_callback(update: Update, data: str) -> None:
         if faq_id == "back":
             faq = companion.support_handler.get_faq()
             keyboard, header = _build_faq_page(faq, page=0)
-            await query.edit_message_text(
+            await _safe_edit(query, 
                 header,
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
@@ -2737,7 +2747,7 @@ async def _handle_support_callback(update: Update, data: str) -> None:
 
         if faq_id == "ask_custom":
             companion._conv_state[user_id] = {"flow": "support", "step": "question"}
-            await query.edit_message_text(
+            await _safe_edit(query, 
                 "Sure! Just type your question and I'll do my best to help 😊"
             )
             return
@@ -2750,7 +2760,7 @@ async def _handle_support_callback(update: Update, data: str) -> None:
                 page = 0
             faq = companion.support_handler.get_faq()
             keyboard, header = _build_faq_page(faq, page=page)
-            await query.edit_message_text(
+            await _safe_edit(query, 
                 header,
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
@@ -2766,7 +2776,7 @@ async def _handle_support_callback(update: Update, data: str) -> None:
                 text = text[:3900] + "...\n\n(Full answer on projectnobi.ai/faq.html)"
             # Add back button
             kb = [[InlineKeyboardButton("⬅️ Back to topics", callback_data="faq:back")]]
-            await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(kb))
+            await _safe_edit(query, text, reply_markup=InlineKeyboardMarkup(kb))
         return
 
     # ── Feedback category selection ──
@@ -2785,7 +2795,7 @@ async def _handle_support_callback(update: Update, data: str) -> None:
             "complaint": "Complaint 😤",
         }
         label = category_names.get(category, "Feedback")
-        await query.edit_message_text(
+        await _safe_edit(query, 
             f"Got it — {label}!\n\n"
             "Now just type your message and I'll save it right away 📝\n\n"
             "(Or send /cancel to bail out)"
@@ -2794,7 +2804,7 @@ async def _handle_support_callback(update: Update, data: str) -> None:
 
     if data == "fb_cancel":
         companion._conv_state.pop(user_id, None)
-        await query.edit_message_text("No worries! Cancelled. 👍")
+        await _safe_edit(query, "No worries! Cancelled. 👍")
         return
 
 
