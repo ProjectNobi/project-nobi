@@ -138,3 +138,8 @@ _WEATHER_PATTERNS.extend([
     # "what's the temperature in London"
     r"what(?:'s|s|is)\s+the\s+temperature\s+(?:in|for|at)\s+([A-Za-z\s\-']+?)(?:\?|$|\.)",
 ])
+
+# Patch: handle "how/what is the weather [today] in {city}"
+_WEATHER_PATTERNS.append(
+    r"(?:how|what)(?:'s|s| is)\s+the\s+weather\s+(?:like\s+)?(?:today|tonight|tomorrow)?\s*(?:in|for|at)\s+([A-Za-z\s\-']+?)(?:\?|$|\.)"
+)
