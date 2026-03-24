@@ -516,6 +516,25 @@ FAQ_ENTRIES: List[Dict[str, Any]] = [
         ),
     },
     {
+        "id": "mass_adoption_contradiction",
+        "topic": "Isn't 'mass adoption' and 'users won't know about Bittensor' a contradiction?",
+        "keywords": ["mass adoption", "contradiction", "users won't know", "bittensor invisible", "don't know bittensor", "don't care about bittensor", "front door"],
+        "answer": (
+            "Do you know what database Instagram uses? What protocol your bank runs on? "
+            "What kernel your phone runs? No — but you use them every day.\n\n"
+            "That's literally what mass adoption means: people use something without "
+            "knowing or caring what's under the hood.\n\n"
+            "If users need to understand Bittensor to use the product, it's not mass "
+            "adoption — it's a developer tool.\n\n"
+            "We're building the product normal people actually use. "
+            "Bittensor is the engine, not the steering wheel.\n\n"
+            "The butterfly effect: person discovers Nori → loves it → tells friends → "
+            "curious user asks 'what powers this?' → discovers Bittensor → some buy TAO, "
+            "some become miners → network grows. That's how mass adoption works. "
+            "Not by explaining consensus mechanisms to grandma."
+        ),
+    },
+    {
         "id": "tao_emissions_subsidy",
         "topic": "Aren't TAO emissions just a permanent subsidy? Who pays for it?",
         "keywords": ["emissions", "subsidy", "dilution", "inflation", "who pays", "TAO", "block reward", "bitcoin", "cost", "forever funding", "community pays"],
