@@ -154,12 +154,15 @@ class ReminderManager:
 # ── Time parsing ─────────────────────────────────────────────
 
 _NOW_PATTERNS = [
-    # "in X minutes/hours/days"
-    (re.compile(r"\bin\s+(\d+)\s+minute", re.I), "minutes"),
-    (re.compile(r"\bin\s+(\d+)\s+hour", re.I), "hours"),
-    (re.compile(r"\bin\s+(\d+)\s+day", re.I), "days"),
-    (re.compile(r"\bin\s+half\s+an?\s+hour", re.I), "half_hour"),
-    (re.compile(r"\bin\s+an?\s+hour", re.I), "one_hour"),
+    # "in X minutes/hours/days" OR "for X minutes/hours/days" OR "timer X minutes"
+    (re.compile(r"\b(?:in|for)\s+(\d+)\s+minute", re.I), "minutes"),
+    (re.compile(r"\b(?:in|for)\s+(\d+)\s+hour", re.I), "hours"),
+    (re.compile(r"\b(?:in|for)\s+(\d+)\s+day", re.I), "days"),
+    (re.compile(r"\b(?:in|for)\s+half\s+an?\s+hour", re.I), "half_hour"),
+    (re.compile(r"\b(?:in|for)\s+an?\s+hour", re.I), "one_hour"),
+    # "timer 10 minutes"
+    (re.compile(r"\btimer\s+(\d+)\s+minute", re.I), "minutes"),
+    (re.compile(r"\btimer\s+(\d+)\s+hour", re.I), "hours"),
 ]
 
 _TIME_OF_DAY = re.compile(
@@ -277,7 +280,7 @@ def extract_reminder_text(message: str) -> str:
 
     # Remove leading trigger
     msg = re.sub(
-        r"^(?:please\s+)?(?:set\s+a\s+)?remind(?:er)?\s+(?:me\s+)?(?:to\s+)?",
+        r"^(?:please\s+)?(?:set\s+a\s+)?(?:remind(?:er)?|timer|alert|notify|ping)\s+(?:me\s+)?(?:to\s+)?",
         "",
         msg,
         flags=re.I,
@@ -308,7 +311,9 @@ def extract_reminder_text(message: str) -> str:
 # ── Trigger detection ────────────────────────────────────────
 
 _REMINDER_TRIGGER = re.compile(
-    r"\b(?:remind\s+me|set\s+a\s+reminder|remind\s+me\s+to|don't\s+let\s+me\s+forget)\b",
+    r"(?:remind\s+me|set\s+a\s+reminder|set\s+a\s+timer|remind\s+me\s+to|"
+    r"don't\s+let\s+me\s+forget|timer\s+\d+\s*(?:min|hour|sec)|alert\s+me|notify\s+me|"
+    r"wake\s+me|ping\s+me)",
     re.I,
 )
 
