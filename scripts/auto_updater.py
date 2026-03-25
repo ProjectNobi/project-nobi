@@ -367,6 +367,63 @@ class AutoUpdater:
         logger.info("Dependencies installed successfully")
         return True
 
+    def rebuild_webapp(self) -> bool:
+        """Rebuild Next.js webapp if webapp files changed in the last commit.
+
+        Next.js pre-renders pages at build time, so code changes require
+        a rebuild + PM2 restart to take effect.
+
+        Returns True if rebuild was performed successfully.
+        """
+        # Check if webapp files changed
+        rc, stdout, _ = self._run_cmd(
+            ["git", "diff", "HEAD~1", "HEAD", "--name-only"]
+        )
+        if rc != 0:
+            return False
+
+        changed_files = stdout.split("\n") if stdout else []
+        webapp_changed = any(f.strip().startswith("webapp/") for f in changed_files)
+
+        if not webapp_changed:
+            logger.debug("No webapp changes — skipping rebuild")
+            return False
+
+        webapp_dir = os.path.join(self.repo_path, "webapp")
+        if not os.path.isdir(webapp_dir):
+            logger.debug("No webapp directory — skipping rebuild")
+            return False
+
+        logger.info("Webapp files changed — rebuilding Next.js...")
+
+        # Run npm run build
+        rc, stdout, stderr = self._run_cmd(
+            ["npm", "run", "build"],
+            cwd=webapp_dir,
+            timeout=180,
+        )
+        if rc != 0:
+            logger.error("Webapp build failed: %s", stderr[-500:] if stderr else "unknown")
+            self._log_event("webapp_build_failed", stderr[-200:] if stderr else "unknown")
+            return False
+
+        # Restart webapp PM2 process
+        for name in self.pm2_names:
+            if "webapp" in name.lower():
+                rc2, _, _ = self._run_cmd(["pm2", "restart", name], cwd="/tmp")
+                if rc2 == 0:
+                    logger.info("Webapp PM2 process '%s' restarted after rebuild", name)
+                break
+        else:
+            # Try common name
+            rc2, _, _ = self._run_cmd(["pm2", "restart", "nobi-webapp"], cwd="/tmp")
+            if rc2 == 0:
+                logger.info("Webapp PM2 process 'nobi-webapp' restarted after rebuild")
+
+        self._log_event("webapp_rebuilt", "Next.js webapp rebuilt and restarted")
+        logger.info("Webapp rebuild complete")
+        return True
+
     def sync_website(self) -> bool:
         """Copy docs/landing/* to website directory if both exist.
 
@@ -587,7 +644,10 @@ class AutoUpdater:
         else:
             logger.info("No PM2 processes configured — skipping restart")
 
-        # Step 6: Sync website
+        # Step 6: Rebuild webapp if needed (Next.js requires build for changes)
+        self.rebuild_webapp()
+
+        # Step 7: Sync website (landing pages → /var/www/projectnobi/)
         self.sync_website()
 
         self._log_event("update_complete", f"Successfully updated to {new_commit[:8]}: {message}")
