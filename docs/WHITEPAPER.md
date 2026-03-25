@@ -12,7 +12,7 @@
 
 ## Abstract
 
-We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants whose memory features remain under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces four key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification, safety scoring, and latency measurement, and (4) a layered privacy architecture progressing from AES-128 at-rest encryption to end-to-end AES-256-GCM TEE encryption with HPKE key wrapping (code-complete) and eventually federated on-device learning. We demonstrate the system's viability through testnet deployment on Bittensor SN272 and stress testing at simulated 500-node scale with 99.75% reliability. As of March 2026, the codebase includes a full GDPR compliance module, adversarial safety probes in the reward pipeline, mandatory age verification, and a React Native mobile scaffold. 1,661 tests are passing across the entire codebase (1,663 collected, 2 skipped).
+We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants whose memory features remain under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces four key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification, safety scoring, and latency measurement, and (4) a layered privacy architecture progressing from AES-128 at-rest encryption to end-to-end AES-256-GCM TEE encryption with HPKE key wrapping (code-complete) and eventually federated on-device learning. We demonstrate the system's viability through testnet deployment on Bittensor SN272 and stress testing at simulated 500-node scale with 99.75% reliability. As of March 2026, the codebase includes a full GDPR compliance module, adversarial safety probes in the reward pipeline, mandatory age verification, and a React Native mobile scaffold. 1,700 tests are passing across the entire codebase (1,705 collected, 2 skipped).
 
 ---
 
@@ -395,7 +395,7 @@ Project Nobi is deployed on Bittensor testnet as SN272:
 | Tempo | 99 blocks (~20 min) |
 | Weights committed | Yes (commit-reveal with hardening) |
 | Uptime | Continuous since deployment |
-| Test suite | 1,661 tests passing (1,663 collected, 2 skipped) |
+| Test suite | 1,700 tests passing (1,705 collected, 2 skipped) |
 
 ---
 
@@ -467,7 +467,7 @@ Replika (Kuyda, 2017) pioneered consumer AI companions, demonstrating market via
 | Foundation | Q1 2026 ✅ | Protocol, miner, validator, memory, scoring, testnet, bot |
 | Intelligence & Memory | Q1 2026 ✅ | Semantic memory, relationship graphs, 20 languages, privacy (at-rest AES-128) |
 | Advanced Features | Q1 2026 ✅ | Voice, vision, proactive companion, group mode, web app, auto-update (React Native mobile scaffold started — app store release planned Q4 2026) |
-| Safety & Privacy Hardening | Q1 2026 ✅ | ContentFilter (dual-stage), adversarial safety probes, DependencyMonitor, age verification (DOB + behavioral), GDPR module (5 rights + consent + PIA + retention), TEE encryption code-complete (AES-256-GCM + HPKE), AMD SEV-SNP attestation, browser-side memory extraction, emission burn automation, React Native scaffold, weight hardening, diversity scoring, 1,661 tests |
+| Safety & Privacy Hardening | Q1 2026 ✅ | ContentFilter (dual-stage), adversarial safety probes, DependencyMonitor, age verification (DOB + behavioral), GDPR module (5 rights + consent + PIA + retention), TEE encryption code-complete (AES-256-GCM + HPKE), AMD SEV-SNP attestation, browser-side memory extraction, emission burn automation, React Native scaffold, weight hardening, diversity scoring, 1,700 tests |
 | Community & Mainnet | Q2 2026 | TEE production rollout, external miners, community growth, mainnet registration |
 | Growth | Q3-Q4 2026 | App store launch, mobile apps, plugin ecosystem, governance |
 | Scale | 2027+ | 100K+ users, decentralized governance, federated privacy |

@@ -171,7 +171,7 @@ Full guide: **[VALIDATING_GUIDE.md](docs/VALIDATING_GUIDE.md)**
 | Phase | Status | Highlights |
 |-------|--------|------------|
 | **0. Foundation** | ✅ Complete | Protocol, miner, validator, memory, scoring, 500 simulated-node stress test |
-| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅, safety scoring ✅, content filter ✅, age verification ✅, dependency monitor ✅, TEE encryption ✅, mobile scaffold ✅ — 1,661 tests passing |
+| **1. Mainnet Prep** | 🔄 Current | 10K stress test ✅, scoring calibration ✅, weight hardening ✅, GDPR module ✅, burn automation ✅, safety scoring ✅, content filter ✅, age verification ✅, dependency monitor ✅, TEE encryption ✅, mobile scaffold ✅ — 1,700 tests passing |
 | **2. Mainnet Launch** | ⏳ Q3 2026 | Subnet registration, subnet routing, public beta, community staking |
 | **3. Growth** | ⏳ Q4 2026+ | Mobile app, 50+ languages, plugin ecosystem, governance |
 | **4. Scale** | ⏳ 2027+ | 100K+ users, decentralized governance, federated privacy |
@@ -253,6 +253,7 @@ cd webapp && npx vercel --prod
 - **GDPR compliance:** Full module — right to access/erasure/portability/rectification/restriction, consent management, retention policy, Privacy Impact Assessment (PIA)
 - **Age verification:** Mandatory DOB-based gate on /start + behavioral minor detection (15 patterns) — 18+ enforced
 - **Dependency detection:** DependencyMonitor with 4-level intervention system (MILD → MODERATE → SEVERE → CRITICAL), periodic AI-disclosure reminders
+- **Self-improving feedback loop:** FeedbackStore detects user corrections (29 patterns), extracts lessons via LLM, injects into future conversations — Nori permanently learns from mistakes
 - **Emission burn automation:** burn_emissions.py operational — all owner emissions burned on-chain via `burn_alpha()`, verifiable
 - **Infrastructure:** PM2, Docker, systemd
 
