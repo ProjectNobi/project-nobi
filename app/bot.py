@@ -63,6 +63,7 @@ from nobi.personality import PersonalityTuner, detect_mood
 from nobi.personality.prompts import get_dynamic_prompt
 from nobi.support import FeedbackManager, SupportHandler
 from nobi.safety.dependency_monitor import DependencyMonitor, DependencyLevel
+from nobi.feedback import FeedbackStore
 import io
 
 try:
@@ -209,6 +210,20 @@ ALWAYS respond in the same language the user writes in. If they write in Vietnam
 - NEVER offer to provide "age-appropriate conversations" to minors — you are NOT for minors
 - NEVER adapt your behavior for younger users — redirect them away immediately
 - This is a legal requirement, not a preference
+
+== MEMORY MASTERY ==
+- When someone tells you something important (name, job, family, schedule), actively remember it — don't wait
+- At the start of conversations, recall recent context naturally: "Last time you mentioned X — how did that go?"
+- Track recurring topics — if someone mentions something 3+ times, it's important to them
+- Remember dates they mention: birthdays, anniversaries, deadlines. Follow up on them.
+- If a user corrects you, learn from it. Note the correction so you don't repeat the mistake.
+- If you're told "you already asked me that" — apologize and make sure to remember next time
+
+== SELF-IMPROVEMENT ==
+- Track what each user enjoys — adapt your style per person over time
+- When you make a mistake, own it directly. No excuses.
+- Vary your conversation style — don't use the same opening, the same structure every time
+- Ask ONE good follow-up question, not three. Let conversations flow naturally.
 
 == WHAT YOU NEVER DO ==
 - NEVER use markdown (no **bold**, no *italic*, no ```code```, no bullet lists with -)
@@ -363,6 +378,10 @@ class CompanionBot:
         self.feedback_manager = FeedbackManager(db_path="~/.nobi/feedback.db")
         self.support_handler = SupportHandler(feedback_manager=self.feedback_manager)
         self.dependency_monitor = DependencyMonitor(db_path="~/.nobi/dependency.db")
+        # Self-improving feedback loop — stores user corrections as lessons
+        self.feedback_store = FeedbackStore(db_path="~/.nobi/feedback_lessons.db")
+        # Track last bot response per user for correction context
+        self._last_response: Dict[str, str] = {}
         # Skills
         self.reminder_manager = ReminderManager(db_path="~/.nobi/bot_memories.db")
         # Conversation state for multi-step flows: {user_id: {state, data}}
@@ -946,6 +965,35 @@ class CompanionBot:
         mood_prompt = get_dynamic_prompt(user_id, message, user_mood)
         system = system + "\n\n== PERSONALITY TUNING ==\n" + mood_prompt
 
+        # ── Self-Improvement: inject accumulated lessons ──────────────────
+        # Check if this message is a correction of the previous response
+        if self.feedback_store.detect_correction(message):
+            last_response = self._last_response.get(user_id, "")
+            if last_response:
+                # Extract lesson asynchronously (don't block response)
+                async def _extract_and_save():
+                    try:
+                        lesson = await self.feedback_store.extract_lesson(
+                            user_message=message,
+                            bot_response=last_response,
+                            correction=message,
+                            llm_client=self.client,
+                            model=self.model,
+                        )
+                        self.feedback_store.save_lesson(user_id, message, lesson)
+                    except Exception as e:
+                        logger.debug(f"[FeedbackStore] Lesson save error: {e}")
+                asyncio.create_task(_extract_and_save())
+
+        # Inject active lessons into system prompt
+        try:
+            active_lessons = self.feedback_store.get_active_lessons(limit=30)
+            if active_lessons:
+                lessons_text = "\n".join([f"- {l['lesson']}" for l in active_lessons])
+                system += f"\n\n== Lessons Learned from User Feedback ==\n{lessons_text}"
+        except Exception as e:
+            logger.debug(f"[FeedbackStore] Lesson injection error: {e}")
+
         # Inject skill context into system prompt if available
         if _weather_context:
             system += (
@@ -1080,6 +1128,9 @@ class CompanionBot:
                 self.memory.save_conversation_turn(user_id, "assistant", response)
             except Exception as e:
                 logger.warning(f"Save response error: {e}")
+
+            # Track last response for correction detection (self-improvement loop)
+            self._last_response[user_id] = response
 
             # Phase B: Update adapter after each conversation turn (with sanitized response)
             try:
