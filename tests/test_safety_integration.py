@@ -229,6 +229,10 @@ async def test_bot_generate_blocks_self_harm_user_message():
         bot.billing.get_user_tier = MagicMock(return_value="free")
         bot.personality_tuner = MagicMock()
         bot.feedback_manager = MagicMock()
+        bot.feedback_store = MagicMock()
+        bot.feedback_store.detect_correction = MagicMock(return_value=False)
+        bot.feedback_store.get_active_lessons = MagicMock(return_value=[])
+        bot._last_response = {}
         bot.subnet_enabled = False
         bot._translation_cache = {}
         bot._turn_count = 0
@@ -279,6 +283,10 @@ async def test_bot_generate_safe_message_calls_llm():
         bot.billing.get_user_tier = MagicMock(return_value="free")
         bot.personality_tuner = MagicMock()
         bot.feedback_manager = MagicMock()
+        bot.feedback_store = MagicMock()
+        bot.feedback_store.detect_correction = MagicMock(return_value=False)
+        bot.feedback_store.get_active_lessons = MagicMock(return_value=[])
+        bot._last_response = {}
         bot.subnet_enabled = False
         bot._translation_cache = {}
         bot._turn_count = 0
