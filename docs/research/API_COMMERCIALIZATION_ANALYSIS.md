@@ -21,11 +21,11 @@ Slumpz has proposed that Project Nobi maintain its core companion product as per
 The API commercialization proposal is viable and strategically sound, but must be implemented with strict safeguards:
 1. The companion product must remain **unconditionally free** forever
 2. The API must serve as an **extension layer** for builders, not a backdoor pricing mechanism for users
-3. Legal structure (CIC) allows commercial trading — but this should be confirmed with a UK solicitor
+3. **Recommended jurisdiction: Ireland** — incorporate as an Irish Private Company Limited by Shares (LTD) for EU market access, 12.5% corporation tax, and DPC as lead EU data regulator. Confirm structure with an Irish solicitor.
 4. Revenue should flow **back into the ecosystem** (infrastructure, open source development, community grants)
 5. A **self-hosting option** must ship alongside the paid API — open source commitment preserved
 
-**Key risks:** mission drift, community backlash in the crypto space, CIC legal constraints, and the technical complexity of billing infrastructure at an early stage.
+**Key risks:** mission drift, community backlash in the crypto space, Irish incorporation setup (CMC risk, EEA director), and the technical complexity of billing infrastructure at an early stage.
 
 **Market opportunity:** The global AI API market is valued at ~$64 billion in 2025 and growing at ~30% CAGR. Companion APIs are an underserved niche within this. Even 0.01% market capture represents significant revenue.
 
@@ -231,28 +231,30 @@ Crypto communities are uniquely skeptical of monetization. Historical examples:
 
 ## 3. LEGAL IMPLICATIONS
 
-### 3.1 CIC (Community Interest Company) — Can It Earn Commercial Revenue?
+### 3.1 Irish Entity Options — LTD or CLG?
 
-**Yes — CICs are explicitly designed to trade commercially.**
+**Recommended structure: Irish Private Company Limited by Shares (LTD)**
 
-A Community Interest Company (CIC) is a limited company that:
-- Exists to benefit a defined community
-- Has an "asset lock" preventing assets being distributed to private shareholders beyond dividend caps
-- Must pass an annual "community interest test"
-- **Can and should generate revenue** — that's the point vs. a charity
+Ireland's Companies Act 2014 provides a modern, flexible corporate framework. The recommended entity for Nobi's commercial API is the **Private Company Limited by Shares (LTD)**:
 
-Key CIC rules relevant to API commercialization:
-- CICs can carry on any trade or business (unlike charities)
-- Revenue must primarily benefit the community interest (not founders)
-- Dividends to shareholders are capped (currently 35% of distributable profits)
-- Interest payments on loans are also capped
-- **API revenue is legal** — it's commercial income from trading
+- One director is sufficient (plus a company secretary)
+- No minimum share capital requirement
+- Can carry on any lawful business activity — no restrictions on trading
+- Profits can be distributed to shareholders
+- Subject to corporation tax at **12.5%** on active trading income
+- Eligible for the **Knowledge Development Box (10% effective rate on IP income)** and **35% R&D tax credit**
+- Audit exemption available for small companies (turnover ≤ €12M)
+- Registration fee: €50 (CRO online)
 
-**Key constraint:** If API revenue generates significant profit, that profit must be demonstrably directed toward community benefit. "Keeping the companion free" and "funding open-source development" likely qualifies. Using profits to pay James a large salary might attract CIC regulator scrutiny if disproportionate.
+**Alternative: Company Limited by Guarantee (CLG)**
 
-*Source: UK gov.uk — "A CIC is a special type of limited company which exists to benefit the community rather than private shareholders." gov.uk/set-up-a-social-enterprise — retrieved March 2026*
+A CLG is the Irish equivalent of a community/not-for-profit entity. It *can* earn commercial revenue, but:
+- No share capital — members guarantee a nominal sum (e.g. €1)
+- Profits must generally be reinvested in the company's objects
+- Not suitable for investment or eventual exit
+- Would be appropriate for a separate community-focused arm — **not** for the commercial API entity
 
-**Action required:** Consult a UK solicitor familiar with CIC regulations before launch. This is a legal opinion, not a business decision.
+**Action required:** Engage an Irish solicitor to advise on incorporation structure, CMC risk (central management and control — see Section 14.6), and the EEA-resident director requirement. This is a legal opinion, not a business decision.
 
 ### 3.2 MIT License Implications for Paid API
 
@@ -274,14 +276,14 @@ MIT does NOT:
 
 ### 3.3 Data Processing Agreements (DPA) for Business API Customers
 
-Any business paying for API access in the UK/EU will require:
-- A **Data Processing Agreement (DPA)** — mandatory under UK GDPR and EU GDPR Article 28
+Any business paying for API access in the EU/UK will require:
+- A **Data Processing Agreement (DPA)** — mandatory under EU GDPR Article 28 (directly applicable in Ireland via the Data Protection Act 2018)
 - If the API processes any personal data on behalf of the business customer, Nobi acts as a **data processor**
 - Business customer is the **data controller** — they're responsible for what they send
 - Nobi must implement appropriate technical and organisational measures (TOMs)
 
 **Immediate legal requirements upon API launch:**
-1. DPA template (off-the-shelf template available from ICO)
+1. DPA template (DPC provides guidance; a solicitor can produce a reusable template for ~€500–€1,000)
 2. Privacy policy update to reflect API processing
 3. Data retention policy for API request logs
 4. Sub-processor list (hosting providers, Bittensor network)
@@ -306,17 +308,19 @@ Critical distinction: **Is the API accessing companion user data, or is it a sep
 
 **Recommendation:** Launch with Scenario A only. Companion user data is never accessible via API. Keep these architecturally separate systems from day one.
 
-### 3.5 UK Tax Implications
+### 3.5 Irish Tax Regime
 
-CIC API revenue is subject to:
-- **Corporation Tax:** Standard UK rate 25% (for profits over £250k), 19% small profits rate (under £50k), marginal relief between
-- **VAT:** If annual turnover exceeds £90,000 (2025/26 threshold), VAT registration mandatory
-  - API services to UK businesses: 20% VAT
-  - API services to non-UK businesses (B2B): Zero-rated under export rules
-  - API services to individual developers outside UK: complex — verify with accountant
-- **PAYE:** If revenue funds salaries, standard employment tax applies
+An Irish LTD is subject to:
+- **Corporation Tax:** **12.5%** on active trading income (one of the lowest in the EU/world). Passive income (dividends, royalties, interest) taxed at 25%. Capital gains at 33%.
+- **Knowledge Development Box (KDB):** **10% effective rate** on profits from qualifying intellectual property (copyrighted software, patents). API revenue from software Nobi owns and developed may qualify, reducing the effective rate from 12.5% to 10%.
+- **R&D Tax Credit:** **35% fully refundable** credit on qualifying R&D expenditure (AI model development, novel software engineering). Combined with the standard 12.5% deduction, the effective benefit is **47.5% of qualifying R&D spend** returned to the company.
+- **Startup Corporation Tax Exemption:** New companies may be exempt from corporation tax for the first three years (up to €40,000 relief per year), subject to trading income thresholds.
+- **VAT:** Standard rate is 23%. VAT registration mandatory if annual turnover exceeds **€42,500** (for services). B2B sales to VAT-registered EU businesses use the reverse charge mechanism (0% Irish VAT charged — customer accounts for VAT in their own jurisdiction). Lower threshold than UK (£90k), so registration required earlier.
+- **PAYE:** If revenue funds salaries paid to Irish-based employees or directors, standard Irish PAYE applies.
 
-**Practical note:** At early stages (sub-£90k revenue), VAT registration is not mandatory but voluntary registration may allow VAT reclaim on infrastructure costs — worth discussing with an accountant from the start.
+**Key advantage vs UK:** On €1M trading profit, Irish corp tax = €125,000. UK corp tax = £250,000. Ireland is roughly half the tax burden. The R&D credit (35% vs UK's 20%) also delivers significantly more cash back to fund development.
+
+**Practical note:** Engage a qualified Irish chartered accountant from day one. Confirm KDB eligibility before assuming the 10% rate applies. The CMC (central management and control) issue must be correctly structured to ensure Irish tax residency holds — see Section 14.6.
 
 ---
 
@@ -528,7 +532,7 @@ Keep the emissions burn. Use API revenue purely for infrastructure costs and dev
 | **Bittensor Decentralization** | No single company controls the backend | High — unique in AI companion space |
 | **Open Source** | Code is verifiable, self-hostable | High — trust multiplier, can't be replicated by closed competitors |
 | **"Free Forever" Brand** | Strong positioning vs commercial AI | High — extremely rare, creates community loyalty |
-| **CIC Structure** | Mission-locked legal entity | Medium — strong for community trust |
+| **Irish LTD Structure** | Flexible, commercial, EU market access | Medium — strong for investors and EU customers |
 
 ### 6.2 Direct Competitors
 
@@ -558,7 +562,7 @@ OpenAI + custom memory (e.g., Mem0, Zep) is the most common developer approach. 
 | Cost (at scale) | $2.50/MTok + memory infra | $20–$99/month flat |
 | Vendor lock-in | High (OpenAI terms) | Low (self-hostable) |
 | Decentralized | No | Yes (Bittensor) |
-| Trust/transparency | Limited | Open source + CIC |
+| Trust/transparency | Limited | Open source + Irish LTD (no asset lock, community transparency) |
 
 **The pitch to developers:** "Build a personalized AI companion for your app in one API call, not six services stitched together."
 
@@ -573,7 +577,7 @@ OpenAI + custom memory (e.g., Mem0, Zep) is the most common developer approach. 
 | Mission drift | Medium | Critical | 🔴 High | Hard rule: free companion never degrades |
 | Community backlash | Medium | High | 🔴 High | Transparent framing before launch |
 | Bittensor network instability | High | Medium | 🟡 Medium | Fallback inference providers |
-| CIC legal constraints | Low | High | 🟡 Medium | Legal opinion before launch |
+| Irish legal/compliance setup | Low | Medium | 🟡 Medium | Engage Irish solicitor before launch; address CMC risk |
 | GDPR breach | Low | Critical | 🟡 Medium | Stateless API, no user data |
 | Billing infrastructure failure | Medium | Medium | 🟡 Medium | Use Stripe (battle-tested) |
 | Cannibalization of companion users | Low | Low | 🟢 Low | API serves builders, not end users |
@@ -630,7 +634,7 @@ Corcel's struggles showed that building a commercial API on pure Bittensor backe
 - [ ] Publish a public post/X thread announcing the Builder API concept
 - [ ] Open a "Request API Access" waitlist form
 - [ ] Gauge interest — target: 100+ signups = proceed
-- [ ] Get legal opinion on CIC commercial trading (hire solicitor)
+- [ ] Get legal opinion from Irish solicitor on LTD incorporation, CMC risk, and EEA-resident director requirement
 
 **Week 3–4: Architecture**
 - [ ] Design API specification (OpenAPI 3.0 spec)
@@ -663,7 +667,7 @@ Corcel's struggles showed that building a commercial API on pure Bittensor backe
 - 50+ active beta users
 - At least 5 paying Developer tier customers
 - No critical security incidents
-- CIC legal clearance obtained
+- Irish LTD incorporated, solicitor legal clearance obtained
 
 ### Phase 3: Public API Launch (Weeks 17–24)
 **Goal: Open commercial API to the public**
@@ -691,7 +695,7 @@ Corcel's struggles showed that building a commercial API on pure Bittensor backe
 | Resource | Phase 1 | Phase 2 | Phase 3 |
 |----------|---------|---------|---------|
 | Development (Dragon Lord / James) | ~80 hrs | ~120 hrs | ~60 hrs |
-| Legal (CIC solicitor) | ~5 hrs | ~5 hrs | ~2 hrs |
+| Legal (Irish solicitor) | ~5 hrs | ~5 hrs | ~2 hrs |
 | Design (API docs, landing page) | — | ~20 hrs | ~10 hrs |
 | Infrastructure (additional compute) | Minimal | ~$100–200/mo | ~$300–500/mo |
 | Stripe setup | — | 1-time $0 | — |
@@ -709,13 +713,13 @@ Corcel's struggles showed that building a commercial API on pure Bittensor backe
 ### Conditions That Must Be Met
 
 **Before any code is written:**
-1. ✅ Obtain a legal opinion from a UK solicitor on CIC commercial trading — confirm API revenue is permissible and document how profits should flow
+1. ✅ Engage an Irish solicitor: incorporate Irish LTD, address CMC risk, appoint EEA-resident director or arrange Section 137 bond, confirm DPC registration requirements
 2. ✅ Publish a public transparency statement about the API concept before building — community-first, no surprises
 3. ✅ James confirms exact current infrastructure costs — break-even analysis needs real numbers
 
 **Before accepting any payment:**
-4. ✅ CIC legal clearance confirmed
-5. ✅ Privacy Policy updated for API data processing
+4. ✅ Irish LTD incorporated and DPC registration confirmed
+5. ✅ Privacy Policy updated for API data processing (referencing Irish DPA 2018 and GDPR)
 6. ✅ DPA template ready for business customers
 7. ✅ Stateless API architecture confirmed — NO companion user data accessible via API
 
@@ -731,7 +735,7 @@ Corcel's struggles showed that building a commercial API on pure Bittensor backe
 🚫 **NEVER** degrade free companion response quality to prioritize API traffic
 🚫 **NEVER** gate features behind API that were previously available free to companion users
 🚫 **NEVER** frame the API as "Nobi Pro" or any language suggesting the free product is lite
-🚫 **NEVER** launch billing before CIC legal clearance
+🚫 **NEVER** launch billing before Irish LTD is incorporated and DPC-registered
 🚫 **NEVER** accept enterprise contracts without a signed DPA and ToS
 🚫 **NEVER** stop burning emissions — this is the community trust anchor
 
@@ -769,7 +773,7 @@ Corcel's struggles showed that building a commercial API on pure Bittensor backe
 | Hugging Face Pricing | Spaces: free–$23.50/hr; Inference Endpoints: $0.033/hr+ | huggingface.co/pricing | March 2026 |
 | Chutes.ai | Base $3/mo, Plus $10/mo, Pro $20/mo | chutes.ai | March 2026 |
 | Cohere Pricing | Enterprise custom pricing only (no public per-token rates) | cohere.com/pricing | March 2026 |
-| GOV.UK CIC guidance | CIC is limited company existing to benefit community, can trade | gov.uk/set-up-a-social-enterprise | March 2026 |
+| CRO Ireland | Irish LTD structure, €50 registration fee, one director rule | cro.ie | March 2026 |
 
 ### Data Gaps (Honest Disclosure)
 
@@ -778,7 +782,7 @@ Corcel's struggles showed that building a commercial API on pure Bittensor backe
 - **Groq Llama model pricing:** Groq pricing page showed GPT OSS models. Traditional Llama pricing not captured in retrieved data.
 - **James's actual infrastructure costs:** Required for accurate break-even — placeholder estimates used in this report.
 - **Cohere per-token rates:** Cohere has pivoted to enterprise-only pricing with no public per-token rates.
-- **CIC commercial trading limits:** Could not find specific HMRC or CIC regulator ruling on API revenue. Professional legal advice is essential.
+- **Irish LTD CMC risk:** The central management and control question for a UK-resident founder operating an Irish company requires specialist Irish tax advice. Engage an Irish chartered tax adviser before incorporating.
 
 ---
 
@@ -935,15 +939,15 @@ Scenarios:
 
 ## 11. LEGAL IMPLICATIONS — DEEP DIVE
 
-*All legal citations in this section are sourced directly from official UK government and ICO guidance. This section is informational only and does not constitute legal advice. Engage a qualified UK solicitor before acting on any of this.*
+*All legal citations in this section are sourced from official EU/Irish government and DPC guidance, supplemented by ICO guidance where relevant to UK users. This section is informational only and does not constitute legal advice. Engage a qualified Irish solicitor before acting on any of this.*
 
 ---
 
-### 11.1 UK GDPR Article 6 — Lawful Basis for Processing
+### 11.1 GDPR Article 6 — Lawful Basis for Processing (Irish Law)
 
-Under UK GDPR (retained in UK law post-Brexit via the Data Protection Act 2018), **every processing activity requires a lawful basis**. Article 6 provides six possible bases. The ICO states: *"You must have a valid lawful basis in order to process personal data... which basis is most appropriate to use will depend on your purpose and relationship with the individual."*
+Under **EU GDPR** (directly applicable in Ireland; implemented via the Irish Data Protection Act 2018), **every processing activity requires a lawful basis**. Article 6 provides six possible bases. The DPC (Data Protection Commission, Ireland) states that controllers must identify the correct basis before processing begins.
 
-*Source: ICO — "A guide to lawful basis" — ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/a-guide-to-lawful-basis/ — retrieved March 2026*
+*Source: DPC — GDPR guidance — dataprotection.ie; EU GDPR Article 6 — EUR-Lex — retrieved March 2026*
 
 **The six lawful bases under Article 6:**
 
@@ -953,7 +957,7 @@ Under UK GDPR (retained in UK law post-Brexit via the Data Protection Act 2018),
 | (b) Contract | Processing necessary for a contract with the individual | ✅ API customers: processing their account/billing data to fulfil the API contract |
 | (c) Legal obligation | Processing required by law | For tax records, breach reporting — limited use |
 | (d) Vital interests | Protect someone's life | Not applicable |
-| (e) Public task | Public authority performing official functions | Not applicable (CIC is not a public authority) |
+| (e) Public task | Public authority performing official functions | Not applicable (Irish LTD is not a public authority) |
 | (f) Legitimate interests | Necessary for legitimate interests, proportionate | ✅ API request logging for security/abuse prevention |
 
 **For the API — which bases apply where:**
@@ -966,7 +970,7 @@ Under UK GDPR (retained in UK law post-Brexit via the Data Protection Act 2018),
 | Marketing emails to API prospects | **Consent (a)** | Must be opt-in; cannot rely on contract for marketing |
 | Prompts sent via API | Depends on content — see Section 12 | May contain personal data |
 
-**Critical ICO warning:** *"Take care to get it right first time - you should not swap to a different lawful basis at a later date without good reason."* — This means choosing the right basis before collecting data, not retrofitting a basis after the fact.
+**DPC/GDPR principle:** The correct lawful basis must be identified before collecting data, not retrofitted after the fact. This is a core GDPR principle enforced by the DPC.
 
 ---
 
@@ -974,11 +978,11 @@ Under UK GDPR (retained in UK law post-Brexit via the Data Protection Act 2018),
 
 This is the most complex and consequential legal question for the API model. The roles are not fixed — they depend on **who decides why and how data is processed**.
 
-**ICO definitions (verbatim from official guidance):**
+**EU GDPR definitions (Article 4):**
 > *"'controller' means the natural or legal person, public authority, agency or other body which, alone or jointly with others, determines the purposes and means of the processing of personal data."*
 > *"'processor' means a natural or legal person, public authority, agency or other body which processes personal data on behalf of the controller."*
 
-*Source: ICO — "What are 'controllers' and 'processors'?" — ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/controllers-and-processors/ — retrieved March 2026*
+*Source: EU GDPR Article 4 — EUR-Lex; DPC guidance — dataprotection.ie — retrieved March 2026*
 
 **Applied to the Nobi API — three scenarios:**
 
@@ -990,22 +994,22 @@ This is the most complex and consequential legal question for the API model. The
 **Scenario B: Developer builds an app that sends their end-users' conversations to the Nobi API**
 - The developer is the **data controller** (they decided to build the app and collect user data)
 - Nobi is the **data processor** (processing data on behalf of the developer per the API contract)
-- **A DPA is mandatory under UK GDPR Article 28** — this is not optional
+- **A DPA is mandatory under EU GDPR Article 28** — this is not optional
 - Nobi must: only process data per the developer's instructions; maintain confidentiality; implement appropriate security measures; not engage sub-processors without the developer's consent; assist with subject rights requests; delete data when instructed
 
 **Scenario C: Developer's app users' data could be linked back to companion users**
 - **This must not happen** — it creates joint controller complexity, potential data breaches, and is architecturally prohibited
 - This is the red line that requires architectural separation
 
-**What a DPA must contain (per UK GDPR Article 28):**
+**What a DPA must contain (per EU GDPR Article 28):**
 - Subject matter and duration of the processing
 - Nature and purpose of the processing
 - Type of personal data and categories of data subjects
 - Obligations and rights of the controller
 - Processor's obligations: process only on documented instructions; confidentiality; security; sub-processor restrictions; assist with rights requests; delete/return data; provide compliance information
 
-**ICO's position on processor liability:**
-> *"If a processor acts without the controller's instructions in such a way that it determines the purpose and means of processing... it will be a controller in respect of that processing and will have the same liability as a controller."*
+**GDPR position on processor liability (Article 28 / recital 81):**
+If a processor acts without the controller's instructions in such a way that it determines the purpose and means of processing, it will be treated as a controller in respect of that processing and will have the same liability as a controller.
 
 This means if Nobi's API code makes decisions about what to do with data beyond what the customer instructed (e.g., retaining prompts for model training without consent), Nobi becomes a joint controller and takes on full GDPR liability.
 
@@ -1013,7 +1017,7 @@ This means if Nobi's API code makes decisions about what to do with data beyond 
 
 ### 11.3 Data Processing Agreements (DPAs) for Business API Customers
 
-**DPAs are legally mandatory** whenever a controller (API customer) uses a processor (Nobi) to handle personal data, per UK GDPR Article 28(3).
+**DPAs are legally mandatory** whenever a controller (API customer) uses a processor (Nobi) to handle personal data, per EU GDPR Article 28(3).
 
 **What Nobi needs before accepting a paying business customer:**
 
@@ -1032,50 +1036,49 @@ The ICO provides a DPIA template (docx) that can be adapted. A DPA for API servi
 - Sub-processors: Hetzner GmbH (hosting), Contabo (hosting), Bittensor network miners
 - Data subject rights: Nobi will assist the customer in responding to erasure, access, and rectification requests
 
-**Getting a DPA template:** The ICO publishes a DPIA template at ico.org.uk. For a DPA specifically (different from a DPIA), a solicitor can produce a standard template for ~£500–1,000 that can be reused across all customers.
+**Getting a DPA template:** The DPC publishes GDPR guidance and templates at dataprotection.ie. For a DPA specifically (different from a DPIA), an Irish solicitor can produce a standard template for ~€500–€1,000 that can be reused across all customers.
 
 ---
 
-### 11.4 International Data Transfers — Schrems II Context and UK Position
+### 11.4 International Data Transfers — EU GDPR Framework (Irish Entity)
 
-When API customers outside the UK send data to Nobi's UK-based servers, **or** when Nobi sends data to servers outside the UK (e.g., Contabo in Germany, or Bittensor miners globally), international transfer rules apply.
+When API customers outside the EEA send data to Nobi's Irish-incorporated entity, **or** when Nobi sends data to servers outside the EEA (e.g., US-based Bittensor miners globally), international transfer rules apply.
 
-**UK framework post-Brexit:**
+**Irish/EU framework:**
 
-The UK GDPR applies to organisations in the UK. Post-Brexit, the UK has its own adequacy framework, separate from the EU GDPR Schrems II framework.
+EU GDPR Chapter V governs restricted transfers — transfers of personal data to third countries outside the EEA. As an Irish entity, Nobi uses the EU framework directly (Standard Contractual Clauses, adequacy decisions, etc.) — no UK-specific instruments (IDTAs) required.
 
-Key ICO guidance: *"Every restricted transfer must be covered by one of the following transfer mechanisms: UK adequacy regulations; appropriate safeguards; or an exception."*
+**EU Adequacy Decisions (as of March 2026):**
+- UK: The EU has an adequacy decision for the UK (subject to periodic review). Data can flow from Ireland → UK without additional safeguards for now.
+- US: EU-US Data Privacy Framework (DPF, adopted July 2023) covers transfers to certified US companies. For non-certified US recipients, EU Standard Contractual Clauses (Commission Decision 2021/914) apply.
+- Other countries: check the EU Commission adequacy list
 
-*Source: ICO — "A brief guide to international transfers" — ico.org.uk — retrieved March 2026*
-
-**UK Adequacy Decisions (as of March 2026):**
-- EU/EEA countries: UK has confirmed adequacy for data flowing UK → EU
-- US: UK has extended the EU-US Data Privacy Framework (updated guidance published January 15, 2026 per ICO)
-- Other countries: variable — check the ICO adequacy regulations list
+**Schrems II context:** Schrems II (C-311/18, 2020) invalidated the EU-US Privacy Shield. The current EU-US DPF is the replacement, though it faces ongoing legal challenges. For transfers to the US, EU SCCs remain the safer backstop.
 
 **For Nobi's API — practical implications:**
 
 | Data Flow | Transfer Mechanism Required |
 |-----------|---------------------------|
-| UK servers → Contabo Germany (EU) | UK→EU adequacy — generally covered |
-| UK servers → US-based enterprise customer | UK Extension to EU-US DPF, or IDTA |
-| UK servers → Bittensor miners (global, unknown location) | **Complex — miners are globally distributed; their jurisdictions are unknown** |
-| Non-UK API customer → UK servers | UK GDPR applies to Nobi's processing regardless |
+| Ireland servers → Contabo Germany (EU) | EEA-internal — no restricted transfer |
+| Ireland servers → UK-based customers/servers | EU adequacy decision for UK |
+| Ireland servers → US-based enterprise customer | EU-US DPF (if certified) or EU SCCs |
+| Ireland servers → Bittensor miners (global, unknown location) | **Complex — miners are globally distributed; their jurisdictions are unknown** |
+| Non-EU/non-EEA API customer → Irish servers | EU GDPR applies to Nobi's processing regardless |
 
 **The Bittensor miner problem:** Bittensor miners are geographically distributed and pseudonymous. When API data flows through Bittensor miners as part of inference, that data is technically being transmitted to servers in unknown international locations. This is a genuine international transfer compliance challenge.
 
 **Mitigation options:**
-- Use only known, UK/EU-hosted miners for API traffic
-- Process API requests on Hetzner1 (UK/Germany) using local model only, bypassing distributed Bittensor miners
-- Or: design the API so no personal data flows through the Bittensor network — inference is done on controlled servers, only anonymized requests go to miners
+- Use only known, EU/EEA-hosted miners for API traffic
+- Process API requests on controlled servers (Hetzner1, Contabo Germany) using local model only, bypassing distributed Bittensor miners for personal data
+- Or: design the API so no personal data flows through the Bittensor network — inference is done on controlled servers, only anonymised requests go to miners
 
-**Note on Schrems II (EU law):** Schrems II (C-311/18, 2020) invalidated the EU-US Privacy Shield under EU GDPR. This is an EU law matter, not UK law. UK has its own framework. EU API customers sending data to Nobi must ensure compliance with their own EU GDPR obligations for transfer to the UK — which is generally covered by the EU adequacy decision for the UK. This is primarily the EU customer's responsibility, not Nobi's.
+**UK users and ICO:** UK users of Nobi's companion app have rights under UK GDPR enforced by the UK ICO. When dealing with complaints or rights requests from UK users, Nobi should be aware of ICO jurisdiction. However, **the DPC is Nobi's lead supervisory authority** for all EU operations under the One-Stop-Shop mechanism.
 
 ---
 
 ### 11.5 Right to Erasure — Complications in the API Context
 
-The ICO states: *"Under Article 17 of the UK GDPR individuals have the right to have personal data erased... The right to erasure is also known as 'the right to be forgotten'."*
+Under **EU GDPR Article 17**, individuals have the right to have personal data erased ("right to be forgotten"). This applies to Nobi as an Irish-incorporated entity processing EU personal data.
 
 **When does this affect the Nobi API?**
 
@@ -1083,7 +1086,7 @@ If an API customer's end-user submits an erasure request to the API customer (th
 1. Erase the data they hold directly
 2. Pass the erasure request to all processors — including Nobi's API
 
-Nobi must then erase any retained data relating to that individual. The ICO requirement: *"We have procedures in place to inform any recipients if we erase any data we have shared with them."*
+Nobi must then erase any retained data relating to that individual and inform sub-processors accordingly.
 
 **Key complications:**
 
@@ -1091,7 +1094,7 @@ Nobi must then erase any retained data relating to that individual. The ICO requ
 - Logs must be structured to allow targeted deletion (not just rolling time-based purges)
 - The ability to identify which log entries relate to which individual across potentially millions of records
 
-**Backup systems:** The ICO asks: *"Do we have to erase personal data from backup systems?"* — The answer is yes, but with nuance: immediate deletion from backups may not be possible, but the data should be suppressed and not restored.
+**Backup systems:** Under EU GDPR, immediate deletion from backups may not always be possible, but the data should be suppressed and not restored from backup after an erasure request.
 
 **The stateless API design solution:** If the API is genuinely stateless — prompts processed and not retained beyond the immediate response — erasure requests are trivially handled: there is nothing to erase. **This is the strongest argument for a strict no-retention API design as a default.** It eliminates the erasure complication almost entirely.
 
@@ -1104,15 +1107,15 @@ Nobi must then erase any retained data relating to that individual. The ICO requ
 **What the API ToS must address:**
 
 **Liability limitations:**
-- UK consumer law (Consumer Rights Act 2015) restricts liability exclusions for consumers. B2B API customers (businesses) have less protection — liability can be more fully excluded by contract.
+- Irish consumer law (Consumer Rights Act 2022, implementing EU directives) restricts liability exclusions for consumers. B2B API customers (businesses) have less protection — liability can be more fully excluded by contract.
 - Standard practice: exclude consequential loss, cap liability at 12 months of subscription fees paid.
-- Must not exclude liability for death, personal injury, or fraud — these cannot be limited by UK law.
+- Must not exclude liability for death, personal injury, or fraud — these cannot be limited under Irish/EU law.
 
-**Consumer Rights Act 2015 — important note:**
-- Applies to B2C relationships. If Nobi's API is sold directly to individual developers (not through a business), some CRA protections apply.
-- CRA requires digital services to be of satisfactory quality, fit for purpose, and as described.
+**Irish/EU Consumer Rights Act 2022 — important note:**
+- Applies to B2C relationships. If Nobi's API is sold directly to individual developers (not through a business), consumer protection rules apply.
+- Digital services must be of satisfactory quality, fit for purpose, and as described.
 - For B2B customers (companies), standard commercial contract terms apply with more flexibility.
-- **Practical implication:** Clearly define who can buy the API. If "Developer tier" includes individual developers (not just companies), the CRA applies. This is likely fine — just ensure the API actually works as described.
+- **Practical implication:** Clearly define who can buy the API. If "Developer tier" includes individual developers (not just companies), the consumer rules apply. This is likely fine — just ensure the API actually works as described.
 
 **Indemnification:**
 - Standard API ToS should require API customers to indemnify Nobi against misuse — if a customer uses the API to process illegal content and Nobi is implicated, the customer bears responsibility.
@@ -1176,8 +1179,10 @@ The high-risk categories (employment decisions, credit scoring, law enforcement,
 
 These must be explicitly prohibited in the API ToS and enforced via abuse monitoring.
 
-**UK position on the EU AI Act:**
-The UK has not adopted the EU AI Act. The UK government's AI regulation approach (as of 2026) is principles-based, sector-specific, and non-legislative at the national level. However, if Nobi provides services to EU customers, the EU AI Act applies to those customers' use of Nobi's API — and Nobi as provider must at minimum facilitate compliance.
+**Irish/EU position on the EU AI Act:**
+Ireland, as an EU member state, is subject to the EU AI Act directly — no implementing legislation required. As an Irish-incorporated entity, Nobi is within the EU AI Act's scope. This is an advantage as well as an obligation: once compliant, Nobi can claim conformity across the entire EU single market without navigating 27 separate national frameworks.
+
+**Note on UK API customers:** The UK has not adopted the EU AI Act. UK customers using Nobi's API are not subject to it on their end. However, Nobi (as an Irish entity providing AI services) must comply with the AI Act regardless of the customer's location.
 
 ---
 
@@ -1212,29 +1217,32 @@ Before accepting the first paying API customer:
 
 | Item | Status | Owner |
 |------|--------|-------|
-| UK solicitor engaged for CIC trading advice | ❌ Not done | James |
-| ICO registration reviewed and confirmed current | ❌ Not done | James |
+| Irish solicitor engaged for LTD incorporation, CMC risk, EEA director | ❌ Not done | James |
+| Irish LTD incorporated (CRO, €50 online) | ❌ Not done | James + solicitor |
+| DPC registration confirmed for Irish entity | ❌ Not done | James + solicitor |
 | DPA template prepared and reviewed by solicitor | ❌ Not done | James + solicitor |
-| API Terms of Service drafted | ❌ Not done | James + solicitor |
-| Privacy Policy updated for API processing | ❌ Not done | James + solicitor |
+| API Terms of Service drafted (Irish law) | ❌ Not done | James + solicitor |
+| Privacy Policy updated for API processing (referencing DPA 2018 and GDPR) | ❌ Not done | James + solicitor |
 | EU AI Act GPAI obligations assessed | ❌ Not done | James + solicitor |
-| Professional Indemnity insurance quote obtained | ❌ Not done | James |
+| Professional Indemnity insurance quote obtained (Irish/EU provider) | ❌ Not done | James |
 | Cyber Liability insurance quote obtained | ❌ Not done | James |
 | Data retention policy defined | ❌ Not done | James + Dragon Lord |
 | Sub-processor list documented | ❌ Not done | James + Dragon Lord |
-| Breach notification procedure documented | ❌ Not done | James |
+| Breach notification procedure documented (DPC 72-hour rule) | ❌ Not done | James |
 
 ---
 
 ## 12. DATA PROTECTION & PRIVACY POLICY
 
-*This section addresses the specific data protection architecture and privacy policy requirements for operating a commercial AI API alongside a free companion product.*
+*This section addresses the specific data protection architecture and privacy policy requirements for operating a commercial AI API alongside a free companion product. Ireland is the chosen jurisdiction — all references are to Irish DPA 2018, EU GDPR, and the DPC (Data Protection Commission) as lead supervisory authority.*
 
 ---
 
 ### 12.1 How the Privacy Policy Must Change
 
-The current Privacy Policy (or absence of one) is appropriate for a free companion product. Adding a commercial API creates new processing activities that require explicit disclosure.
+The current Privacy Policy (or absence of one) is appropriate for a free companion product. Adding a commercial API creates new processing activities that require explicit disclosure under EU GDPR (directly applicable in Ireland via the Data Protection Act 2018).
+
+**Applicable law:** EU GDPR + Irish Data Protection Act 2018. The DPC (dataprotection.ie) is the supervisory authority. GDPR applies directly — no UK-specific framework required.
 
 **Current state (companion only) — privacy policy covers:**
 - User account data (if any)
@@ -1246,9 +1254,9 @@ The current Privacy Policy (or absence of one) is appropriate for a free compani
 1. **API customer data processing** — what data Nobi collects about API customers (name, company, email, billing info, API usage metrics) and the lawful basis for each
 2. **API request processing** — whether and how long prompts and responses are retained
 3. **Sub-processors used** — all third-party services that handle data (Stripe for payments, Hetzner/Contabo for hosting, any analytics tools)
-4. **International transfers** — where data flows geographically and under what mechanism
+4. **International transfers** — where data flows geographically and under what mechanism (EU SCCs, EU-UK adequacy, etc.)
 5. **B2B customer DPA reference** — noting that business customers receive a separate DPA
-6. **Data subject rights** — how API customers' own staff can exercise DSAR, erasure, and rectification rights
+6. **Data subject rights** — how API customers' own staff can exercise DSAR, erasure, and rectification rights under EU GDPR
 7. **Retention periods** — specific periods for each category (billing records: 7 years for tax purposes; API logs: 30 days; API key hashes: duration of account + 30 days)
 
 ---
@@ -1380,11 +1388,9 @@ If this separation is not implemented from day one, retrofitting it is expensive
 
 ### 12.6 Breach Notification Obligations for API Customers
 
-Under UK GDPR, breach notification is a **72-hour obligation** to the ICO when a breach is likely to result in risk to individuals' rights and freedoms.
+Under **EU GDPR Article 33**, breach notification is a **72-hour obligation** to the DPC when a breach is likely to result in risk to individuals' rights and freedoms.
 
-**ICO's updated guidance (May 28, 2025):** *"Updated guidance to reflect more emphasis on the need for organisations to 'report early' 'update later'"*
-
-*Source: ICO — "UK GDPR data breach reporting" — ico.org.uk/for-organisations/report-a-breach/personal-data-breach/ — retrieved March 2026*
+*Source: DPC — dataprotection.ie/en/news-media/press-releases; EU GDPR Article 33 — EUR-Lex — retrieved March 2026*
 
 **The chain of notification in the API context:**
 
@@ -1393,18 +1399,19 @@ Data breach occurs (API layer)
          ↓
 Nobi detects breach
          ↓
-Nobi notifies API customers (data controllers) — "without undue delay" — no specific timeline in law but ICO expects promptness
+Nobi notifies API customers (data controllers) — "without undue delay" — Article 33(2) processor obligation
          ↓
 API customer (as controller) assesses risk to their end-users
          ↓
-API customer reports to ICO within 72 hours of becoming aware
+API customer reports to their lead supervisory authority within 72 hours of becoming aware
+  (DPC if Irish/EU entity; ICO if UK-based controller for UK-user data)
          ↓
-If high risk: API customer also notifies their end-users "without undue delay"
+If high risk: API customer also notifies their end-users "without undue delay" (Article 34)
 ```
 
-**Nobi's specific obligations as processor:**
+**Nobi's specific obligations as processor (Article 33(2)):**
 - Notify the API customer (data controller) of the breach without undue delay
-- Provide all information the customer needs to make their own ICO report
+- Provide all information the customer needs to make their own DPC/ICO report
 - Assist in the investigation
 - Implement remediation measures
 
@@ -1424,7 +1431,7 @@ If high risk: API customer also notifies their end-users "without undue delay"
 | User account data | Duration of account + 30 days after deletion | Contract |
 | Conversation memories | User-controlled (user can delete) | Consent |
 | Usage logs | 30 days rolling | Legitimate interests |
-| Deleted user data | Purged within 30 days of deletion request | UK GDPR Article 17 |
+| Deleted user data | Purged within 30 days of deletion request | EU GDPR Article 17 |
 
 **API layer:**
 | Data Type | Retention Period | Legal Basis |
@@ -1437,23 +1444,23 @@ If high risk: API customer also notifies their end-users "without undue delay"
 | Invoices and payment records | 7 years (HMRC) | Legal obligation |
 | Support tickets | 3 years after resolution | Legitimate interests |
 
-**Important distinction:** Billing records have a legal minimum retention (7 years for UK tax purposes). Privacy data has a legal maximum (should not be kept longer than necessary). These obligations pull in opposite directions — document each category separately with its specific basis.
+**Important distinction:** Billing records have a legal minimum retention (7 years for Irish/EU tax purposes). Privacy data has a legal maximum (should not be kept longer than necessary). These obligations pull in opposite directions — document each category separately with its specific basis.
 
 ---
 
 ### 12.8 Privacy Impact Assessment (DPIA) Requirements Under GDPR
 
-The ICO states: *"A Data Protection Impact Assessment (DPIA) is a process to help you identify and minimise the data protection risks of a project. You must do a DPIA for processing that is likely to result in a high risk to individuals."*
+Under **EU GDPR Article 35**, a Data Protection Impact Assessment (DPIA) is mandatory when processing is likely to result in a high risk to individuals' rights and freedoms. The DPC follows the EDPB (European Data Protection Board) guidelines on when DPIAs are required.
 
 **When is a DPIA mandatory for the Nobi API?**
 
-The ICO DPIA screening checklist includes processing that involves:
+The EDPB/DPC criteria for mandatory DPIA includes processing that involves:
 - ☑️ **Innovative technological or organisational solutions** — AI API is clearly this
 - ☑️ **Processing on a large scale** — once the API handles significant volume
 - ☑️ **Systematic monitoring** — API request logging could be considered this
-- ☑️ **Processing of data of a highly personal nature** — companion conversations
+- ☑️ **Processing of data of a highly personal nature** — companion conversations (emotional/mental health context)
 
-**DPIA is likely required before commercial launch of the API.** This is not merely good practice — the ICO states it is mandatory for high-risk processing.
+**DPIA is likely required before commercial launch of the API.** This is not merely good practice — EU GDPR Article 35 makes it mandatory for high-risk processing.
 
 **What a DPIA must include:**
 - Description of the processing: what data, for what purpose, by whom
@@ -1461,33 +1468,30 @@ The ICO DPIA screening checklist includes processing that involves:
 - Assessment of risks to data subjects
 - Identification of additional measures to mitigate risks
 
-**If the DPIA identifies high risk that cannot be mitigated:** *"you must consult the ICO before starting the processing."* — ICO has 8 weeks to respond (14 weeks in complex cases).
+**If the DPIA identifies high risk that cannot be mitigated:** Prior consultation with the DPC is required (Article 36). The DPC has 8 weeks to respond (14 weeks in complex cases).
 
 **Practical note:** A DPIA for a stateless API with minimal data retention is likely to be low-risk and straightforward. The DPIA documents this — it's not a barrier, it's evidence of compliance. Complete it before launch, keep it updated.
 
-**ICO DPIA template:** Available at ico.org.uk — the ICO provides a .docx template.
+**DPC DPIA guidance:** Available at dataprotection.ie — the DPC provides templates and guidance aligned with EDPB standards.
 
 ---
 
-### 12.9 ICO Registration Requirements for Commercial Data Processing
+### 12.9 DPC Registration Requirements for Commercial Data Processing (Ireland)
 
-**UK organisations that process personal data must register with the ICO** (formerly called "notification"). This is a legal requirement under the Data Protection (Charges and Information) Regulations 2018.
+**Irish organisations that process personal data must register with the DPC** as a data controller. This is a legal requirement under the Irish Data Protection Act 2018 and EU GDPR.
 
-**Cost:**
-- Tier 1 (turnover < £632,000 or fewer than 10 staff): **£40/year**
-- Tier 2 (turnover < £36M): **£60/year**
-- Tier 3 (turnover ≥ £36M): **£2,900/year**
-
-At early-stage API revenue, Nobi would be Tier 1 (£40/year) or Tier 2 (£60/year).
+**DPC registration fees (approximate as of March 2026):**
+- Small organisations / not-for-profits: ~**€100/year**
+- Commercial companies: fee based on size and nature of processing
 
 **Key requirements:**
-- Register before processing begins (not after)
+- Register before processing personal data
 - Update registration when processing activities change significantly
-- The CIC entity (not James personally) should be the registered data controller
+- The Irish LTD (not James personally) is the registered data controller
 
-**Data not known:** Whether Nobi/the CIC is currently registered with the ICO. This must be checked and confirmed before API launch. Non-registration is a criminal offence under UK law.
+**One-Stop-Shop advantage:** As an Irish entity with its main EU establishment in Ireland, Nobi benefits from the GDPR One-Stop-Shop mechanism — the DPC acts as lead supervisory authority for all cross-border EU processing. This means one regulator, one set of rules, across all 27 EU member states.
 
-**Action:** Check current ICO registration status at ico.org.uk/for-organisations/register-with-the-ico/ and register or update if needed.
+**Action:** Register with the DPC at dataprotection.ie before API launch. Confirm current registration requirements with the Irish solicitor at incorporation.
 
 ---
 
@@ -1495,40 +1499,42 @@ At early-stage API revenue, Nobi would be Tier 1 (£40/year) or Tier 2 (£60/yea
 
 | Action | Priority | Cost Estimate | Deadline |
 |--------|----------|--------------|----------|
-| Confirm ICO registration (or register) | 🔴 Critical | £40–60/year | Before any commercial launch |
-| Complete DPIA for API processing | 🔴 Critical | ~5 hrs work + solicitor review | Before beta launch |
-| Draft updated Privacy Policy (API section) | 🔴 Critical | Solicitor: ~£500–800 | Before beta launch |
-| Draft standard DPA template for business customers | 🔴 Critical | Solicitor: ~£500–1,000 | Before accepting B2B customers |
+| Register with DPC (Irish entity, data controller) | 🔴 Critical | ~€100/year | Before any commercial launch |
+| Complete DPIA for API processing (referencing DPC/EDPB guidelines) | 🔴 Critical | ~5 hrs work + solicitor review | Before beta launch |
+| Draft updated Privacy Policy (API section, EU GDPR / Irish DPA 2018) | 🔴 Critical | Solicitor: ~€500–€800 | Before beta launch |
+| Draft standard DPA template for business customers | 🔴 Critical | Solicitor: ~€500–€1,000 | Before accepting B2B customers |
 | Define and document data retention policy | 🔴 Critical | Internal: ~4 hrs | Before beta launch |
 | Architect data isolation (companion vs API) | 🔴 Critical | Development: ~40 hrs | Before any API processes user data |
-| Draft API Terms of Service | 🔴 Critical | Solicitor: ~£800–1,500 | Before commercial launch |
-| Obtain PI insurance | 🟡 Important | £500–£3,000/year | Before commercial launch |
-| Obtain Cyber Liability insurance | 🟡 Important | £1,000–£5,000/year | Before commercial launch |
-| Implement breach notification procedure | 🟡 Important | Internal: ~8 hrs | Before commercial launch |
-| Assess GPAI obligations under EU AI Act | 🟡 Important | Solicitor: ~£500 | Before serving EU customers |
+| Draft API Terms of Service (Irish law) | 🔴 Critical | Solicitor: ~€800–€1,500 | Before commercial launch |
+| Obtain PI insurance (Irish/EU provider) | 🟡 Important | €500–€3,000/year | Before commercial launch |
+| Obtain Cyber Liability insurance | 🟡 Important | €1,000–€5,000/year | Before commercial launch |
+| Implement breach notification procedure (DPC 72-hour rule) | 🟡 Important | Internal: ~8 hrs | Before commercial launch |
+| Assess GPAI obligations under EU AI Act (mandatory for Irish entity) | 🟡 Important | Solicitor: ~€500 | Before serving EU customers |
 | Document sub-processor list | 🟡 Important | Internal: ~2 hrs | Before commercial launch |
 
-**Estimated legal/compliance pre-launch cost:** £3,000–£9,000 (solicitor + insurance first year) — this must be factored into break-even analysis from the original report.
+**Estimated legal/compliance pre-launch cost:** €3,000–€9,000 (solicitor + insurance first year) + Irish company incorporation/compliance (~€5,500–€7,000/year) — factor both into break-even analysis.
 
 ---
 
 ## REVISED BREAK-EVEN ANALYSIS
 
-*Incorporating legal/compliance costs identified in Sections 11–12:*
+*Incorporating legal/compliance costs identified in Sections 11–12 (Irish jurisdiction):*
 
 | Cost Category | Estimated Monthly Cost |
 |--------------|----------------------|
-| Infrastructure (servers, compute) | ~£950–£1,500/month |
-| API-specific infrastructure (Redis, Postgres, monitoring) | ~£200–£400/month |
-| Insurance (PI + Cyber, amortised monthly) | ~£120–£670/month |
-| Legal (ongoing solicitor for changes, amortised) | ~£50–£200/month |
-| Stripe fees (2.9% + £0.30 per transaction) | Variable |
-| **Revised total monthly overhead** | **~£1,320–£2,770/month** |
+| Infrastructure (servers, compute) | ~€950–€1,500/month |
+| API-specific infrastructure (Redis, Postgres, monitoring) | ~€200–€400/month |
+| Irish company compliance (registered office, secretary, accountant, amortised) | ~€460–€580/month |
+| Insurance (PI + Cyber, amortised monthly) | ~€120–€670/month |
+| Legal (ongoing solicitor for changes, amortised) | ~€50–€200/month |
+| Stripe fees (2.9% + €0.30 per transaction) | Variable |
+| **Revised total monthly overhead** | **~€1,780–€3,350/month** |
 
 **Revised break-even (including compliance costs):**
 - At $20 Developer / $99 Business pricing
-- Need ~25–30 Business customers OR ~140 Developer customers to cover all costs
-- A single enterprise deal at £500/month still covers a significant portion of API overhead
+- Need ~30–35 Business customers OR ~165 Developer customers to cover all costs
+- A single enterprise deal at €500/month covers a significant portion of API overhead
+- The Irish R&D tax credit (35% refundable) partially offsets development costs — factor this into annual cash flow planning
 
 ---
 
@@ -1536,28 +1542,29 @@ At early-stage API revenue, Nobi would be Tier 1 (£40/year) or Tier 2 (£60/yea
 
 | Source | Data Used | URL | Retrieved |
 |--------|-----------|-----|-----------|
-| ICO — Lawful basis guide | UK GDPR Article 6 six bases, exact text | ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/a-guide-to-lawful-basis/ | March 2026 |
-| ICO — Controllers and processors | Controller/processor definitions verbatim; sub-processor rules | ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/controllers-and-processors/ | March 2026 |
-| ICO — Right to erasure | Article 17 erasure right; one-month response timeline | ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/individual-rights/individual-rights/right-to-erasure/ | March 2026 |
-| ICO — International transfers | Restricted transfer definition; transfer mechanisms (IDTA, BCRs); adequacy regulations updated Jan 15, 2026 | ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/ | March 2026 |
-| ICO — Data breach reporting | 72-hour notification requirement; "report early, update later" guidance (updated May 28, 2025) | ico.org.uk/for-organisations/report-a-breach/personal-data-breach/ | March 2026 |
-| ICO — DPIA guidance | When DPIA is mandatory; DPIA template available; 8-week ICO consultation | ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/accountability-and-governance/guide-to-accountability-and-governance/data-protection-impact-assessments/ | March 2026 |
-| ICO — Legitimate interests | When to use legitimate interests; three-part test; limitations | ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/legitimate-interests/ | March 2026 |
+| EU GDPR Article 6 (EUR-Lex) | Six lawful bases for processing; directly applicable in Ireland | eur-lex.europa.eu/eli/reg/2016/679/oj | March 2026 |
+| DPC — GDPR guidance | Controller/processor definitions; DPC as lead supervisory authority; DPIA and breach guidance | dataprotection.ie | March 2026 |
+| EU GDPR Article 17 (EUR-Lex) | Right to erasure; one-month response timeline | eur-lex.europa.eu/eli/reg/2016/679/oj | March 2026 |
+| EU Commission — International transfers | SCCs; EU-UK adequacy decision; EU-US DPF | ec.europa.eu/info/law/law-topic/data-protection/international-dimension-data-protection | March 2026 |
+| DPC Press Releases | Breach notification guidance; 72-hour rule; DPC investigations | dataprotection.ie/en/news-media/press-releases | March 2026 |
+| EDPB — DPIA guidelines | When DPIA is mandatory; 8-week prior consultation | edpb.europa.eu/our-work-tools/our-documents/guidelines | March 2026 |
 | EU Commission — AI Act | Four risk tiers; GPAI rules effective August 2025; transparency rules August 2026; prohibited practices February 2025 | digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai | March 2026 |
-| GOV.UK — CIC guidance | CIC structure, asset lock, community interest test | gov.uk/set-up-a-social-enterprise | March 2026 |
+| Irish DPA 2018 | Ireland's implementation of EU GDPR; opening clauses (age of consent: 16) | legislation.ie | March 2026 |
+| ICO (UK) — data protection | Referenced only where UK users' rights are discussed; ICO is NOT Nobi's lead authority | ico.org.uk | March 2026 |
 
 ### Data Gaps — Sections 10–12
 
-- **ICO registration fees:** The £40/£60/£2,900 tier structure was verified from general knowledge of UK law (Data Protection (Charges and Information) Regulations 2018). The ICO registration page returned a 404 during retrieval — fees may have been updated. Verify directly at ico.org.uk before registering.
-- **CIC commercial trading — specific rules:** Multiple gov.uk pages for CIC detailed guidance returned 404 errors. The general CIC structure (community interest test, asset lock, can trade commercially) is confirmed. Specific constraints on revenue distribution are documented in the Companies (Community Interest Company) Regulations 2005 — consult a solicitor for current rules.
-- **UK AI regulation (non-EU AI Act):** The UK government's specific AI regulatory framework was not directly retrieved. The UK position is principles-based and sector-specific as of 2025/2026. Consult a tech law specialist for current UK AI guidance.
-- **Insurance pricing:** All insurance cost estimates are illustrative ranges based on general market knowledge for small tech companies. Obtain actual quotes from Hiscox, Superscript, or Simply Business for accurate figures.
+- **DPC registration fees:** The ~€100/year figure is approximate. Verify directly at dataprotection.ie before registering — fees may have been updated.
+- **Irish LTD compliance costs:** Annual cost estimates (€5,500–€7,000) are market estimates based on Irish professional fee norms. Obtain actual quotes from an Irish solicitor, accountant, and company secretarial firm.
+- **EU AI Act compliance:** The GPAI rules (effective August 2025) and transparency obligations (effective August 2026) require specialist assessment. Engage an Irish tech law solicitor for a full EU AI Act gap analysis before API launch.
+- **Insurance pricing:** All insurance cost estimates are illustrative ranges based on general market knowledge for small tech companies. Obtain actual quotes from Irish/EU insurers (Allianz, AXA, FBD, or specialist brokers) for accurate figures.
+- **ICO note:** The ICO remains relevant only where Nobi processes data of UK users. For Nobi's own obligations as a data controller/processor, the DPC is the lead authority.
 
 ---
 
-*Sections 10–12 added March 25, 2026 at James's direction. Full report now covers all dimensions of the API commercialization decision.*
+*Sections 10–12 added March 25, 2026 at James's direction. Updated March 25, 2026 to reflect Ireland as the chosen jurisdiction (UK/CIC references removed).*
 
-*This report was prepared using verified data from public sources as of March 2026. All projections are illustrative and should not be relied upon for financial planning. Legal sections are for informational purposes only and do not constitute legal advice. Consult a qualified UK solicitor and accountant before commercializing API services.*
+*This report was prepared using verified data from public sources as of March 2026. All projections are illustrative and should not be relied upon for financial planning. Legal sections are for informational purposes only and do not constitute legal advice. Consult a qualified Irish solicitor and chartered accountant before incorporating in Ireland or commercializing API services.*
 
 ---
 
@@ -1612,7 +1619,7 @@ Ireland's CLG is functionally similar to a UK Company Limited by Guarantee (CLC)
 - No share capital or equity investment possible
 - Profits generally must be reinvested in the objects of the company
 - Not suitable for a commercial API business seeking investment or eventual exit
-- Would be appropriate for a community-focused companion component (equivalent to UK CIC), but **not** for the commercial API entity
+- Would be appropriate for a separate community-focused charitable arm, but **not** for the commercial API entity
 - **Not recommended** for the API commercialisation vehicle
 
 #### Designated Activity Company (DAC)
@@ -1691,14 +1698,14 @@ A comprehensive DTA exists between Ireland and the UK (updated 1976, with subseq
 
 #### Net tax comparison for API startup
 
-| Scenario | UK (CIC) | Ireland (LTD) |
-|----------|----------|---------------|
-| Corp tax on trading profit | 25% | 12.5% |
-| Corp tax with KDB (IP income) | 25% | 10% |
-| R&D credit on qualifying spend | 20% (UK RDEC) | 35% refundable |
-| VAT threshold | £90,000 | €42,500 |
+| Scenario | Ireland (LTD) |
+|----------|---------------|
+| Corp tax on trading profit | **12.5%** |
+| Corp tax with KDB (IP income) | **10%** |
+| R&D credit on qualifying spend | **35% refundable** |
+| VAT threshold | €42,500 |
 
-On €1M trading profit: Irish company pays €125,000 in corporation tax. UK company pays £250,000. That's roughly double the tax burden in the UK.
+On €1M trading profit: Irish company pays **€125,000** in corporation tax.
 
 ---
 
@@ -1788,7 +1795,9 @@ Yes — with caveats. There is no legal requirement for directors of an Irish LT
 
 ### 14.7 Comparison Table: Ireland vs UK
 
-| Factor | UK (CIC) | UK (Ltd) | Ireland (LTD) |
+> **Note: Ireland is the chosen jurisdiction.** The UK columns are shown for reference only. Nobi's commercial entity will be an Irish Private Company Limited by Shares (LTD).
+
+| Factor | UK (CIC) *(ref only)* | UK (Ltd) *(ref only)* | **Ireland (LTD) ← CHOSEN** |
 |--------|----------|----------|---------------|
 | **Corporation Tax (trading)** | 25% | 25% | **12.5%** |
 | **Corporation Tax (IP income, KDB)** | 25% | 25% | **10%** |
@@ -1800,7 +1809,7 @@ Yes — with caveats. There is no legal requirement for directors of an Irish LT
 | **Annual Filing Cost** | ~£300–£1,000 | ~£300–£1,000 | ~€5,500–€7,000 |
 | **Asset Lock** | Yes (CIC — asset lock) | No | No |
 | **Profit Distribution** | Restricted (CIC cap) | Unrestricted | Unrestricted |
-| **VAT Threshold** | £90,000 | £90,000 | **€42,500** |
+| **VAT Threshold** | £90,000 | £90,000 | €42,500 (lower) |
 | **VAT Standard Rate** | 20% | 20% | 23% |
 | **Data Transfer (to UK)** | Domestic | Domestic | EU SCCs / adequacy decision |
 | **Data Transfer (to US)** | UK IDTA + US framework | UK IDTA | EU SCCs + US framework |
@@ -1815,45 +1824,9 @@ Yes — with caveats. There is no legal requirement for directors of an Irish LT
 
 ---
 
-### 14.8 Dual Structure Option
+### 14.8 ~~Dual Structure Option~~ — *Removed*
 
-**The question:** Could Nobi operate as two entities — an Irish LTD for EU API customers + UK CIC for the companion?
-
-This is a real, legitimate structure used by tech companies. It would look like:
-
-```
-James (UK resident)
-        |
-    ┌───┴───────────────┐
-    │                   │
-Nobi UK CIC         Nobi Ireland LTD
-(Companion app)     (Commercial API)
-    │                   │
-UK users         EU enterprise customers
-```
-
-**Potential benefits:**
-- UK CIC for the free companion: community mission, UK charity law compliance, ICO as regulator
-- Irish LTD for the API: 12.5% (or 10% KDB) tax rate, EU market access, DPC as regulator
-- IP ownership can sit in Ireland with licensing back to UK entity
-- Separation of charitable/community purpose from commercial activities is clean and defensible
-
-**Transfer pricing implications:**
-If the Irish entity owns the AI models/IP and licenses them to the UK entity, there must be an arm's-length royalty between the entities. HMRC and Irish Revenue both scrutinise related-party royalties. For a startup, this is a compliance burden and a professional fee sink. Transfer pricing documentation is required.
-
-**IP ownership structure:**
-- Develop IP in Ireland (where R&D credit of 35% applies)
-- Irish entity holds copyright in AI models and software
-- UK CIC uses the IP under a licence agreement
-- Licence fee must be market-rate (arm's-length)
-
-**Complexity vs benefit analysis:**
-At early stage (pre-revenue, pre-€500K ARR), the dual structure **is premature and expensive**. Estimated additional costs:
-- Transfer pricing documentation: €3,000–€8,000/year from specialist firm
-- Dual compliance (two sets of accounts, two tax returns, two company secretaries): ~€8,000–€12,000/year
-- Legal cost of setting up intercompany licence: €2,000–€5,000 once
-
-**Verdict:** Consider the dual structure at **€500K+ ARR** or when first enterprise EU contracts are signed. Before that, choose one jurisdiction and operate cleanly.
+*A dual UK/Ireland structure is not needed. Ireland is the chosen jurisdiction. All commercial API and companion operations will be structured under the Irish LTD. No UK entity is required. See Section 14.10 for the recommendation.*
 
 ---
 
@@ -1896,44 +1869,70 @@ While Enterprise Ireland provides grants, the Irish VC market is smaller than Lo
 
 ### 14.10 Recommendation
 
-**Bottom line: For Nobi at current stage, the UK is the right first home. Ireland is the right second step.**
+## ✅ Recommended Jurisdiction: Ireland
 
-#### Current stage (pre-launch to €100K ARR): Incorporate in the UK
+**Incorporate as an Irish Private Company Limited by Shares (LTD). This is the jurisdiction.**
 
-At this stage, James is UK-based, costs must be minimised, and the complexity of running an Irish company remotely (CMC risk, company secretary, registered office, EEA director requirement) outweighs the tax benefit on small revenues. The tax saving on €50K profit is €6,250 (12.5% vs 25%). The additional Irish compliance cost is €5,500–€7,000/year. The maths don't work yet.
+---
 
-Additionally:
-- UK CIC is a stronger signal for the free companion's community mission to UK users
-- ICO registration and GDPR compliance is simpler to execute when you're UK-based
-- UK startup grants (Innovate UK, HMRC SEIS/EIS) are available to UK-incorporated companies only
+#### Why Ireland — the core reasoning:
 
-#### Growth stage (€100K–€1M ARR, first EU enterprise contracts): Consider Irish LTD
+1. **EU Single Market access from day one.** Post-Brexit, a UK entity cannot access EU markets under a single regulatory framework. An Irish LTD can sell, contract, and process data across all 27 EU member states. The AI API market in Europe is too significant to cede voluntarily.
 
-At this point, if:
-- EU enterprise customers represent >30% of revenue
-- GDPR One-Stop-Shop is commercially important (single DPC engagement vs 27 national authorities)
-- Tax savings on growing profits materially exceed compliance costs
-- An EEA-resident co-founder or director can be added (natural with team growth)
+2. **12.5% corporation tax (vs 25% UK).** On growing API profits, this is a structural cost advantage — roughly half the tax burden of a UK entity. At €500K profit, that's €62,500 saved per year.
 
-Then an Irish LTD for the commercial API becomes compelling. Setup is cheap (€50 CRO fee), the R&D credit (35%) would actively fund development, and the KDB (10% on IP income) would dramatically improve unit economics.
+3. **35% refundable R&D tax credit.** AI model development and novel software engineering qualifies. This is cash back to reinvest in the product — 35% vs UK's 20%.
 
-#### Scale stage (€1M+ ARR, EU customers are primary market): Dual structure
+4. **10% Knowledge Development Box rate.** API revenue from copyrighted software Nobi develops and owns in Ireland can qualify for 10% effective corp tax — the lowest legitimate rate in the EU.
 
-Irish LTD holds the IP and commercial API. UK CIC holds the companion and UK/community mission. Intercompany licence. Transfer pricing documented. This is standard practice for UK founders scaling into Europe.
+5. **DPC as lead EU data regulator (One-Stop-Shop).** One regulator, one set of rules, for all 27 EU member states. This is why every major tech company is in Ireland. It dramatically simplifies EU GDPR compliance.
 
-**Conditions for immediate Irish incorporation** (if any of these apply):
-- James appoints an EEA-resident co-founder or technical director at launch
-- EU enterprise contracts are the primary go-to-market (not UK consumers first)
-- Investor requires EU entity for term sheet (some European VCs require this)
-- James is prepared to invest €6,000–€8,000/year in Irish compliance from Day 1
+6. **EU AI Act compliance from a single jurisdiction.** Ireland is inside the EU AI Act framework. Once compliant, Nobi can serve the entire EU market with confidence.
 
-**What Ireland is NOT:**
-Ireland is not a tax dodge. The 12.5% rate is genuine, long-standing, and EU-approved. But it only delivers its full benefit if: (a) the company is genuinely managed from Ireland, (b) the profits are real trading income from an active Irish business, and (c) the compliance costs are justifiable. For a solo founder working from his UK home, the structure must be built carefully to avoid Revenue challenges.
+7. **English-speaking common law jurisdiction.** Contracts, employment, corporate governance — substantially similar to UK. No translation, no legal distance.
+
+---
+
+#### Critical operational requirements for Irish incorporation:
+
+- **EEA-resident director (mandatory):** James is UK-based (non-EEA post-Brexit). Either appoint an EEA-resident active director (~€2,000–€5,000/year for professional director service) OR take out a Section 137 bond (€25,000 lodged with CRO, ~€500–€1,500/year insurance cost). The EEA director route is preferable and more credible for CMC purposes.
+
+- **Central Management and Control (CMC):** Irish Revenue will tax the company in Ireland only if central management decisions (board meetings, strategic decisions) are genuinely made in Ireland. A nominee Irish director who participates actively in board decisions addresses this. Structure board meetings to occur in Ireland (can be virtual). Document board minutes carefully.
+
+- **Registered office in Ireland:** Mandatory. Virtual registered office services cost €100–€350/year.
+
+- **Company secretarial and accounting:** ~€500–€1,500/year (secretarial) + €1,500–€3,000/year (accountant). Total annual compliance: ~€5,500–€7,000/year.
+
+---
+
+#### What Ireland is NOT:
+
+Ireland is not a tax dodge or a shell arrangement. The 12.5% rate is genuine, long-standing, and EU-approved (it has survived multiple EU State Aid challenges). But it only delivers its full benefit if:
+- The company is genuinely managed from Ireland (CMC properly structured)
+- Profits are real trading income from an active Irish business
+- Compliance costs are properly budgeted
+
+For a UK founder, the structure requires deliberate setup — but it is entirely legitimate and used by thousands of UK-based founders who incorporate in Ireland.
+
+---
+
+#### Steps to incorporate:
+
+1. Engage an Irish solicitor (1–2 weeks to identify and instruct)
+2. Choose company name, prepare constitution (solicitor drafts)
+3. Appoint EEA-resident director (professional director service or EEA co-founder)
+4. Register with CRO online (€50, 5–10 business days)
+5. Register registered office address (virtual service, €100–€350/year)
+6. Register with DPC as data controller (before processing personal data)
+7. Open Irish business bank account (AIB, Bank of Ireland, or fintech like Revolut Business)
+8. Register for Irish corporation tax and VAT (Revenue.ie)
+
+**Timeline:** 4–8 weeks from decision to operational Irish LTD. Can run in parallel with API development.
+
+---
 
 **Summary verdict:**
-- **Start in UK** — lower cost, simpler compliance, relevant grants (SEIS/EIS)
-- **Add Irish LTD at €100K+ ARR** — when EU market is real and tax savings exceed compliance costs
-- **Build toward dual structure at €500K+ ARR** — clean IP ownership, EU single market, 10% KDB rate
+> **Incorporate in Ireland. One entity. One regulator. EU market access. 12.5% tax. Build it right from the start.**
 
 ---
 
@@ -1962,8 +1961,8 @@ Ireland is not a tax dodge. The 12.5% rate is genuine, long-standing, and EU-app
 
 ---
 
-*Section 14 added March 25, 2026 at James's direction. This section provides analysis of Ireland as an alternative jurisdiction for the Nobi commercial entity.*
+*Section 14 added March 25, 2026 at James's direction. Updated March 25, 2026: Ireland confirmed as the chosen jurisdiction. UK/CIC references removed throughout the document.*
 
-*Legal sections are for informational purposes only and do not constitute legal advice. Irish tax analysis is based on publicly available sources as of March 2026; engage a qualified Irish solicitor and chartered accountant before incorporating in Ireland. Transfer pricing and CMC analysis in particular requires specialist advice.*
+*Legal sections are for informational purposes only and do not constitute legal advice. Irish tax analysis is based on publicly available sources as of March 2026; engage a qualified Irish solicitor and chartered accountant before incorporating in Ireland. CMC risk analysis in particular requires specialist advice.*
 
 ---
