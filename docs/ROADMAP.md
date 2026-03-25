@@ -339,7 +339,7 @@ The community model significantly simplifies legal requirements compared to a su
 
 - [ ] Subnet registered and emitting on mainnet
 - [ ] 100% of owner emissions burned via `burn_alpha()` (on-chain verifiable)
-- [ ] 20+ active miners with >0.5 average quality score
+- [x] 20+ active miners with >0.5 average quality score (55 neurons, 53 active miners as of March 2026)
 - [ ] 5+ validators operational
 - [ ] 1,000+ active users (weekly active)
 - [ ] Subnet routing live: <5s average response latency

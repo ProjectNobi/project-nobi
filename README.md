@@ -204,7 +204,7 @@ See also: [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md)
 | **Registration** | Open |
 | **GPU Required** | No |
 | **Min Hardware** | 2 CPU, 2GB RAM, any VPS |
-| **Active Neurons** | 14+ (growing) |
+| **Active Neurons** | 55 (53 miners serving across 7 servers) |
 | **Web App** | [Launch](https://app.projectnobi.ai) |
 
 ---
