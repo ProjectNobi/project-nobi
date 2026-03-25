@@ -56,6 +56,11 @@ export default function HomePage() {
               Built on Bittensor
             </div>
 
+            {/* Testnet Disclaimer Banner */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-medium">
+              ⚠️ Testnet Phase — Under active development. Use at your own risk.
+            </div>
+
             {/* Heading */}
             <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
               Meet{" "}

@@ -1,3 +1,5 @@
+> ⚠️ **Testnet Notice:** Project Nobi is currently in testnet phase. All features, mechanisms, and economics described in this document are subject to change. Nothing in this document constitutes financial advice or a guarantee of future functionality.
+
 # Project Nobi — Vision
 
 ### A Manifesto for Accessible AI Companionship

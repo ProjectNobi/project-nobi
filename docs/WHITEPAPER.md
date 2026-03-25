@@ -8,6 +8,8 @@
 
 ---
 
+> ⚠️ **Testnet Notice:** This whitepaper describes a system currently in testnet phase on Bittensor SN272. Implementation details, mechanisms, and specifications are subject to change. Nothing in this document constitutes financial advice.
+
 ## Abstract
 
 We present Project Nobi, a decentralized protocol built on the Bittensor network that creates a competitive marketplace for personal AI companions with persistent memory. Unlike existing centralized AI assistants whose memory features remain under corporate control, Nobi incentivizes a distributed network of miners to build companions that remember users across conversations, exhibit genuine personality, and improve continuously through market competition. Our protocol introduces four key contributions: (1) a memory-augmented companion scoring mechanism that rewards persistent user understanding, (2) a dynamic query generation system that prevents gaming through combinatorial unpredictability, (3) a multi-dimensional evaluation framework combining LLM-as-judge quality assessment with empirical memory recall verification, safety scoring, and latency measurement, and (4) a layered privacy architecture progressing from AES-128 at-rest encryption to end-to-end AES-256-GCM TEE encryption with HPKE key wrapping (code-complete) and eventually federated on-device learning. We demonstrate the system's viability through testnet deployment on Bittensor SN272 and stress testing at simulated 500-node scale with 99.75% reliability. As of March 2026, the codebase includes a full GDPR compliance module, adversarial safety probes in the reward pipeline, mandatory age verification, and a React Native mobile scaffold. 1,661 tests are passing across the entire codebase (1,663 collected, 2 skipped).

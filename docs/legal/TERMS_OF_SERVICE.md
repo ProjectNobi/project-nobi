@@ -1,7 +1,7 @@
 # Terms of Service
 
 **Effective Date:** March 20, 2026  
-**Last Updated:** March 20, 2026
+**Last Updated:** March 25, 2026
 
 ---
 
@@ -16,6 +16,28 @@ Welcome to Nori, the AI companion service operated by Project Nobi ("Project Nob
 By accessing or using Nori through any of our platforms — including our Telegram bot, web application at app.projectnobi.ai, mobile application, or API — you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our service.
 
 These Terms constitute a legally binding agreement between you and Project Nobi. Please read them carefully.
+
+---
+
+## 1A. Testnet Status and Disclaimer
+
+**Project Nobi and the Nori AI companion are currently in testnet phase (Bittensor SN272).** This means:
+
+- The service is under active development and testing
+- Features may be added, changed, or removed without notice
+- Data (including memories and conversations) may be reset during testing
+- Service availability is not guaranteed
+- Performance and response quality may vary
+- The underlying infrastructure may change significantly before mainnet launch
+
+**By using Nori during the testnet phase, you acknowledge and accept that:**
+1. The service is provided "as-is" with no warranties of any kind
+2. You use the service entirely at your own risk
+3. We are not liable for any loss of data, service interruptions, or issues arising from testnet usage
+4. Features and functionality demonstrated during testnet may not be available at mainnet launch
+5. This is not a production-ready product
+
+This disclaimer supplements, and does not replace, the general limitations of liability in these Terms.
 
 ---
 

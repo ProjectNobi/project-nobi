@@ -2,7 +2,7 @@
 
 > *"Every human being deserves a companion that knows them, grows with them, and belongs to them — not to a corporation."*
 
-[![Testnet](https://img.shields.io/badge/Bittensor_Testnet-SN272-blue)](https://docs.learnbittensor.org)
+[![Testnet](https://img.shields.io/badge/Bittensor_Testnet-SN272-orange)](https://docs.learnbittensor.org)
 [![Try it](https://img.shields.io/badge/Try_it-@ProjectNobiBot-blue?logo=telegram)](https://t.me/ProjectNobiBot)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Free for All](https://img.shields.io/badge/Price-Free_Forever-brightgreen)]()
@@ -34,6 +34,10 @@ How? Community-funded through Bittensor network emissions and voluntary TAO stak
 - **Discord:** [Join our community](https://discord.gg/e6StezHM)
 
 No setup, no account, no payment. It remembers you.
+
+---
+
+> ⚠️ **Testnet Notice:** Project Nobi is currently in testnet (Bittensor SN272). The service is under active development and testing. Features may change, break, or be unavailable. By using any Project Nobi service, you acknowledge that you do so at your own risk. This is not a production product. No guarantees are made regarding uptime, data persistence, or service continuity during the testnet phase. See our [Terms of Service](docs/legal/TERMS_OF_SERVICE.md) for full details.
 
 ---
 

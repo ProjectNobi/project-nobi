@@ -224,7 +224,8 @@ WELCOME_MESSAGES = [
         "A few things to know:\n"
         "• I'm an AI — not a therapist, doctor, or counselor\n"
         "• Your memories are encrypted and you control them\n"
-        "• Type /help anytime for commands, /privacy for your data rights\n\n"
+        "• Type /help anytime for commands, /privacy for your data rights\n"
+        "• ⚠️ Nori is in testnet phase — features may change and data may be reset. Use at your own risk.\n\n"
         "By chatting with me, you agree to our Terms of Service: projectnobi.ai/terms\n\n"
         "What would you like me to call you?"
     ),
@@ -234,7 +235,8 @@ WELCOME_MESSAGES = [
         "Worth knowing:\n"
         "• I'm an AI — genuine warmth, but not a human\n"
         "• Your data is encrypted and always yours to control\n"
-        "• /help for commands, /privacy for your rights\n\n"
+        "• /help for commands, /privacy for your rights\n"
+        "• ⚠️ Nori is in testnet phase — features may change and data may be reset. Use at your own risk.\n\n"
         "By continuing, you agree to our Terms of Service: projectnobi.ai/terms\n\n"
         "What would you like me to call you?"
     ),

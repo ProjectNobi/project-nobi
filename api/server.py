@@ -1376,6 +1376,13 @@ async def health():
         "model": llm_model if llm_client else None,
         "billing_enabled": billing is not None,
         "stripe_configured": stripe_handler.stripe_configured if stripe_handler else False,
+        "phase": "testnet",
+        "network": "Bittensor SN272",
+        "testnet_notice": (
+            "Project Nobi is currently in testnet phase (Bittensor SN272). "
+            "The service is under active development. Features may change and data may be reset. "
+            "Use at your own risk. This is not a production product."
+        ),
         "legal_notice": (
             "Nori is an AI companion, not a professional service provider. "
             "Nothing Nori says constitutes medical, legal, or financial advice. "

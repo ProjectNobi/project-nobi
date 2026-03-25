@@ -1,3 +1,5 @@
+> ⚠️ **Testnet Notice:** Project Nobi is in active testnet development on Bittensor SN272. Features described may change. Use at your own risk.
+
 # Project Nobi — Community Announcement Draft
 
 > For use when James approves breaking stealth mode.
