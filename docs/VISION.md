@@ -1,4 +1,4 @@
-> ⚠️ **Testnet Notice:** Project Nobi is currently in testnet phase. All features, mechanisms, and economics described in this document are subject to change. Nothing in this document constitutes financial advice or a guarantee of future functionality.
+> ⚠️ **Testnet Notice:** Project Nobi is currently in testnet phase on Bittensor SN272. All features, mechanisms, and economics described in this document are subject to change. Use at your own risk. Nothing in this document constitutes financial advice or a guarantee of future functionality.
 
 # Project Nobi — Vision
 

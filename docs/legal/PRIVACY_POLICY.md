@@ -1,7 +1,9 @@
+> ⚠️ **Testnet Notice:** Project Nobi is currently in testnet phase. Data handling practices described in this policy are subject to change during development. Use at your own risk.
+
 # Privacy Policy
 
 **Effective Date:** March 20, 2026  
-**Last Updated:** March 20, 2026
+**Last Updated:** March 25, 2026
 
 ---
 
@@ -44,7 +46,7 @@ We collect data in the following categories:
 | Conversation content | Text messages, voice transcriptions, image descriptions | Providing the companion service |
 | Memory data | Facts, preferences, events Nori extracts from conversations | Personalisation and continuity |
 | Feedback and support | Bug reports, feature requests, support tickets | Service improvement |
-| Payment information | Billing address, last 4 digits of card (Stripe handles full card data) | Payment processing |
+| Payment information | Not currently collected — the service is free for all users. If paid features are introduced in the future, payment processing will be handled by a PCI-DSS compliant provider. | N/A |
 
 ### 2.2 Data Collected Automatically
 | Data Category | Examples | Purpose |
@@ -55,7 +57,7 @@ We collect data in the following categories:
 | Cookies and local storage | Session tokens, preferences, consent flags | Authentication and user experience |
 
 ### 2.3 Data We Do NOT Collect
-- Full payment card numbers (handled exclusively by Stripe)
+- Payment card numbers (the service is free; no payment information is collected)
 - Audio recordings (voice messages are transcribed; the audio is not permanently stored)
 - Original images (images are analysed for conversational context; originals are not permanently stored)
 - Location data (we do not request or store GPS coordinates)
@@ -71,7 +73,7 @@ Under GDPR, we process your data on the following legal bases:
 |---|---|
 | Providing the companion service | **Contract** (Art. 6(1)(b)) — necessary to perform the service you requested |
 | Memory storage and personalisation | **Contract** (Art. 6(1)(b)) — core feature of the service |
-| Payment processing | **Contract** (Art. 6(1)(b)) — necessary to process your subscription |
+| Payment processing | **Contract** (Art. 6(1)(b)) — not currently applicable; the service is free. Will apply if paid features are introduced. |
 | Safety filtering and abuse prevention | **Legitimate interests** (Art. 6(1)(f)) — protecting users and the platform |
 | Service analytics and improvement | **Legitimate interests** (Art. 6(1)(f)) — improving service quality |
 | Marketing communications | **Consent** (Art. 6(1)(a)) — only with your explicit opt-in |
@@ -87,7 +89,7 @@ We use your data to:
 1. **Provide the service** — process your messages and generate AI responses
 2. **Enable memory** — store and retrieve personal context to make Nori feel like a real companion
 3. **Personalise your experience** — adapt Nori's tone, topics, and responses to you over time
-4. **Process payments** — manage your subscription and billing
+4. **Process payments** — not currently applicable; the service is free for all users
 5. **Improve service quality** — analyse usage patterns and fix issues (using anonymised/aggregated data)
 6. **Ensure safety** — detect and prevent abuse, illegal content, and harmful interactions
 7. **Communicate with you** — send service updates, receipts, and responses to your enquiries
@@ -143,7 +145,7 @@ We share your data only in the following limited circumstances:
 
 | Recipient | Purpose | Safeguards |
 |---|---|---|
-| **Stripe** | Payment processing | Stripe Privacy Policy; PCI-DSS compliant; data processing agreement in place |
+| **Stripe** | Payment processing (not currently active — service is free) | Stripe Privacy Policy; PCI-DSS compliant; will apply if paid features are introduced |
 | **Bittensor miners** | AI response generation | Miners process conversation content during response generation; stored data encrypted at rest (AES-128); pseudonymous identifiers |
 | **Cloud infrastructure providers** | Hosting and storage | Data processing agreements; encrypted data |
 | **Legal authorities** | Compliance with legal obligations | Only when required by law, court order, or to protect safety |
@@ -191,7 +193,7 @@ California residents have the right to:
 | Active account data (conversations, memories) | Retained while your account is active |
 | Inactive account data | Automatically deleted after **12 months of inactivity** |
 | Deleted account data | Permanently deleted within **30 days** of account deletion request |
-| Payment records | Retained for **7 years** for accounting and legal compliance |
+| Payment records | Not currently applicable — the service is free. If introduced, retained for **7 years** for legal compliance. |
 | Safety and abuse logs | Retained for **12 months** for security purposes |
 | Anonymous analytics | Retained for **12 months** then permanently deleted |
 | Support tickets | Retained for **24 months** then anonymised |
@@ -311,4 +313,4 @@ Web: ico.org.uk
 
 ---
 
-*This Privacy Policy was last updated on March 20, 2026. It complies with GDPR Articles 13 and 14, UK GDPR, CCPA, and COPPA.*
+*This Privacy Policy was last updated on March 25, 2026. It complies with GDPR Articles 13 and 14, UK GDPR, CCPA, and COPPA.*
