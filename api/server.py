@@ -42,6 +42,7 @@ from nobi.api_auth import ApiKeyManager
 from nobi.personality import PersonalityTuner, detect_mood
 from nobi.personality.prompts import get_dynamic_prompt
 from nobi.support import FeedbackManager, SupportHandler
+from nobi.proactive import ProactiveEngine
 
 try:
     from openai import OpenAI
@@ -183,6 +184,7 @@ lang_detector: Optional[LanguageDetector] = None
 llm_client: Optional[Any] = None
 llm_model: str = CHUTES_MODEL
 user_settings: Dict[str, Dict[str, Any]] = {}  # In-memory settings cache
+proactive_engine: Optional[ProactiveEngine] = None
 billing: Optional[SubscriptionManager] = None
 stripe_handler: Optional[StripeHandler] = None
 api_key_mgr: Optional[ApiKeyManager] = None
@@ -410,10 +412,11 @@ async def rate_limit_middleware(request: Request, call_next):
 
 
 async def startup():
-    global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler, api_key_mgr, personality_tuner, feedback_manager, support_handler
+    global memory, adapter_manager, lang_detector, llm_client, llm_model, billing, stripe_handler, api_key_mgr, personality_tuner, feedback_manager, support_handler, proactive_engine
 
     ensure_master_secret()
     memory = MemoryManager(db_path=DB_PATH)
+    proactive_engine = ProactiveEngine(memory, getattr(memory, "graph", None))
     adapter_manager = UserAdapterManager(db_path=DB_PATH)
     lang_detector = LanguageDetector()
 
@@ -718,6 +721,11 @@ async def save_settings(req: SettingsRequest, request: Request = None):
         user_settings[uid]["theme"] = req.theme
     if req.display_name is not None:
         user_settings[uid]["display_name"] = req.display_name
+    if req.proactive_enabled is not None:
+        user_settings[uid]["proactive_enabled"] = req.proactive_enabled
+        # Sync to proactive engine DB so Telegram bot sees the same setting
+        if proactive_engine is not None:
+            proactive_engine.set_opted_in(uid, req.proactive_enabled)
 
     return {"success": True, "settings": user_settings[uid]}
 
@@ -726,7 +734,11 @@ async def save_settings(req: SettingsRequest, request: Request = None):
 async def get_settings(user_id: str, request: Request = None):
     authed = await require_session_user_id(request)
     uid = f"web_{authed}"
-    return {"settings": user_settings.get(uid, {})}
+    settings = user_settings.get(uid, {})
+    # Hydrate proactive status from engine DB (source of truth)
+    if proactive_engine is not None:
+        settings["proactive_enabled"] = proactive_engine.is_opted_in(uid)
+    return {"settings": settings}
 
 
 @app.get("/api/languages")

@@ -750,6 +750,7 @@ class CompanionBot:
                 "Features:\n"
                 "  /voice — toggle voice replies\n"
                 "  /language — change language (20+ supported)\n"
+                "  /proactive — toggle check-in messages on/off\n"
                 "  /plan — your usage stats\n"
                 "  /limits — rate limits & usage\n\n"
                 "Support:\n"
@@ -1339,6 +1340,36 @@ _ADULT_OVERRIDE_SIGNALS = [
     r"\bmy (job|career|boss|coworker|colleague)\b",
     r"\b(mortgage|rent|taxes|insurance|retirement)\b",
     r"\bmy (apartment|house|car)\b",
+]
+
+# ─── Natural Language Proactive Toggle Phrases ────────────────
+# Ordered longest-first so more specific phrases match before shorter substrings
+_PROACTIVE_OFF_PHRASES = [
+    "stop checking in on me", "stop checking in",
+    "stop sending me check-ins", "stop the check-ins",
+    "stop check-ins", "stop check ins", "stop checkins",
+    "stop reaching out",
+    "turn off check-ins", "turn off check ins", "turn off checkins",
+    "disable check-ins", "disable check ins", "disable checkins",
+    "no more check-ins", "no more check ins", "no more checkins",
+    "don't check in on me", "dont check in on me",
+    "don't check in", "dont check in",
+    "stop proactive", "disable proactive",
+    "turn off proactive", "no proactive",
+    "pause check-ins", "pause check ins", "pause checkins",
+    "i don't want check-ins", "i dont want check-ins",
+    "i don't want check ins", "i dont want check ins",
+]
+_PROACTIVE_ON_PHRASES = [
+    "start checking in on me", "start checking in",
+    "start check-ins", "start check ins",
+    "turn on check-ins", "turn on check ins", "turn on checkins",
+    "enable check-ins", "enable check ins", "enable checkins",
+    "enable proactive", "turn on proactive", "start proactive",
+    "please check in on me", "you can check in on me",
+    "check on me sometimes",
+    "resume check-ins", "resume check ins", "resume checkins",
+    "i want check-ins", "i want check ins",
 ]
 
 
@@ -2409,6 +2440,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # ─── Private Chat Handling (existing logic) ──────────────
+
+    # ─── Natural Language Proactive Toggle ────────────────────
+    if any(phrase in msg_lower for phrase in _PROACTIVE_OFF_PHRASES):
+        companion.proactive_engine.set_opted_in(user_id, False)
+        await update.message.reply_text(
+            "🔕 Check-ins turned OFF.\n"
+            "No worries — I'll only respond when you message me.\n\n"
+            "You can turn them back on anytime: just say \"start checking in\" "
+            "or use /proactive on"
+        )
+        return
+    if any(phrase in msg_lower for phrase in _PROACTIVE_ON_PHRASES):
+        companion.proactive_engine.set_opted_in(user_id, True)
+        await update.message.reply_text(
+            "🔔 Check-ins turned ON!\n"
+            "I'll reach out from time to time — birthday wishes, "
+            "follow-ups, and friendly check-ins. 😊\n\n"
+            "To turn off: say \"stop checking in\" or use /proactive off"
+        )
+        return
 
     # Check if user is in a support/feedback flow
     consumed = await _handle_support_message(update, user_id)
