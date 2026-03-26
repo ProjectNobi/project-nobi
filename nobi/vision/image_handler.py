@@ -20,6 +20,19 @@ CHUTES_API_URL = os.environ.get(
     "CHUTES_API_URL", "https://llm.chutes.ai/v1"
 )
 
+# Load backup Chutes keys for vision retry (429/503 key rotation)
+_CHUTES_KEYS_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "scripts", "chutes_keys.txt"
+)
+_CHUTES_BACKUP_KEYS: list = []
+try:
+    if os.path.exists(_CHUTES_KEYS_PATH):
+        with open(_CHUTES_KEYS_PATH) as f:
+            _CHUTES_BACKUP_KEYS = [k.strip() for k in f if k.strip().startswith("cpk_")]
+except Exception:
+    pass
+
 SUPPORTED_FORMATS = {"jpg", "jpeg", "png", "gif", "webp"}
 MAX_IMAGE_SIZE_MB = 10
 MAX_DESCRIPTION_LENGTH = 500
@@ -83,43 +96,55 @@ async def _analyze_with_chutes(
             },
         ]
 
-        # Try multiple vision models in order (handles 503/capacity issues)
+        # Try multiple vision models × multiple API keys (handles 503/429)
         vision_models = [
             "Qwen/Qwen2.5-VL-32B-Instruct",
             "Qwen/Qwen3-VL-235B-A22B-Instruct",
         ]
 
+        # Build key rotation list: primary key first, then up to 5 backup keys
+        api_keys = [CHUTES_API_KEY]
+        for bk in _CHUTES_BACKUP_KEYS:
+            if bk != CHUTES_API_KEY and bk not in api_keys:
+                api_keys.append(bk)
+            if len(api_keys) >= 6:
+                break
+
         async with httpx.AsyncClient(timeout=45.0) as client:
             for model in vision_models:
-                try:
-                    response = await client.post(
-                        f"{CHUTES_API_URL}/chat/completions",
-                        headers={
-                            "Authorization": f"Bearer {CHUTES_API_KEY}",
-                            "Content-Type": "application/json",
-                        },
-                        json={
-                            "model": model,
-                            "messages": messages,
-                            "max_tokens": 500,
-                            "temperature": 0.7,
-                        },
-                    )
+                for key in api_keys:
+                    try:
+                        response = await client.post(
+                            f"{CHUTES_API_URL}/chat/completions",
+                            headers={
+                                "Authorization": f"Bearer {key}",
+                                "Content-Type": "application/json",
+                            },
+                            json={
+                                "model": model,
+                                "messages": messages,
+                                "max_tokens": 500,
+                                "temperature": 0.7,
+                            },
+                        )
 
-                    if response.status_code == 200:
-                        data = response.json()
-                        return data["choices"][0]["message"]["content"]
-                    elif response.status_code in (503, 429, 502):
-                        logger.warning(f"Chutes Vision {model}: {response.status_code}, trying next...")
-                        continue
-                    else:
-                        logger.error(f"Chutes Vision {model} failed: {response.status_code}")
-                        continue
-                except Exception as model_err:
-                    logger.warning(f"Chutes Vision {model} error: {model_err}, trying next...")
-                    continue
+                        if response.status_code == 200:
+                            data = response.json()
+                            return data["choices"][0]["message"]["content"]
+                        elif response.status_code == 429:
+                            logger.warning(f"Chutes Vision {model}: 429 rate-limited, rotating key...")
+                            continue
+                        elif response.status_code in (503, 502):
+                            logger.warning(f"Chutes Vision {model}: {response.status_code}, trying next model...")
+                            break  # Skip to next model (server issue, not key issue)
+                        else:
+                            logger.error(f"Chutes Vision {model} failed: {response.status_code}")
+                            break
+                    except Exception as model_err:
+                        logger.warning(f"Chutes Vision {model} error: {model_err}")
+                        break
 
-            logger.error("All Chutes vision models failed")
+            logger.error("All Chutes vision models/keys exhausted")
             return None
     except ImportError:
         logger.warning("httpx not installed for Chutes Vision")
