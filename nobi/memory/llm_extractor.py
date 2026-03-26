@@ -82,7 +82,7 @@ class LLMEntityExtractor:
         api_key: str = "",
         model: str = "",
         cache_size: int = 256,
-        timeout: float = 8.0,
+        timeout: float = 15.0,
     ):
         """
         Initialize the LLM extractor.
@@ -107,6 +107,11 @@ class LLMEntityExtractor:
         self._cache: OrderedDict[str, Dict] = OrderedDict()
         self._cache_size = cache_size
         self._lock = threading.Lock()
+
+        # Reusable OpenAI client (connection pooling — avoids creating new client per call)
+        self._client: Optional["OpenAI"] = None
+        if self.is_available:
+            self._client = OpenAI(base_url=self.base_url, api_key=self.api_key)
 
     @property
     def is_available(self) -> bool:
@@ -203,7 +208,9 @@ class LLMEntityExtractor:
             return {"entities": [], "relationships": []}
 
         try:
-            client = OpenAI(base_url=self.base_url, api_key=self.api_key)
+            client = self._client  # Reuse pooled client instead of creating per-call
+            if client is None:
+                return {"entities": [], "relationships": []}
             prompt = _EXTRACTION_PROMPT.replace("{text}", text[:2000])
 
             # Exponential backoff with jitter on 429 responses
@@ -245,11 +252,29 @@ class LLMEntityExtractor:
                     else:
                         raise  # Non-429 error or exhausted retries
 
-            raw_response = completion.choices[0].message.content.strip()
+            content = completion.choices[0].message.content
+            if not content or not content.strip():
+                logger.warning("[LLM Extractor] Empty response from LLM")
+                return {"entities": [], "relationships": []}
+
+            raw_response = content.strip()
+
+            # Normalize BPE token artifacts: some models return Unicode pseudo-whitespace
+            # Ċ (U+010A) → \n, Ġ (U+0120) → space — these break json.loads()
+            raw_response = raw_response.replace('\u010a', '\n').replace('\u0120', ' ')
 
             # Handle markdown code blocks
             if raw_response.startswith("```"):
                 raw_response = raw_response.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+
+            # Try to extract JSON object from response even if surrounded by text
+            json_start = raw_response.find("{")
+            json_end = raw_response.rfind("}") + 1
+            if json_start >= 0 and json_end > json_start:
+                raw_response = raw_response[json_start:json_end]
+            else:
+                logger.warning("[LLM Extractor] No JSON object found in response")
+                return {"entities": [], "relationships": []}
 
             parsed = json.loads(raw_response)
             if not isinstance(parsed, dict):
