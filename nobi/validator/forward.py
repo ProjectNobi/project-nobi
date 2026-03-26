@@ -388,10 +388,7 @@ async def _forward_safety_probe(self, miner_uids):
                 cache_miner_pubkey(int(uid), r[2])
 
     # Compute safety multipliers
-    api_key = (
-        getattr(self.config.neuron, "openrouter_api_key", "")
-        or os.environ.get("OPENROUTER_API_KEY", "")
-    )
+    api_key = os.environ.get("CHUTES_API_KEY", "")
     s_scores = safety_score(
         responses=processed,
         queries=[query] * len(processed),

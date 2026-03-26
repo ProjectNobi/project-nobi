@@ -37,7 +37,6 @@ except ImportError:
 
 BOT_TOKEN = os.environ.get("NOBI_DISCORD_TOKEN", "")
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
-OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 _CHUTES_MODEL_RAW = os.environ.get("CHUTES_MODEL", "MiniMaxAI/MiniMax-M2.5-TEE")
 # Extract primary model from auto-route chain (first model before comma)
 CHUTES_MODEL = _CHUTES_MODEL_RAW.split(",")[0].split(":")[0].strip()
@@ -256,12 +255,8 @@ llm_model = CHUTES_MODEL
 if CHUTES_KEY and OpenAI:
     llm_client = OpenAI(base_url="https://llm.chutes.ai/v1", api_key=CHUTES_KEY)
     logger.info(f"LLM: Chutes ({llm_model})")
-elif OPENROUTER_KEY and OpenAI:
-    llm_client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=OPENROUTER_KEY)
-    llm_model = "anthropic/claude-3.5-haiku-20241022"
-    logger.info(f"LLM: OpenRouter ({llm_model})")
 else:
-    logger.warning("No LLM API key — bot will use static responses only")
+    logger.warning("No LLM API key — bot will use static responses only. Set CHUTES_API_KEY.")
 
 
 def generate_response(question: str, context: str = "") -> str:

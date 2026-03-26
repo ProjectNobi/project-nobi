@@ -1,7 +1,8 @@
 """
 Nobi Speech-to-Text — Server-side audio transcription.
 
-Integrates with OpenAI Whisper API or local Whisper model.
+Uses local Whisper model for transcription.
+Chutes.ai does not currently offer a Whisper/STT endpoint.
 Supports multiple languages and audio formats.
 """
 
@@ -16,8 +17,7 @@ logger = logging.getLogger(__name__)
 
 # ─── Config ──────────────────────────────────────────────────────────────────
 
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-WHISPER_MODEL = os.environ.get("WHISPER_MODEL", "whisper-1")  # For API
+
 WHISPER_LOCAL_MODEL = os.environ.get("WHISPER_LOCAL_MODEL", "base")  # For local
 
 SUPPORTED_FORMATS = {"wav", "mp3", "ogg", "m4a", "webm", "flac"}
@@ -30,46 +30,14 @@ SUPPORTED_LANGUAGES = {
 
 # ─── OpenAI Whisper API ──────────────────────────────────────────────────────
 
-async def _transcribe_openai(
+async def _transcribe_chutes(
     audio_bytes: bytes,
     audio_format: str = "wav",
     language: str = "en",
 ) -> Optional[str]:
-    """Transcribe audio using OpenAI Whisper API."""
-    if not OPENAI_API_KEY:
-        return None
-
-    try:
-        import httpx
-
-        # Prepare the audio file
-        filename = f"audio.{audio_format}"
-
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                "https://api.openai.com/v1/audio/transcriptions",
-                headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
-                data={
-                    "model": WHISPER_MODEL,
-                    "language": language if language in SUPPORTED_LANGUAGES else "en",
-                    "response_format": "text",
-                },
-                files={"file": (filename, audio_bytes, f"audio/{audio_format}")},
-            )
-
-            if response.status_code == 200:
-                return response.text.strip()
-            else:
-                logger.error(
-                    f"Whisper API failed: {response.status_code} {response.text}"
-                )
-                return None
-    except ImportError:
-        logger.warning("httpx not installed for Whisper API")
-        return None
-    except Exception as e:
-        logger.error(f"Whisper API error: {e}")
-        return None
+    """Transcribe audio using Chutes.ai STT endpoint (not yet available)."""
+    logger.warning("STT disabled: no Chutes Whisper endpoint available. Using local Whisper fallback.")
+    return None
 
 
 # ─── Local Whisper Model ──────────────────────────────────────────────────────
@@ -143,8 +111,8 @@ async def transcribe_audio(
     if not audio_bytes:
         return None
 
-    # Try API first
-    text = await _transcribe_openai(audio_bytes, audio_format, language)
+    # Try Chutes API first (currently unavailable — falls back to local)
+    text = await _transcribe_chutes(audio_bytes, audio_format, language)
 
     # Fall back to local
     if text is None:

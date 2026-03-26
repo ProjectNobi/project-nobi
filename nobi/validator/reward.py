@@ -197,16 +197,11 @@ def _llm_judge(query: str, response: str, api_key: str = "") -> float:
     chutes_key = os.environ.get("CHUTES_API_KEY", "")
     chutes_model = os.environ.get("CHUTES_JUDGE_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
 
-    for base_url, key, model in [
-        ("https://llm.chutes.ai/v1", chutes_key, chutes_model),
-        ("https://openrouter.ai/api/v1", api_key, "anthropic/claude-3.5-haiku-20241022"),
-    ]:
-        if not key or OpenAI is None:
-            continue
+    if chutes_key and OpenAI is not None:
         try:
-            client = OpenAI(base_url=base_url, api_key=key)
+            client = OpenAI(base_url="https://llm.chutes.ai/v1", api_key=chutes_key)
             completion = client.chat.completions.create(
-                model=model,
+                model=chutes_model,
                 messages=[
                     {"role": "user", "content": JUDGE_PROMPT.format(
                         query=query, response=response
@@ -221,7 +216,7 @@ def _llm_judge(query: str, response: str, api_key: str = "") -> float:
             if match:
                 return max(0.0, min(1.0, float(match.group(1))))
         except Exception as e:
-            bt.logging.warning(f"[JUDGE] {base_url.split('/')[2]} failed: {e} — trying next")
+            bt.logging.warning(f"[JUDGE] Chutes failed: {e} — using heuristic fallback")
 
     # Heuristic fallback — CAPPED at 0.5 to prevent gaming
     return _heuristic_score(query, response)
@@ -580,19 +575,14 @@ def _safety_judge_single(
     chutes_key = os.environ.get("CHUTES_API_KEY", "")
     chutes_model = os.environ.get("CHUTES_JUDGE_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
 
-    for base_url, key, model in [
-        ("https://llm.chutes.ai/v1", chutes_key, chutes_model),
-        ("https://openrouter.ai/api/v1", api_key, "anthropic/claude-3.5-haiku-20241022"),
-    ]:
-        if not key or OpenAI is None:
-            continue
+    if chutes_key and OpenAI is not None:
         try:
-            client = OpenAI(base_url=base_url, api_key=key)
+            client = OpenAI(base_url="https://llm.chutes.ai/v1", api_key=chutes_key)
             prompt = SAFETY_JUDGE_PROMPT.format(
                 query=query, response=response, category=category
             )
             completion = client.chat.completions.create(
-                model=model,
+                model=chutes_model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=10,
                 temperature=0.0,
@@ -603,7 +593,7 @@ def _safety_judge_single(
             if match:
                 return max(0.0, min(1.0, float(match.group(1))))
         except Exception as e:
-            bt.logging.warning(f"[Safety] {base_url.split('/')[2]} judge failed: {e}")
+            bt.logging.warning(f"[Safety] Chutes judge failed: {e}")
 
     # Heuristic fallback
     return _safety_heuristic(response, query, category)
@@ -832,10 +822,7 @@ def get_rewards(
             If provided, applied as a multiplier AFTER all other scoring.
             Harmful content (safety_score=0) → zero emission regardless of quality.
     """
-    api_key = (
-        getattr(self.config.neuron, "openrouter_api_key", "")
-        or os.environ.get("OPENROUTER_API_KEY", "")
-    )
+    api_key = os.environ.get("CHUTES_API_KEY", "")
 
     if latencies is None:
         latencies = [0.0] * len(responses)

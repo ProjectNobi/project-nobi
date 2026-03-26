@@ -19,8 +19,6 @@ CHUTES_API_KEY = os.environ.get("CHUTES_API_KEY", "")
 CHUTES_API_URL = os.environ.get(
     "CHUTES_API_URL", "https://llm.chutes.ai/v1"
 )
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-VISION_MODEL = os.environ.get("VISION_MODEL", "gpt-4o-mini")
 
 SUPPORTED_FORMATS = {"jpg", "jpeg", "png", "gif", "webp"}
 MAX_IMAGE_SIZE_MB = 10
@@ -50,70 +48,6 @@ MEMORIES: User has an orange cat, cat sleeps on blue couch
 
 
 # ─── Vision Model Providers ──────────────────────────────────────────────────
-
-async def _analyze_with_openai(
-    image_base64: str,
-    image_format: str,
-    caption: str,
-    user_context: str,
-) -> Optional[str]:
-    """Analyze image using OpenAI GPT-4V."""
-    if not OPENAI_API_KEY:
-        return None
-
-    try:
-        import httpx
-
-        messages = [
-            {"role": "system", "content": NORI_VISION_PROMPT},
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/{image_format};base64,{image_base64}",
-                            "detail": "low",
-                        },
-                    },
-                    {
-                        "type": "text",
-                        "text": f"User says: {caption}\n\nContext about this user: {user_context}"
-                        if caption
-                        else f"User shared this image.\n\nContext: {user_context}",
-                    },
-                ],
-            },
-        ]
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {OPENAI_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": VISION_MODEL,
-                    "messages": messages,
-                    "max_tokens": 500,
-                    "temperature": 0.7,
-                },
-            )
-
-            if response.status_code == 200:
-                data = response.json()
-                return data["choices"][0]["message"]["content"]
-            else:
-                logger.error(f"OpenAI Vision failed: {response.status_code}")
-                return None
-    except ImportError:
-        logger.warning("httpx not installed for OpenAI Vision")
-        return None
-    except Exception as e:
-        logger.error(f"OpenAI Vision error: {e}")
-        return None
-
 
 async def _analyze_with_chutes(
     image_base64: str,
@@ -192,72 +126,6 @@ async def _analyze_with_chutes(
         return None
     except Exception as e:
         logger.error(f"Chutes Vision error: {e}")
-        return None
-
-
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-
-
-async def _analyze_with_openrouter(
-    image_base64: str,
-    image_format: str,
-    caption: str,
-    user_context: str,
-) -> Optional[str]:
-    """Analyze image using OpenRouter (last-resort fallback for vision)."""
-    if not OPENROUTER_API_KEY:
-        return None
-
-    try:
-        import httpx
-
-        messages = [
-            {"role": "system", "content": NORI_VISION_PROMPT},
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/{image_format};base64,{image_base64}",
-                        },
-                    },
-                    {
-                        "type": "text",
-                        "text": f"User says: {caption}\n\nContext: {user_context}"
-                        if caption
-                        else f"User shared this image.\n\nContext: {user_context}",
-                    },
-                ],
-            },
-        ]
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "qwen/qwen-2.5-vl-72b-instruct:free",
-                    "messages": messages,
-                    "max_tokens": 500,
-                    "temperature": 0.7,
-                },
-            )
-
-            if response.status_code == 200:
-                data = response.json()
-                return data["choices"][0]["message"]["content"]
-            else:
-                logger.error(f"OpenRouter Vision failed: {response.status_code}")
-                return None
-    except ImportError:
-        logger.warning("httpx not installed for OpenRouter Vision")
-        return None
-    except Exception as e:
-        logger.error(f"OpenRouter Vision error: {e}")
         return None
 
 
@@ -346,20 +214,10 @@ async def analyze_image(
     # Encode to base64
     image_base64 = base64.b64encode(image_bytes).decode("utf-8")
 
-    # Try providers in order
-    raw_response = await _analyze_with_openai(
+    # Chutes only — no centralized providers
+    raw_response = await _analyze_with_chutes(
         image_base64, image_format, caption, user_context
     )
-
-    if raw_response is None:
-        raw_response = await _analyze_with_chutes(
-            image_base64, image_format, caption, user_context
-        )
-
-    if raw_response is None:
-        raw_response = await _analyze_with_openrouter(
-            image_base64, image_format, caption, user_context
-        )
 
     if raw_response is None:
         logger.warning("All vision providers failed")

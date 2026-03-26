@@ -94,7 +94,6 @@ from nobi.skills import (
 
 BOT_TOKEN = os.environ.get("NOBI_BOT_TOKEN", "")
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
-OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 CHUTES_MODEL = os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
 # Smart fallback chain — tries models in order until one responds
 # Chutes auto-routing: comma-separated models with :latency picks lowest TTFT automatically
@@ -422,7 +421,7 @@ class CompanionBot:
         self.proactive_engine = ProactiveEngine(self.memory, self.memory.graph)
         self.proactive_scheduler: Optional[ProactiveScheduler] = None
 
-        # Set up LLM client (Chutes → OpenRouter fallback)
+        # Set up LLM client (Chutes.ai only)
         if CHUTES_KEY and OpenAI:
             if _httpx:
                 self.client = OpenAI(
@@ -438,25 +437,9 @@ class CompanionBot:
                     base_url="https://llm.chutes.ai/v1",
                     api_key=CHUTES_KEY,
                 )
-            logger.info(f"LLM: Chutes auto-route ({CHUTES_AUTO_MODEL}) → legacy fallback → OpenRouter")
-        elif OPENROUTER_KEY and OpenAI:
-            self.client = OpenAI(
-                base_url="https://openrouter.ai/api/v1",
-                api_key=OPENROUTER_KEY,
-            )
-            self.model = "anthropic/claude-3.5-haiku-20241022"
-            logger.info(f"LLM: OpenRouter ({self.model})")
+            logger.info(f"LLM: Chutes auto-route ({CHUTES_AUTO_MODEL}) → legacy fallback")
         else:
-            logger.warning("No LLM API key configured!")
-
-        # Pre-create OpenRouter fallback client once (avoids re-instantiation per request)
-        self.openrouter_client = None
-        if OPENROUTER_KEY and OpenAI:
-            self.openrouter_client = OpenAI(
-                base_url="https://openrouter.ai/api/v1",
-                api_key=OPENROUTER_KEY,
-            )
-            logger.info("OpenRouter fallback client ready")
+            logger.warning("No LLM API key configured! Set CHUTES_API_KEY.")
 
     def _user_id(self, update: Update) -> str:
         """Get a stable user ID from Telegram."""
@@ -1069,24 +1052,6 @@ class CompanionBot:
                     logger.warning(f"[Routing] Chutes fallback {fallback_model} failed: {model_err}")
                     continue
 
-        # If all Chutes models failed, try OpenRouter as final fallback (pre-created client)
-        if not response or not response.strip():
-            try:
-                if self.openrouter_client:
-                    fallback_completion = self.openrouter_client.chat.completions.create(
-                        model="anthropic/claude-3.5-haiku-20241022",
-                        messages=messages,
-                        max_tokens=self._get_max_tokens(user_id),
-                        temperature=0.7,
-                        timeout=30,
-                    )
-                    response = fallback_completion.choices[0].message.content
-                    if response and response.strip():
-                        used_model = "openrouter/claude-3.5-haiku"
-                        logger.info(f"[Routing] OpenRouter fallback succeeded for user {user_id}")
-            except Exception as or_err:
-                logger.warning(f"[Routing] OpenRouter fallback also failed: {or_err}")
-
         if not response or not response.strip():
             return "Hmm, I got tongue-tied! 😅 Try saying that again?"
 
@@ -1197,27 +1162,6 @@ class CompanionBot:
                         return subnet_resp
                 except (asyncio.TimeoutError, Exception):
                     pass
-
-            # Dynamic fallback to OpenRouter if primary (Chutes) fails
-            try:
-                if self.openrouter_client:
-                    fallback_completion = self.openrouter_client.chat.completions.create(
-                        model="anthropic/claude-3.5-haiku-20241022",
-                        messages=messages,
-                        max_tokens=self._get_max_tokens(user_id),
-                        temperature=0.7,
-                        timeout=30,
-                    )
-                    response = fallback_completion.choices[0].message.content
-                    if response and response.strip():
-                        logger.info(f"[Routing] OpenRouter fallback succeeded for user {user_id}")
-                        try:
-                            self.memory.save_conversation_turn(user_id, "assistant", response)
-                        except Exception:
-                            pass
-                        return response
-            except Exception as fallback_err:
-                logger.error(f"LLM error (OpenRouter fallback): {fallback_err}")
 
             fallbacks = [
                 "Hmm, my brain did a thing 😅 Mind trying again?",

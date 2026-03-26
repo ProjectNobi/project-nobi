@@ -93,15 +93,12 @@ class LLMEntityExtractor:
             cache_size: Max number of cached extraction results.
             timeout: API request timeout in seconds.
         """
-        self.api_key = api_key or os.environ.get("CHUTES_API_KEY", "") or os.environ.get("OPENROUTER_API_KEY", "")
+        self.api_key = api_key or os.environ.get("CHUTES_API_KEY", "")
         self.model = model or os.environ.get("CHUTES_MODEL", "deepseek-ai/DeepSeek-V3.1-TEE")
         self.timeout = timeout
 
-        # Determine base URL from key type
-        if self.api_key.startswith("sk-or-"):
-            self.base_url = "https://openrouter.ai/api/v1"
-        else:
-            self.base_url = os.environ.get("CHUTES_BASE_URL", "https://llm.chutes.ai/v1")
+        # Chutes.ai only
+        self.base_url = os.environ.get("CHUTES_BASE_URL", "https://llm.chutes.ai/v1")
 
         # Thread-safe LRU cache
         self._cache: OrderedDict[str, Dict] = OrderedDict()

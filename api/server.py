@@ -52,7 +52,6 @@ except ImportError:
 # ─── Config ──────────────────────────────────────────────────
 
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY", "")
-OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 _CHUTES_MODEL_RAW = os.environ.get("CHUTES_MODEL", "MiniMaxAI/MiniMax-M2.5-TEE")
 # Extract primary model from auto-route chain
 CHUTES_MODEL = _CHUTES_MODEL_RAW.split(",")[0].split(":")[0].strip()
@@ -444,15 +443,8 @@ async def startup():
         )
         llm_model = CHUTES_MODEL
         logger.info(f"LLM: Chutes ({llm_model})")
-    elif OPENROUTER_KEY and OpenAI:
-        llm_client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=OPENROUTER_KEY,
-        )
-        llm_model = "anthropic/claude-3.5-haiku-20241022"
-        logger.info(f"LLM: OpenRouter ({llm_model})")
     else:
-        logger.warning("No LLM API key configured!")
+        logger.warning("No LLM API key configured! Set CHUTES_API_KEY.")
 
 
 # ─── Session Auth Endpoint ───────────────────────────────────
