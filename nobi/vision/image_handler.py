@@ -149,15 +149,98 @@ async def _analyze_with_chutes(
             },
         ]
 
+        # Try multiple vision models in order (handles 503/capacity issues)
+        vision_models = [
+            "Qwen/Qwen2.5-VL-32B-Instruct",
+            "Qwen/Qwen3-VL-235B-A22B-Instruct",
+        ]
+
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            for model in vision_models:
+                try:
+                    response = await client.post(
+                        f"{CHUTES_API_URL}/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {CHUTES_API_KEY}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "model": model,
+                            "messages": messages,
+                            "max_tokens": 500,
+                            "temperature": 0.7,
+                        },
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        return data["choices"][0]["message"]["content"]
+                    elif response.status_code in (503, 429, 502):
+                        logger.warning(f"Chutes Vision {model}: {response.status_code}, trying next...")
+                        continue
+                    else:
+                        logger.error(f"Chutes Vision {model} failed: {response.status_code}")
+                        continue
+                except Exception as model_err:
+                    logger.warning(f"Chutes Vision {model} error: {model_err}, trying next...")
+                    continue
+
+            logger.error("All Chutes vision models failed")
+            return None
+    except ImportError:
+        logger.warning("httpx not installed for Chutes Vision")
+        return None
+    except Exception as e:
+        logger.error(f"Chutes Vision error: {e}")
+        return None
+
+
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+
+
+async def _analyze_with_openrouter(
+    image_base64: str,
+    image_format: str,
+    caption: str,
+    user_context: str,
+) -> Optional[str]:
+    """Analyze image using OpenRouter (last-resort fallback for vision)."""
+    if not OPENROUTER_API_KEY:
+        return None
+
+    try:
+        import httpx
+
+        messages = [
+            {"role": "system", "content": NORI_VISION_PROMPT},
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/{image_format};base64,{image_base64}",
+                        },
+                    },
+                    {
+                        "type": "text",
+                        "text": f"User says: {caption}\n\nContext: {user_context}"
+                        if caption
+                        else f"User shared this image.\n\nContext: {user_context}",
+                    },
+                ],
+            },
+        ]
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                f"{CHUTES_API_URL}/chat/completions",
+                "https://openrouter.ai/api/v1/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {CHUTES_API_KEY}",
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "Qwen/Qwen2.5-VL-32B-Instruct",
+                    "model": "qwen/qwen-2.5-vl-72b-instruct:free",
                     "messages": messages,
                     "max_tokens": 500,
                     "temperature": 0.7,
@@ -168,13 +251,13 @@ async def _analyze_with_chutes(
                 data = response.json()
                 return data["choices"][0]["message"]["content"]
             else:
-                logger.error(f"Chutes Vision failed: {response.status_code}")
+                logger.error(f"OpenRouter Vision failed: {response.status_code}")
                 return None
     except ImportError:
-        logger.warning("httpx not installed for Chutes Vision")
+        logger.warning("httpx not installed for OpenRouter Vision")
         return None
     except Exception as e:
-        logger.error(f"Chutes Vision error: {e}")
+        logger.error(f"OpenRouter Vision error: {e}")
         return None
 
 
@@ -270,6 +353,11 @@ async def analyze_image(
 
     if raw_response is None:
         raw_response = await _analyze_with_chutes(
+            image_base64, image_format, caption, user_context
+        )
+
+    if raw_response is None:
+        raw_response = await _analyze_with_openrouter(
             image_base64, image_format, caption, user_context
         )
 
