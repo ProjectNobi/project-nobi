@@ -2685,22 +2685,14 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 logger.warning(f"Memory store from image failed: {e}")
 
-    # Safety-filter image response before saving to memory
+    # Safety-filter image response before sending
     try:
         image_safety = companion.content_filter.check_bot_response(user_id, caption or "", response)
         response = image_safety.response
     except Exception:
         pass
 
-    # Save conversation turn (with safety-filtered response)
-    try:
-        caption_text = f"[Photo] {caption}" if caption else "[Photo shared]"
-        companion.memory.save_conversation_turn(user_id, "user", caption_text)
-        companion.memory.save_conversation_turn(user_id, "assistant", response)
-    except Exception:
-        pass
-
-    # Clean and send response
+    # Clean and send response FIRST (before slow memory operations)
     response = response.replace("**", "").replace("__", "").replace("```", "").replace("`", "")
     if len(response) > 4000:
         response = response[:4000] + "..."
@@ -2709,9 +2701,20 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(response)
     except Exception as e:
         logger.error(f"Photo reply error: {e}")
-        await update.message.reply_text(
-            "I saw your photo but had trouble responding 😅 Try again?"
-        )
+        try:
+            await update.message.reply_text(
+                "I saw your photo but had trouble responding 😅 Try again?"
+            )
+        except Exception:
+            pass
+
+    # Save conversation turn AFTER reply (non-blocking for user)
+    try:
+        caption_text = f"[Photo] {caption}" if caption else "[Photo shared]"
+        companion.memory.save_conversation_turn(user_id, "user", caption_text)
+        companion.memory.save_conversation_turn(user_id, "assistant", response)
+    except Exception:
+        pass
 
     logger.info(
         f"Photo user {update.effective_user.id}: "
