@@ -96,21 +96,22 @@ async def _analyze_with_chutes(
             },
         ]
 
-        # Try multiple vision models × multiple API keys (handles 503/429)
+        # Fast path: try smaller model first (faster TTFT), then larger
+        # 3 keys per model max to keep total time under 15s
         vision_models = [
-            "Qwen/Qwen2.5-VL-32B-Instruct",
-            "Qwen/Qwen3-VL-235B-A22B-Instruct",
+            "Qwen/Qwen2.5-VL-32B-Instruct",      # Smaller, faster
+            "Qwen/Qwen3-VL-235B-A22B-Instruct",   # Larger, slower but more capable
         ]
 
-        # Build key rotation list: primary key first, then up to 5 backup keys
+        # Build key rotation list: primary + up to 2 backups (3 total per model)
         api_keys = [CHUTES_API_KEY]
         for bk in _CHUTES_BACKUP_KEYS:
             if bk != CHUTES_API_KEY and bk not in api_keys:
                 api_keys.append(bk)
-            if len(api_keys) >= 6:
+            if len(api_keys) >= 3:
                 break
 
-        async with httpx.AsyncClient(timeout=45.0) as client:
+        async with httpx.AsyncClient(timeout=20.0) as client:
             for model in vision_models:
                 for key in api_keys:
                     try:
@@ -123,25 +124,29 @@ async def _analyze_with_chutes(
                             json={
                                 "model": model,
                                 "messages": messages,
-                                "max_tokens": 500,
+                                "max_tokens": 300,
                                 "temperature": 0.7,
                             },
                         )
 
                         if response.status_code == 200:
                             data = response.json()
+                            logger.info(f"Chutes Vision OK: {model}")
                             return data["choices"][0]["message"]["content"]
                         elif response.status_code == 429:
-                            logger.warning(f"Chutes Vision {model}: 429 rate-limited, rotating key...")
+                            logger.warning(f"Chutes Vision {model}: 429, rotating key...")
                             continue
                         elif response.status_code in (503, 502):
-                            logger.warning(f"Chutes Vision {model}: {response.status_code}, trying next model...")
-                            break  # Skip to next model (server issue, not key issue)
-                        else:
-                            logger.error(f"Chutes Vision {model} failed: {response.status_code}")
+                            logger.warning(f"Chutes Vision {model}: {response.status_code}, next model...")
                             break
+                        else:
+                            logger.error(f"Chutes Vision {model}: {response.status_code}")
+                            break
+                    except httpx.TimeoutException:
+                        logger.warning(f"Chutes Vision {model}: timeout, next model...")
+                        break
                     except Exception as model_err:
-                        logger.warning(f"Chutes Vision {model} error: {model_err}")
+                        logger.warning(f"Chutes Vision {model}: {model_err}")
                         break
 
             logger.error("All Chutes vision models/keys exhausted")
@@ -235,6 +240,26 @@ async def analyze_image(
     if size_mb > MAX_IMAGE_SIZE_MB:
         result["response"] = f"That image is a bit large ({size_mb:.1f}MB). Could you send a smaller version?"
         return result
+
+    # Resize large images to reduce payload and speed up processing
+    try:
+        from PIL import Image
+        import io
+        img = Image.open(io.BytesIO(image_bytes))
+        # Resize if larger than 1024px on any side
+        max_dim = 1024
+        if max(img.size) > max_dim:
+            img.thumbnail((max_dim, max_dim), Image.LANCZOS)
+            buf = io.BytesIO()
+            save_fmt = "JPEG" if image_format.lower() in ("jpg", "jpeg") else "PNG"
+            img.save(buf, format=save_fmt, quality=80)
+            image_bytes = buf.getvalue()
+            image_format = "jpeg" if save_fmt == "JPEG" else "png"
+            logger.info(f"Image resized to {img.size}, {len(image_bytes)} bytes")
+    except ImportError:
+        pass  # PIL not available, send as-is
+    except Exception as e:
+        logger.debug(f"Image resize skipped: {e}")
 
     # Encode to base64
     image_base64 = base64.b64encode(image_bytes).decode("utf-8")
