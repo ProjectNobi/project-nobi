@@ -528,17 +528,41 @@ async def on_message(message):
         clean = clean[:2000]
 
         async with message.channel.typing():
-            # Fetch recent context — only human messages, with error handling
-            context_msgs = []
-            try:
-                async for msg in message.channel.history(limit=5, before=message):
-                    if not msg.author.bot:
-                        context_msgs.append(f"{msg.author.display_name}: {msg.content[:100]}")
-            except (discord.Forbidden, discord.HTTPException) as e:
-                logger.debug(f"Could not fetch channel history: {e}")
+            # ─── Image handling ──────────────────────────
+            image_response = None
+            if message.attachments:
+                for att in message.attachments:
+                    if att.content_type and att.content_type.startswith("image/"):
+                        try:
+                            img_bytes = await att.read()
+                            fmt = att.filename.rsplit(".", 1)[-1].lower() if "." in att.filename else "jpg"
+                            from nobi.vision.image_handler import analyze_image
+                            result = await analyze_image(
+                                image_bytes=img_bytes,
+                                user_context="Discord user",
+                                caption=clean,
+                                image_format=fmt,
+                            )
+                            if result.get("success"):
+                                image_response = result["response"]
+                        except Exception as e:
+                            logger.warning(f"Discord image analysis failed: {e}")
+                        break  # Only process first image
 
-            context = "\n".join(reversed(context_msgs))
-            response = generate_response(clean, context)
+            if image_response:
+                response = image_response
+            else:
+                # Fetch recent context — only human messages, with error handling
+                context_msgs = []
+                try:
+                    async for msg in message.channel.history(limit=5, before=message):
+                        if not msg.author.bot:
+                            context_msgs.append(f"{msg.author.display_name}: {msg.content[:100]}")
+                except (discord.Forbidden, discord.HTTPException) as e:
+                    logger.debug(f"Could not fetch channel history: {e}")
+
+                context = "\n".join(reversed(context_msgs))
+                response = generate_response(clean, context)
 
         await message.reply(response)
         logger.info(f"Replied to {message.author}: '{clean[:50]}' → '{response[:50]}'")
