@@ -82,7 +82,7 @@ class LLMEntityExtractor:
         api_key: str = "",
         model: str = "",
         cache_size: int = 256,
-        timeout: float = 15.0,
+        timeout: float = 8.0,
     ):
         """
         Initialize the LLM extractor.
@@ -215,7 +215,7 @@ class LLMEntityExtractor:
             backoff_base = 2.0
             backoff_max = 60.0
             backoff_attempt = 0
-            max_retries = 5
+            max_retries = 1  # Fast-fail: 1 retry max to avoid blocking event loop
 
             while True:
                 try:
