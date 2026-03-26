@@ -2677,14 +2677,6 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     response = result["response"]
 
-    # Store extracted memories
-    if result.get("extracted_memories"):
-        for mem_text in result["extracted_memories"][:5]:
-            try:
-                companion.memory.store(user_id, mem_text, memory_type="fact", importance=0.6)
-            except Exception as e:
-                logger.warning(f"Memory store from image failed: {e}")
-
     # Safety-filter image response before sending
     try:
         image_safety = companion.content_filter.check_bot_response(user_id, caption or "", response)
@@ -2692,7 +2684,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         pass
 
-    # Clean and send response FIRST (before slow memory operations)
+    # Clean and send response IMMEDIATELY (before any memory operations)
     response = response.replace("**", "").replace("__", "").replace("```", "").replace("`", "")
     if len(response) > 4000:
         response = response[:4000] + "..."
@@ -2708,7 +2700,17 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
 
-    # Save conversation turn AFTER reply (non-blocking for user)
+    # ALL memory operations AFTER reply is sent (these can be slow due to LLM extraction)
+    try:
+        if result.get("extracted_memories"):
+            for mem_text in result["extracted_memories"][:5]:
+                try:
+                    companion.memory.store(user_id, mem_text, memory_type="fact", importance=0.6)
+                except Exception as e:
+                    logger.warning(f"Memory store from image failed: {e}")
+    except Exception:
+        pass
+
     try:
         caption_text = f"[Photo] {caption}" if caption else "[Photo shared]"
         companion.memory.save_conversation_turn(user_id, "user", caption_text)
