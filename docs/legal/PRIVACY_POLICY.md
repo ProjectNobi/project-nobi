@@ -179,7 +179,9 @@ California residents have the right to:
 - Non-discrimination for exercising your privacy rights
 
 ### 7.3 How to Exercise Your Rights
-- **In-app:** Use `/memories`, `/forget`, `/export` on Telegram, or the Settings page in the web app
+- **In-app:** Use `/memories`, `/forget`, `/forgetme`, `/export` on Telegram, or the Settings page in the web app
+  - `/forget` — deletes your data from our local systems
+  - `/forgetme` — deletes your data locally AND broadcasts an erasure request to all miners on the Bittensor subnet (best-effort, network-wide)
 - **By email:** Contact privacy@projectnobi.ai with subject "Privacy Rights Request"
 - **Response time:** We will respond within 30 days (extendable by a further 60 days for complex requests with notice)
 - **Verification:** We may ask you to verify your identity before processing requests
@@ -198,7 +200,7 @@ California residents have the right to:
 | Anonymous analytics | Retained for **12 months** then permanently deleted |
 | Support tickets | Retained for **24 months** then anonymised |
 
-When you request data deletion (e.g., via `/forget`), we initiate deletion immediately and complete purging from all systems within 30 days.
+When you request data deletion (e.g., via `/forget` or `/forgetme`), we initiate deletion immediately. Local data is deleted instantly. For network-wide erasure (`/forgetme`), we broadcast a `MemoryForget` request to all miners on the subnet. This is best-effort: we cannot guarantee deletion on third-party miners, but compliant miners will honour the request. Complete purging from all our controlled systems occurs within 30 days.
 
 ---
 
