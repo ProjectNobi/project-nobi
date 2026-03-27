@@ -1587,6 +1587,102 @@ async def cmd_forget(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def cmd_forgetme(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    GDPR Art. 17 — Right to Erasure (network-wide).
+
+    /forgetme — two-step confirmation that:
+      1. Wipes all local data (same as /forget)
+      2. Broadcasts MemoryForget to ALL miners on the Bittensor subnet
+         so decentralized copies are also erased.
+
+    This is stronger than /forget, which only clears the local bot DB.
+    """
+    args = context.args or []
+    user_id = companion._user_id(update)
+
+    if args and args[0].lower() == "confirm":
+        # ── Step 2: User confirmed — execute erasure ──────────
+        await update.message.chat.send_action(ChatAction.TYPING)
+
+        # 1. Local wipe (GDPR compliance: erase our own copy first)
+        local_deleted = 0
+        try:
+            from nobi.compliance.gdpr import GDPRHandler
+            handler = GDPRHandler()
+            result = handler.handle_erasure_request(user_id)
+            deleted_map = result.get("deleted", {})
+            local_deleted = sum(v for v in deleted_map.values() if isinstance(v, int))
+            logger.info(f"[ForgetMe/GDPR] Local erasure for {user_id}: {deleted_map}")
+        except Exception as e:
+            logger.error(f"[ForgetMe/GDPR] Local erasure failed for {user_id}: {e}")
+            await update.message.reply_text(
+                "⚠️ Something went wrong with the local deletion. "
+                "Please try /forget or contact support."
+            )
+            return
+
+        # 2. Broadcast to miners (best-effort — subnet-wide GDPR erasure)
+        broadcast_result = None
+        if SUBNET_ROUTING and bt is not None:
+            try:
+                import asyncio as _asyncio
+                from nobi.validator.forward import broadcast_forget
+                _subtensor = bt.subtensor(network=SUBNET_NETWORK)
+                _metagraph = _subtensor.metagraph(netuid=SUBNET_NETUID)
+                _wallet = bt.wallet(
+                    name=SUBNET_WALLET_NAME, hotkey=SUBNET_HOTKEY_NAME
+                )
+                _dendrite = bt.dendrite(wallet=_wallet)
+                broadcast_result = await broadcast_forget(
+                    dendrite=_dendrite,
+                    metagraph=_metagraph,
+                    user_id=user_id,
+                    reason="user_request",
+                    timeout=SUBNET_TIMEOUT,
+                )
+                logger.info(
+                    f"[ForgetMe/GDPR] Broadcast result for {user_id}: {broadcast_result}"
+                )
+            except Exception as e:
+                logger.warning(
+                    f"[ForgetMe/GDPR] Miner broadcast failed (non-fatal, local wipe done): {e}"
+                )
+
+        # 3. Send confirmation to user
+        if broadcast_result:
+            miner_line = (
+                f"• Miners notified: {broadcast_result['miners_acked']} of "
+                f"{broadcast_result['miners_queried']} confirmed erasure\n"
+            )
+        else:
+            miner_line = (
+                "• Miner broadcast skipped (subnet routing not active — "
+                "local data deleted)\n"
+            )
+
+        await update.message.reply_text(
+            "✅ Done — your data has been permanently erased.\n\n"
+            f"• Local memories deleted: {local_deleted} items\n"
+            + miner_line
+            + "\n"
+            "This is a GDPR Art. 17 right-to-erasure request. "
+            "Tell me your name and let's start fresh! 🌱"
+        )
+
+    else:
+        # ── Step 1: Ask for confirmation ──────────────────────
+        await update.message.reply_text(
+            "⚠️ GDPR Right to Erasure (/forgetme)\n\n"
+            "This will permanently delete ALL your data from:\n"
+            "• This bot (memories, conversations, profile)\n"
+            "• All miners on the Bittensor subnet (best-effort)\n\n"
+            "⚡ This is stronger than /forget — it requests deletion from the "
+            "entire decentralized network.\n\n"
+            "Type /forgetme confirm to proceed, or just ignore this to cancel."
+        )
+
+
 async def cmd_export(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """GDPR Art. 20 — Right to Data Portability. Export all user data as structured JSON."""
     user_id = companion._user_id(update)
@@ -3148,6 +3244,7 @@ def main():
     app.add_handler(CommandHandler("help", cmd_help))
     app.add_handler(CommandHandler("memories", cmd_memories))
     app.add_handler(CommandHandler("forget", cmd_forget))
+    app.add_handler(CommandHandler("forgetme", cmd_forgetme))
     app.add_handler(CommandHandler("export", cmd_export))
     app.add_handler(CommandHandler("import", cmd_import))
     app.add_handler(CommandHandler("language", cmd_language))

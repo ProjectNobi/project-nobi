@@ -33,7 +33,7 @@ try:
 except Exception:
     pass
 
-SUPPORTED_FORMATS = {"jpg", "jpeg", "png", "gif", "webp"}
+SUPPORTED_FORMATS = {"jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif"}
 MAX_IMAGE_SIZE_MB = 10
 MAX_DESCRIPTION_LENGTH = 500
 
@@ -96,14 +96,19 @@ async def _analyze_with_chutes(
             },
         ]
 
-        # Fast path: try smaller model first (faster TTFT), then larger
-        # 3 keys per model max to keep total time under 15s
+        # Vision model chain — ordered by speed (fastest first)
+        # 3 keys per model max to keep total time under 30s
         vision_models = [
-            "Qwen/Qwen2.5-VL-32B-Instruct",      # Smaller, faster
-            "Qwen/Qwen3-VL-235B-A22B-Instruct",   # Larger, slower but more capable
+            "Qwen/Qwen2.5-VL-32B-Instruct",                        # Fast, reliable
+            "zai-org/GLM-4.6V",                                     # GLM Vision
+            "chutesai/Mistral-Small-3.1-24B-Instruct-2503-TEE",    # Mistral Small 3.1 vision
+            "chutesai/Mistral-Small-3.2-24B-Instruct-2506",        # Mistral Small 3.2 vision
+            "XiaomiMiMo/MiMo-V2-Flash-TEE",                        # Xiaomi MiMo Vision
+            "Qwen/Qwen3-VL-235B-A22B-Instruct",                    # Largest, slowest fallback
         ]
 
-        # Build key rotation list: primary + up to 2 backups (3 total per model)
+        # Build key rotation list: primary + up to 2 backups (3 per model)
+        # 3 keys × 6 models = 18 max attempts — keeps total time under 20s
         api_keys = [CHUTES_API_KEY]
         for bk in _CHUTES_BACKUP_KEYS:
             if bk != CHUTES_API_KEY and bk not in api_keys:
@@ -113,7 +118,10 @@ async def _analyze_with_chutes(
 
         async with httpx.AsyncClient(timeout=20.0) as client:
             for model in vision_models:
+                model_failed = False
                 for key in api_keys:
+                    if model_failed:
+                        break
                     try:
                         response = await client.post(
                             f"{CHUTES_API_URL}/chat/completions",
@@ -133,21 +141,24 @@ async def _analyze_with_chutes(
                             data = response.json()
                             logger.info(f"Chutes Vision OK: {model}")
                             return data["choices"][0]["message"]["content"]
-                        elif response.status_code == 429:
-                            logger.warning(f"Chutes Vision {model}: 429, rotating key...")
+                        elif response.status_code in (429, 401):
+                            logger.warning(f"Chutes Vision {model}: {response.status_code}, rotating key...")
                             continue
                         elif response.status_code in (503, 502):
                             logger.warning(f"Chutes Vision {model}: {response.status_code}, next model...")
-                            break
+                            model_failed = True
+                        elif response.status_code == 404:
+                            logger.warning(f"Chutes Vision {model}: 404 (model unavailable), next model...")
+                            model_failed = True
                         else:
                             logger.error(f"Chutes Vision {model}: {response.status_code}")
-                            break
+                            model_failed = True
                     except httpx.TimeoutException:
                         logger.warning(f"Chutes Vision {model}: timeout, next model...")
-                        break
+                        model_failed = True
                     except Exception as model_err:
                         logger.warning(f"Chutes Vision {model}: {model_err}")
-                        break
+                        model_failed = True
 
             logger.error("All Chutes vision models/keys exhausted")
             return None
@@ -192,7 +203,9 @@ def _parse_vision_response(
     mem_match = re.search(r"MEMORIES:\s*(.+?)$", raw_response, re.DOTALL | re.IGNORECASE)
     if mem_match:
         mem_text = mem_match.group(1).strip()
-        if mem_text.lower() != "none":
+        # Clean model artifacts (e.g. <|end_of_box|>, <|im_end|>, etc.)
+        mem_text = re.sub(r"<\|[^|]+\|>", "", mem_text).strip()
+        if mem_text.lower() not in ("none", ""):
             memories = [m.strip() for m in mem_text.split(",") if m.strip()]
 
     # Fallback: if parsing failed, use the whole response
@@ -233,6 +246,11 @@ async def analyze_image(
     # Validate format
     if image_format.lower() not in SUPPORTED_FORMATS:
         result["response"] = f"Sorry, I can't process {image_format} images yet. Try JPG or PNG!"
+        return result
+
+    # Check minimum size (corrupt/empty images)
+    if len(image_bytes) < 100:
+        result["response"] = "That image seems empty or corrupted. Could you try sending it again? 😊"
         return result
 
     # Check size

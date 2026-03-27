@@ -20,7 +20,7 @@ import asyncio
 import numpy as np
 import bittensor as bt
 
-from nobi.protocol import CompanionRequest, MemoryStore, MemoryRecall
+from nobi.protocol import CompanionRequest, MemoryStore, MemoryRecall, MemoryForget
 from nobi.validator.reward import get_rewards, safety_score
 from nobi.validator.query_generator import (
     generate_single_turn_query,
@@ -144,6 +144,91 @@ def _save_router_state(router: MinerRouter) -> None:
             json.dump(state, f, indent=2)
     except Exception as e:
         bt.logging.warning(f"[Router] Failed to save state: {e}")
+
+
+async def broadcast_forget(
+    dendrite,
+    metagraph,
+    user_id: str,
+    reason: str = "user_request",
+    timeout: float = 12.0,
+) -> dict:
+    """
+    Broadcast a MemoryForget synapse to ALL active miners on the metagraph.
+
+    GDPR Art. 17 — best-effort erasure broadcast. We query every miner
+    (not just a random sample) because erasure must be as complete as possible.
+    Miners that don't support MemoryForget simply time out — graceful degradation.
+
+    Args:
+        dendrite:  bt.Dendrite instance (from the validator)
+        metagraph: bt.Metagraph instance
+        user_id:   The user whose data must be erased
+        reason:    Reason string ("user_request" | "gdpr" | "account_deletion")
+        timeout:   Per-miner timeout in seconds
+
+    Returns:
+        dict with keys:
+            miners_queried  — number of miners contacted
+            miners_acked    — number that returned deleted=True
+            miners_failed   — number that failed or timed out
+            total_items     — sum of items_deleted reported by miners
+    """
+    bt.logging.info(
+        f"[Forget/GDPR] Broadcasting MemoryForget for user_id='{user_id}' "
+        f"reason='{reason}' to {len(metagraph.axons)} miners"
+    )
+
+    synapse = MemoryForget(user_id=user_id, reason=reason)
+    axons = list(metagraph.axons)
+
+    if not axons:
+        bt.logging.warning("[Forget/GDPR] No miners on metagraph — nothing to broadcast")
+        return {"miners_queried": 0, "miners_acked": 0, "miners_failed": 0, "total_items": 0}
+
+    try:
+        responses = await dendrite(
+            axons=axons,
+            synapse=synapse,
+            deserialize=False,
+            timeout=timeout,
+        )
+    except Exception as e:
+        bt.logging.error(f"[Forget/GDPR] Broadcast failed: {e}")
+        return {
+            "miners_queried": len(axons),
+            "miners_acked": 0,
+            "miners_failed": len(axons),
+            "total_items": 0,
+        }
+
+    miners_acked = 0
+    miners_failed = 0
+    total_items = 0
+
+    for resp in (responses or []):
+        if resp is None:
+            miners_failed += 1
+            continue
+        deleted = getattr(resp, "deleted", None)
+        if deleted is True:
+            miners_acked += 1
+            total_items += getattr(resp, "items_deleted", 0) or 0
+        else:
+            miners_failed += 1
+
+    bt.logging.info(
+        f"[Forget/GDPR] Broadcast complete — "
+        f"queried={len(axons)}, acked={miners_acked}, "
+        f"failed={miners_failed}, total_items_deleted={total_items}"
+    )
+
+    return {
+        "miners_queried": len(axons),
+        "miners_acked": miners_acked,
+        "miners_failed": miners_failed,
+        "total_items": total_items,
+    }
 
 
 async def forward(self):

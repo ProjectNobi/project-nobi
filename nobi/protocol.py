@@ -204,6 +204,34 @@ class MemoryRecall(bt.Synapse):
         return self.memories or []
 
 
+class MemoryForget(bt.Synapse):
+    """
+    GDPR right-to-erasure — request miners to delete ALL data for a user.
+
+    Validators broadcast this to all miners when a user requests deletion.
+    Miners MUST delete all memories, conversations, profiles, entities,
+    relationships, and embeddings for the given user_id.
+
+    This is a best-effort protocol: we broadcast the request but cannot
+    verify deletion on remote miners. Compliance is trust-based.
+
+    GDPR basis: Art. 17 — Right to Erasure ("right to be forgotten").
+    Subnet 272 design: Bot triggers local wipe first, then validator
+    broadcasts MemoryForget to all active miners for decentralized erasure.
+    """
+
+    # === Request fields ===
+    user_id: str                            # User whose data must be deleted
+    reason: str = "user_request"            # user_request | gdpr | account_deletion
+
+    # === Response fields (filled by miner) ===
+    deleted: typing.Optional[bool] = None
+    items_deleted: int = 0                  # How many items (rows) were deleted
+
+    def deserialize(self) -> bool:
+        return self.deleted or False
+
+
 class FederatedUpdate(bt.Synapse):
     """
     Carries federated learning weight updates with privacy-preserving model deltas.

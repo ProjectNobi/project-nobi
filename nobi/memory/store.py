@@ -1282,6 +1282,72 @@ class MemoryManager:
 
     # ─── Phase 2: Memory Export/Import ─────────────────────────
 
+    def forget_user(self, user_id: str) -> int:
+        """
+        GDPR Art. 17 — Right to Erasure: wipe ALL data for a user locally.
+
+        Deletes from ALL tables: memories, conversations, user_profiles,
+        memory_embeddings, archived_memories, and graph tables
+        (entities, relationships) if present.
+
+        This is the local wipe function called by the bot before broadcasting
+        MemoryForget to remote miners via the validator.
+
+        Returns:
+            Total number of rows deleted across all tables.
+        """
+        logger.info(f"[Forget/GDPR] Erasing ALL data for user_id={user_id}")
+        total_deleted = 0
+
+        # ── Core memory tables ────────────────────────────────
+        tables_simple = [
+            "memories",
+            "conversations",
+            "user_profiles",
+            "archived_memories",
+        ]
+        for table in tables_simple:
+            try:
+                r = self._conn.execute(
+                    f"DELETE FROM {table} WHERE user_id = ?", (user_id,)
+                )
+                count = r.rowcount
+                total_deleted += count
+                logger.debug(f"[Forget/GDPR] {table}: deleted {count} rows for {user_id}")
+            except Exception as e:
+                logger.warning(f"[Forget/GDPR] {table} delete error (non-fatal): {e}")
+
+        # ── Semantic embeddings (memory_id → memories, already deleted above) ──
+        # The FK relationship means rows are orphaned; delete explicitly.
+        try:
+            r = self._conn.execute(
+                "DELETE FROM memory_embeddings WHERE memory_id NOT IN "
+                "(SELECT id FROM memories)"
+            )
+            count = r.rowcount
+            total_deleted += count
+            logger.debug(f"[Forget/GDPR] memory_embeddings: deleted {count} orphaned rows")
+        except Exception as e:
+            logger.debug(f"[Forget/GDPR] memory_embeddings cleanup (non-fatal): {e}")
+
+        # ── Graph tables: entities, relationships ─────────────
+        for table in ("entities", "relationships"):
+            try:
+                r = self._conn.execute(
+                    f"DELETE FROM {table} WHERE user_id = ?", (user_id,)
+                )
+                count = r.rowcount
+                total_deleted += count
+                logger.debug(f"[Forget/GDPR] {table}: deleted {count} rows for {user_id}")
+            except Exception as e:
+                logger.debug(f"[Forget/GDPR] {table} delete (non-fatal, may not exist): {e}")
+
+        self._conn.commit()
+        logger.info(
+            f"[Forget/GDPR] Complete — {total_deleted} total rows deleted for user_id={user_id}"
+        )
+        return total_deleted
+
     def export_memories(self, user_id: str) -> Dict:
         """Export all memories for a user as a JSON-serializable dict."""
         try:

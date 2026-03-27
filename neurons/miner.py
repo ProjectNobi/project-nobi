@@ -11,7 +11,7 @@ import bittensor as bt
 
 import nobi
 from nobi.base.miner import BaseMinerNeuron
-from nobi.protocol import CompanionRequest, MemoryStore, MemoryRecall
+from nobi.protocol import CompanionRequest, MemoryStore, MemoryRecall, MemoryForget
 from nobi.memory import MemoryManager
 from nobi.memory.encryption import ensure_master_secret
 from nobi.memory.adapters import UserAdapterManager
@@ -621,6 +621,44 @@ class Miner(BaseMinerNeuron):
             bt.logging.error(f"Memory recall error: {e}")
             synapse.memories = []
             synapse.total_count = 0
+
+        return synapse
+
+    async def forward_memory_forget(self, synapse: MemoryForget) -> MemoryForget:
+        """
+        Handle GDPR right-to-erasure requests from validators.
+
+        GDPR Art. 17 compliance: delete ALL data for the given user_id
+        from this miner's local database. Covers:
+          - memories, conversations, user_profiles
+          - memory_embeddings, archived_memories
+          - entities, relationships (graph tables)
+
+        This is a best-effort handler. If deletion fails partially, we
+        log the error and return deleted=False so the validator knows.
+        Graceful degradation: older miners that don't implement this
+        handler simply won't receive the synapse (axon attach is optional).
+        """
+        user_id = synapse.user_id
+        reason = synapse.reason or "user_request"
+        bt.logging.info(
+            f"[MemoryForget/GDPR] Erasure request for user_id='{user_id}' reason='{reason}'"
+        )
+
+        try:
+            # Wipe all local data for this user using MemoryManager
+            total_deleted = self.memory.forget_user(user_id)
+            synapse.deleted = True
+            synapse.items_deleted = total_deleted
+            bt.logging.info(
+                f"[MemoryForget/GDPR] Erased {total_deleted} items for user_id='{user_id}'"
+            )
+        except Exception as e:
+            bt.logging.error(
+                f"[MemoryForget/GDPR] Erasure failed for user_id='{user_id}': {e}"
+            )
+            synapse.deleted = False
+            synapse.items_deleted = 0
 
         return synapse
 

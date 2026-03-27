@@ -261,12 +261,48 @@ class GDPRHandler:
                     deleted["archived_memories"] = r.rowcount
                 except Exception:
                     pass
+                # ── Graph tables: entities, relationships ─────────
+                for graph_table in ("entities", "relationships"):
+                    try:
+                        r = mem_conn.execute(
+                            f"DELETE FROM {graph_table} WHERE user_id = ?", (user_id,)
+                        )
+                        deleted[graph_table] = r.rowcount
+                    except Exception:
+                        pass  # Table may not exist
+                # ── Orphaned embeddings ───────────────────────
+                try:
+                    r = mem_conn.execute(
+                        "DELETE FROM memory_embeddings WHERE memory_id NOT IN "
+                        "(SELECT id FROM memories)"
+                    )
+                    deleted["embeddings"] = r.rowcount
+                except Exception:
+                    pass
                 mem_conn.commit()
             except Exception as e:
                 errors.append(f"memories: {e}")
                 logger.error(f"[GDPR:Erasure] memory error for {user_id}: {e}")
             finally:
                 mem_conn.close()
+
+        # ── Dependency tracking ───────────────────────────────
+        dep_db = os.path.expanduser("~/.nobi/dependency.db")
+        if os.path.exists(dep_db):
+            try:
+                dep_conn = sqlite3.connect(dep_db)
+                for dep_table in ("interactions", "user_state"):
+                    try:
+                        r = dep_conn.execute(
+                            f"DELETE FROM {dep_table} WHERE user_id = ?", (user_id,)
+                        )
+                        deleted[dep_table] = r.rowcount
+                    except Exception:
+                        pass
+                dep_conn.commit()
+                dep_conn.close()
+            except Exception as e:
+                errors.append(f"dependency: {e}")
 
         # ── Billing ───────────────────────────────────────────
         bill_conn = self._billing_conn()

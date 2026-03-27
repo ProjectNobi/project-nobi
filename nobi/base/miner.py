@@ -64,6 +64,15 @@ class BaseMinerNeuron(BaseNeuron):
             except Exception as e:
                 bt.logging.debug(f"MemoryRecall attach skipped: {e}")
 
+        # GDPR Art. 17: attach MemoryForget handler if miner implements it
+        # Graceful degradation: older miners without this method are simply skipped
+        if hasattr(self, 'forward_memory_forget'):
+            try:
+                self.axon.attach(forward_fn=self.forward_memory_forget)
+                bt.logging.info("Attached MemoryForget handler to axon (GDPR Art. 17)")
+            except Exception as e:
+                bt.logging.debug(f"MemoryForget attach skipped: {e}")
+
         bt.logging.info(f"Axon created: {self.axon}")
 
         self.should_exit: bool = False
