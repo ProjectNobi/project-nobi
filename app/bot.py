@@ -275,7 +275,7 @@ PRIVACY_SUMMARY = (
     "• Miners process conversation content to generate responses\n"
     "• End-to-end TEE encryption: code-complete, deploying to production\n"
     "• We never sell your data to third parties\n"
-    "• Your rights: access (/memories), export (/export), delete (/forget)\n"
+    "• Your rights: access (/memories), export (/export), delete (/forget), network-wide erasure (/forgetme)\n"
     "• Data auto-deleted after 12 months of inactivity\n"
     "• Age requirements: 18+ required; users under 18 are not permitted\n\n"
     "Full Privacy Policy: projectnobi.ai/privacy\n"
@@ -300,6 +300,7 @@ HELP_MESSAGE = (
     "Memory & Data:\n"
     "/memories — see what I remember about you\n"
     "/forget — delete everything and start fresh\n"
+    "/forgetme — delete everywhere (network-wide GDPR erasure)\n"
     "/export — download your memories as a file\n"
     "/import — restore memories from a backup\n\n"
     "Privacy & Rights:\n"
@@ -576,14 +577,14 @@ class CompanionBot:
             "End-to-end TEE encryption is code-complete and deploying to production. "
             "The data lives on a decentralized network (Bittensor), not one company's server. "
             "You're always in control — /memories to see what I know, "
-            "/export to download everything, /forget to wipe it all. "
+            "/export to download everything, /forget to wipe locally, /forgetme to erase from the entire network. "
             "Your data, your choice 🔒"
         ),
         "memory": (
             "Yep, I remember things about you! That's my superpower 🧠 "
             "When you tell me your name, what you like, where you live — I remember it "
             "across our conversations. It's all encrypted at rest (AES-128, server-side) and stored securely. "
-            "Check what I know with /memories, or wipe everything with /forget. "
+            "Check what I know with /memories, wipe locally with /forget, or erase from all miners with /forgetme. "
             "The more we chat, the better I know you!"
         ),
         "learning": (
@@ -638,7 +639,7 @@ class CompanionBot:
                     {"role": "system", "content": (
                         f"Translate the following text to {lang_name}. "
                         "Keep the same tone (friendly, warm, casual). "
-                        "Keep emoji. Keep command names like /memories, /export, /forget unchanged. "
+                        "Keep emoji. Keep command names like /memories, /export, /forget, /forgetme unchanged. "
                         "Output ONLY the translation, nothing else."
                     )},
                     {"role": "user", "content": self._BOT_IDENTITY[key]},
@@ -724,6 +725,7 @@ class CompanionBot:
                 "Memory & Data:\n"
                 "  /memories — see what I remember about you\n"
                 "  /forget — delete all your data\n"
+                "  /forgetme — delete everywhere (network-wide erasure)\n"
                 "  /export — download memories as a file\n"
                 "  /import — restore from backup\n\n"
                 "Privacy & Rights:\n"
@@ -1492,7 +1494,8 @@ async def cmd_privacy(update: Update, context: ContextTypes.DEFAULT_TYPE):
         + "\n\nYour Rights (GDPR):\n"
         "  • /memories — see what I know\n"
         "  • /export — download all your data (Art. 20)\n"
-        "  • /forget — delete everything (Art. 17)\n"
+        "  • /forget — delete everything locally (Art. 17)\n"
+        "  • /forgetme — delete everywhere, including miners (Art. 17)\n"
         "  • /data_request — formal GDPR data subject request\n\n"
         "Questions? privacy@projectnobi.ai\n"
         "Full policy: projectnobi.ai/privacy"
@@ -1927,7 +1930,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Key points:\n"
             "• Nori is an AI companion — not a therapist, doctor, or lawyer\n"
             "• Your memories are encrypted at rest (AES-128)\n"
-            "• You can export or delete all your data anytime (/export, /forget)\n"
+            "• You can export or delete all your data anytime (/export, /forget, /forgetme)\n"
             "• We don't sell your data. Ever.\n"
             "• 18+ only. No exceptions.\n\n"
             "By tapping 'I accept', you agree to both documents.",
@@ -1990,6 +1993,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Useful commands:\n"
             "  /memories — see what I remember about you\n"
             "  /forget — delete all your data (GDPR Art. 17)\n"
+            "  /forgetme — delete everywhere (network-wide erasure)\n"
             "  /export — download your memories as a file\n"
             "  /import — restore memories from a backup\n"
             "  /voice — toggle voice replies on/off\n"

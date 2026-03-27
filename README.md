@@ -57,7 +57,7 @@ No setup, no account, no payment. It remembers you.
 | Languages | 30+ | 20+ | ✅ 20 (auto-detected) |
 | Single point of failure | Yes | Yes | ✅ Decentralized |
 
-¹ *Memory is encrypted at rest (AES-128, server-side encryption — protects stored data) with user-controlled deletion (`/forget`). Miners process conversation content to generate responses. End-to-end TEE encryption (AES-256-GCM + HPKE key wrapping) is code-complete and deploying to production. Browser-side memory extraction is code-complete and available in the web app. On-device federated learning is on the roadmap. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) and [WHITEPAPER.md](docs/WHITEPAPER.md) for details.*
+¹ *Memory is encrypted at rest (AES-128, server-side encryption — protects stored data) with user-controlled deletion (`/forget`, `/forgetme` for network-wide erasure). Miners process conversation content to generate responses. End-to-end TEE encryption (AES-256-GCM + HPKE key wrapping) is code-complete and deploying to production. Browser-side memory extraction is code-complete and available in the web app. On-device federated learning is on the roadmap. See [SUBNET_DESIGN.md](docs/SUBNET_DESIGN.md) and [WHITEPAPER.md](docs/WHITEPAPER.md) for details.*
 
 ---
 
