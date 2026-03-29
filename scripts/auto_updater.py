@@ -357,7 +357,7 @@ class AutoUpdater:
         """
         logger.info("Installing updated dependencies...")
         rc, stdout, stderr = self._run_cmd(
-            [sys.executable, "-m", "pip", "install", "-e", "."],
+            [sys.executable, "-m", "pip", "install", "-e", ".", "--break-system-packages"],
             timeout=300,
         )
         if rc != 0:
