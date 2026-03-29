@@ -318,15 +318,15 @@ async def resolve_conflict(
         )
 
         # Also flag in memories table if IDs are valid
+        # Ensure conflict_flag column exists (once, outside loop)
+        try:
+            conn.execute("SELECT conflict_flag FROM memories LIMIT 1")
+        except sqlite3.OperationalError:
+            conn.execute("ALTER TABLE memories ADD COLUMN conflict_flag INTEGER DEFAULT 0")
+
         for mid in [conflict.get("memory_id_a"), conflict.get("memory_id_b")]:
             if mid:
                 try:
-                    # Ensure conflict_flag column exists
-                    try:
-                        conn.execute("SELECT conflict_flag FROM memories LIMIT 1")
-                    except sqlite3.OperationalError:
-                        conn.execute("ALTER TABLE memories ADD COLUMN conflict_flag INTEGER DEFAULT 0")
-
                     conn.execute(
                         "UPDATE memories SET conflict_flag = 1, updated_at = ? WHERE id = ?",
                         [now, mid]
@@ -437,6 +437,27 @@ async def run_reflection_cron(
         "errors": errors,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
+
+async def clear_reflection_data(user_id: str, db_path: str = "~/.nobi/bot_memories.db") -> int:
+    """GDPR: Clear all memory conflicts for a user. Returns count deleted."""
+    db_path_expanded = os.path.expanduser(db_path)
+    if not os.path.exists(db_path_expanded):
+        return 0
+    conn = sqlite3.connect(db_path_expanded)
+    try:
+        _ensure_conflict_table(conn)
+        r = conn.execute("DELETE FROM memory_conflicts WHERE user_id = ?", [user_id])
+        conn.commit()
+        count = r.rowcount
+        logger.info(f"[Reflection] GDPR clear: deleted {count} conflicts for user={user_id}")
+        return count
+    except Exception as e:
+        logger.error(f"[Reflection] GDPR clear error: {e}")
+        conn.rollback()
+        return 0
+    finally:
+        conn.close()
 
 
 def get_unresolved_conflicts(

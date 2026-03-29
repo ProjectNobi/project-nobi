@@ -311,7 +311,8 @@ async def store_emotion_reading(
 ):
     """Store an emotion reading to SQLite."""
     db_path_expanded = os.path.expanduser(db_path)
-    if not os.path.exists(os.path.dirname(db_path_expanded)):
+    db_dir = os.path.dirname(db_path_expanded)
+    if db_dir and not os.path.exists(db_dir):
         return
 
     message_hash = hashlib.sha256(f"{user_id}:{message[:200]}".encode()).hexdigest()[:16]
@@ -503,6 +504,27 @@ async def get_current_mood(
     except Exception as e:
         logger.error(f"[Emotion] Get mood error: {e}")
         return "neutral"
+    finally:
+        conn.close()
+
+
+async def clear_emotion_data(user_id: str, db_path: str = "~/.nobi/bot_memories.db") -> int:
+    """GDPR: Clear all emotion readings for a user. Returns count deleted."""
+    db_path_expanded = os.path.expanduser(db_path)
+    if not os.path.exists(db_path_expanded):
+        return 0
+    conn = sqlite3.connect(db_path_expanded)
+    try:
+        _ensure_emotion_table(conn)
+        r = conn.execute("DELETE FROM emotion_readings WHERE user_id = ?", [user_id])
+        conn.commit()
+        count = r.rowcount
+        logger.info(f"[Emotion] GDPR clear: deleted {count} readings for user={user_id}")
+        return count
+    except Exception as e:
+        logger.error(f"[Emotion] GDPR clear error: {e}")
+        conn.rollback()
+        return 0
     finally:
         conn.close()
 

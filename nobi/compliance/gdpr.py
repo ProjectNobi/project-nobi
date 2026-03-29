@@ -279,6 +279,15 @@ class GDPRHandler:
                     deleted["embeddings"] = r.rowcount
                 except Exception:
                     pass
+                # ── MemoryBear: emotion_readings, implicit_memories, memory_conflicts ──
+                for mb_table in ("emotion_readings", "implicit_memories", "memory_conflicts"):
+                    try:
+                        r = mem_conn.execute(
+                            f"DELETE FROM {mb_table} WHERE user_id = ?", (user_id,)
+                        )
+                        deleted[mb_table] = r.rowcount
+                    except Exception:
+                        pass  # Table may not exist yet
                 mem_conn.commit()
             except Exception as e:
                 errors.append(f"memories: {e}")

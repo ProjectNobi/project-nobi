@@ -10,8 +10,11 @@ References:
   Standard ACT-R decay parameter d = 0.5
 """
 
+import json
 import math
 import logging
+import os
+import sqlite3
 import time
 from typing import List, Optional
 from datetime import datetime, timezone
@@ -102,10 +105,6 @@ async def apply_forgetting(
     Returns:
         Count of memories soft-deleted.
     """
-    import os
-    import sqlite3
-    import json
-
     db_path = os.path.expanduser(db_path)
     if not os.path.exists(db_path):
         logger.warning(f"[ACT-R] DB not found at {db_path}, skipping forgetting pass")
@@ -179,7 +178,6 @@ async def apply_forgetting(
                 importance = min(1.0, importance * 1.3)
 
             # Compute activation
-            import asyncio
             activation = await compute_activation(
                 memory_id=row["id"],
                 access_times=access_times,
@@ -219,9 +217,6 @@ async def run_forgetting_cron(
     Returns:
         Dict with {total_users, total_forgotten, errors}
     """
-    import os
-    import sqlite3
-
     db_path = os.path.expanduser(db_path)
     if not os.path.exists(db_path):
         return {"total_users": 0, "total_forgotten": 0, "errors": ["DB not found"]}

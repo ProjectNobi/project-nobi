@@ -26,8 +26,16 @@ import pytest
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 def run(coro):
-    """Run async coroutine in test context."""
-    return asyncio.get_event_loop().run_until_complete(coro)
+    """Run async coroutine in test context.
+    
+    Uses new_event_loop() to avoid RuntimeError when pytest-asyncio
+    has closed the default event loop during full-suite runs.
+    """
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
 
 
 def make_test_db() -> str:
@@ -687,6 +695,94 @@ class TestACTRMigration:
             conn2.close()
         finally:
             os.unlink(tmp.name)
+
+
+# ─── Feature 6: GDPR Clear Functions ─────────────────────────────────────────
+
+class TestGDPRClear:
+    """Test that clear_*_data() functions properly delete user data."""
+
+    def test_clear_emotion_data(self):
+        """clear_emotion_data removes all readings for a user."""
+        from nobi.memory.emotion import store_emotion_reading, clear_emotion_data, EmotionReading
+
+        db = make_test_db()
+        try:
+            reading = EmotionReading(joy=0.9, dominant="joy", intensity=0.8)
+            run(store_emotion_reading("user1", "happy message", reading, db_path=db))
+            run(store_emotion_reading("user1", "another happy", reading, db_path=db))
+            run(store_emotion_reading("user2", "keep this", reading, db_path=db))
+
+            deleted = run(clear_emotion_data("user1", db_path=db))
+            assert deleted == 2
+
+            # user2 data should remain
+            conn = sqlite3.connect(db)
+            count = conn.execute("SELECT COUNT(*) FROM emotion_readings WHERE user_id = 'user2'").fetchone()[0]
+            conn.close()
+            assert count == 1
+        finally:
+            os.unlink(db)
+
+    def test_clear_inference_data(self):
+        """clear_inference_data removes all inferences for a user."""
+        from nobi.memory.inference import clear_inference_data, _store_inferences
+
+        db = make_test_db()
+        try:
+            _store_inferences("user1", [
+                {"type": "habit", "inference": "likes coffee", "confidence": 0.8, "evidence": "mentioned coffee"},
+            ], db)
+            _store_inferences("user2", [
+                {"type": "preference", "inference": "likes tea", "confidence": 0.7, "evidence": "mentioned tea"},
+            ], db)
+
+            deleted = run(clear_inference_data("user1", db_path=db))
+            assert deleted == 1
+
+            conn = sqlite3.connect(db)
+            count = conn.execute("SELECT COUNT(*) FROM implicit_memories WHERE user_id = 'user2'").fetchone()[0]
+            conn.close()
+            assert count == 1
+        finally:
+            os.unlink(db)
+
+    def test_clear_reflection_data(self):
+        """clear_reflection_data removes all conflicts for a user."""
+        from nobi.memory.reflection import clear_reflection_data, resolve_conflict
+
+        db = make_test_db()
+        try:
+            conflict = {
+                "type": "fact_conflict",
+                "memory_id_a": "m1",
+                "memory_id_b": "m2",
+                "description": "test conflict",
+                "confidence": 0.8,
+            }
+            run(resolve_conflict(conflict, "user1", db_path=db))
+            run(resolve_conflict(conflict, "user2", db_path=db))
+
+            deleted = run(clear_reflection_data("user1", db_path=db))
+            assert deleted == 1
+
+            conn = sqlite3.connect(db)
+            count = conn.execute("SELECT COUNT(*) FROM memory_conflicts WHERE user_id = 'user2'").fetchone()[0]
+            conn.close()
+            assert count == 1
+        finally:
+            os.unlink(db)
+
+    def test_clear_missing_db_returns_zero(self):
+        """All clear functions return 0 when DB doesn't exist."""
+        from nobi.memory.emotion import clear_emotion_data
+        from nobi.memory.inference import clear_inference_data
+        from nobi.memory.reflection import clear_reflection_data
+
+        fake_path = "/tmp/nonexistent_memorybear_test.db"
+        assert run(clear_emotion_data("user1", db_path=fake_path)) == 0
+        assert run(clear_inference_data("user1", db_path=fake_path)) == 0
+        assert run(clear_reflection_data("user1", db_path=fake_path)) == 0
 
 
 # ─── Run summary ──────────────────────────────────────────────────────────────

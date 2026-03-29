@@ -175,6 +175,27 @@ async def infer_implicit_memories(
         return []
 
 
+async def clear_inference_data(user_id: str, db_path: str = "~/.nobi/bot_memories.db") -> int:
+    """GDPR: Clear all implicit memory inferences for a user. Returns count deleted."""
+    db_path_expanded = os.path.expanduser(db_path)
+    if not os.path.exists(db_path_expanded):
+        return 0
+    conn = sqlite3.connect(db_path_expanded)
+    try:
+        _ensure_implicit_table(conn)
+        r = conn.execute("DELETE FROM implicit_memories WHERE user_id = ?", [user_id])
+        conn.commit()
+        count = r.rowcount
+        logger.info(f"[Inference] GDPR clear: deleted {count} inferences for user={user_id}")
+        return count
+    except Exception as e:
+        logger.error(f"[Inference] GDPR clear error: {e}")
+        conn.rollback()
+        return 0
+    finally:
+        conn.close()
+
+
 def _parse_json_safely(text: str) -> any:
     """Parse JSON from LLM response, handling markdown code blocks."""
     text = text.strip()

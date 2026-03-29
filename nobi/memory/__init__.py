@@ -22,12 +22,12 @@ except ImportError:
     pass
 
 try:
-    from .inference import infer_implicit_memories, get_implicit_memories, run_inference_cron
+    from .inference import infer_implicit_memories, get_implicit_memories, run_inference_cron, clear_inference_data
 except ImportError:
     pass
 
 try:
-    from .reflection import detect_conflicts, resolve_conflict, run_nightly_reflection, run_reflection_cron
+    from .reflection import detect_conflicts, resolve_conflict, run_nightly_reflection, run_reflection_cron, clear_reflection_data
 except ImportError:
     pass
 
@@ -35,6 +35,7 @@ try:
     from .emotion import (
         detect_emotion, store_emotion_reading, get_emotion_trend,
         get_current_mood, build_mood_context, EmotionReading, EmotionTrend,
+        clear_emotion_data,
     )
 except ImportError:
     pass

@@ -977,7 +977,7 @@ class CompanionBot:
                     await store_emotion_reading(user_id, message, reading,
                                                 db_path=self._emotion_db_path)
                 except Exception as e:
-                    logger.debug(f"[MemoryBear] Emotion detect error: {e}")
+                    logger.warning(f"[MemoryBear] Emotion detect error: {e}")
             asyncio.create_task(_detect_and_store_emotion())
 
             try:
