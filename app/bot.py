@@ -64,6 +64,16 @@ from nobi.personality.prompts import get_dynamic_prompt
 from nobi.support import FeedbackManager, SupportHandler
 from nobi.safety.dependency_monitor import DependencyMonitor, DependencyLevel
 from nobi.feedback import FeedbackStore
+
+# MemoryBear — Biological Cognition Layer (optional, graceful fallback)
+try:
+    from nobi.memory.emotion import (
+        detect_emotion, store_emotion_reading, get_current_mood,
+        get_emotion_trend, build_mood_context,
+    )
+    _MEMORYBEAR_EMOTION = True
+except ImportError:
+    _MEMORYBEAR_EMOTION = False
 import io
 
 try:
@@ -394,6 +404,8 @@ class CompanionBot:
         self._last_response_max = 500
         # Turn counter for periodic memory decay (replaces hasattr pattern)
         self._turn_count: int = 0
+        # MemoryBear: emotion tracking DB path (shared with main memory DB)
+        self._emotion_db_path = "~/.nobi/bot_memories.db"
         # Skills
         self.reminder_manager = ReminderManager(db_path="~/.nobi/bot_memories.db")
         # Conversation state for multi-step flows: {user_id: {state, data}}
@@ -956,6 +968,26 @@ class CompanionBot:
         system = SYSTEM_PROMPT.format(memory_context=memory_context or "")
         mood_prompt = get_dynamic_prompt(user_id, message, user_mood)
         system = system + "\n\n== PERSONALITY TUNING ==\n" + mood_prompt
+
+        # ── MemoryBear: Emotion tracking + mood-aware response ────────────────
+        if _MEMORYBEAR_EMOTION:
+            async def _detect_and_store_emotion():
+                try:
+                    reading = await detect_emotion(message)
+                    await store_emotion_reading(user_id, message, reading,
+                                                db_path=self._emotion_db_path)
+                except Exception as e:
+                    logger.debug(f"[MemoryBear] Emotion detect error: {e}")
+            asyncio.create_task(_detect_and_store_emotion())
+
+            try:
+                current_mood = await get_current_mood(user_id, db_path=self._emotion_db_path)
+                if current_mood != "neutral":
+                    mood_context = build_mood_context(current_mood)
+                    if mood_context:
+                        system = system + "\n\n" + mood_context
+            except Exception as e:
+                logger.debug(f"[MemoryBear] Mood inject error: {e}")
 
         # ── Self-Improvement: inject accumulated lessons ──────────────────
         # Check if this message is a correction of the previous response
