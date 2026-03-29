@@ -124,7 +124,10 @@ class LanguageDetector:
 
         # Override: if core says non-English but text clearly looks English (3+ words),
         # trust _looks_english (core often confuses English with Dutch/German)
-        if detected != "en" and len(text.split()) >= 3 and _looks_english(text):
+        # IMPORTANT: Do NOT override non-Latin script languages (zh, ja, ko, ar, hi, etc.)
+        # — these are detected by character ranges, not word patterns, so they are reliable.
+        _NON_LATIN_LANGS = {"zh", "ja", "ko", "ar", "hi", "bn", "th", "ru", "uk"}
+        if detected != "en" and detected not in _NON_LATIN_LANGS and len(text.split()) >= 3 and _looks_english(text):
             detected = "en"
 
         if user_id:

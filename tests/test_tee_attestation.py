@@ -17,6 +17,7 @@ import struct
 import time
 
 import pytest
+from unittest.mock import patch
 
 # ─── Import TEE attestation module ───────────────────────────────────────────
 from nobi.privacy.tee_attestation import (
@@ -442,10 +443,16 @@ class TestTEEScoringBonus:
         assert with_tee >= base
 
     def test_no_tee_no_reward_change(self):
-        """reward() without TEE flags should behave exactly as before."""
-        r1 = reward("hello", "Hi there!", latency=2.0, tee_verified=False)
-        r2 = reward("hello", "Hi there!", latency=2.0)
-        assert r1 == pytest.approx(r2)
+        """reward() without TEE flags should behave exactly as before.
+        
+        We patch _llm_judge to return a fixed value so this test is deterministic.
+        Without mocking, two separate LLM calls could return different scores
+        even at temperature=0 due to model non-determinism.
+        """
+        with patch("nobi.validator.reward._llm_judge", return_value=0.5):
+            r1 = reward("hello", "Hi there!", latency=2.0, tee_verified=False)
+            r2 = reward("hello", "Hi there!", latency=2.0)
+            assert r1 == pytest.approx(r2)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

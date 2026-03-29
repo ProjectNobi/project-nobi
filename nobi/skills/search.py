@@ -75,7 +75,7 @@ async def search_web(query: str) -> str:
     if not query or not query.strip():
         return ""
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     try:
         result = await loop.run_in_executor(None, _search_sync, query.strip())
         return result

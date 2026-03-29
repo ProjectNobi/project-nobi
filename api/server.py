@@ -532,7 +532,7 @@ async def chat(req: ChatRequest, request: Request = None):
     # Call LLM
     # Smart fallback chain — try Chutes models in order
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         response_text = None
         for fallback_model in CHUTES_FALLBACK_MODELS:
             try:
@@ -1298,7 +1298,7 @@ async def chat_encrypted(req: EncryptedChatRequest, request: Request = None):
 
     # ─── Call TEE model ──────────────────────────────────────────────────────
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         response_text = None
         for fallback_model in CHUTES_FALLBACK_MODELS:
             try:

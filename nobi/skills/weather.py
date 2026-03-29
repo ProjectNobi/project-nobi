@@ -19,7 +19,7 @@ async def fetch_weather(city: str) -> str:
     if not city_clean:
         return ""
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     try:
         result = await loop.run_in_executor(None, _fetch_weather_sync, city_clean)
         return result

@@ -335,23 +335,31 @@ from collections import defaultdict
 
 
 class RateLimiter:
-    """Simple per-user rate limiter."""
+    """Simple per-user rate limiter with periodic stale-entry cleanup."""
 
     def __init__(self, max_per_minute: int = MESSAGES_PER_MINUTE):
         self.max = max_per_minute
         self.timestamps: dict = defaultdict(list)
+        self._check_count: int = 0
 
     def check(self, user_id: str) -> bool:
         """Returns True if allowed, False if rate limited."""
         now = time.monotonic()
         window = now - 60
-        # Clean old timestamps
+        # Clean old timestamps for this user
         self.timestamps[user_id] = [
             t for t in self.timestamps[user_id] if t > window
         ]
         if len(self.timestamps[user_id]) >= self.max:
             return False
         self.timestamps[user_id].append(now)
+        # Periodic global cleanup: remove empty entries every 1000 checks
+        # Prevents unbounded dict growth when many unique users pass through
+        self._check_count += 1
+        if self._check_count % 1000 == 0:
+            stale = [uid for uid, ts in self.timestamps.items() if not ts]
+            for uid in stale:
+                del self.timestamps[uid]
         return True
 
 
@@ -381,7 +389,11 @@ class CompanionBot:
         # Self-improving feedback loop — stores user corrections as lessons
         self.feedback_store = FeedbackStore(db_path="~/.nobi/feedback_lessons.db")
         # Track last bot response per user for correction context
+        # Bounded dict — keep last 500 users only (prevents unbounded memory growth)
         self._last_response: Dict[str, str] = {}
+        self._last_response_max = 500
+        # Turn counter for periodic memory decay (replaces hasattr pattern)
+        self._turn_count: int = 0
         # Skills
         self.reminder_manager = ReminderManager(db_path="~/.nobi/bot_memories.db")
         # Conversation state for multi-step flows: {user_id: {state, data}}
@@ -825,22 +837,22 @@ class CompanionBot:
             message = message[:2000] + "..."
 
         # Parallel memory fetch — run get_smart_context and get_recent_conversation concurrently
-        loop = asyncio.get_event_loop()
+        _loop = asyncio.get_running_loop()
 
         async def _fetch_memory_context():
             try:
-                ctx = await loop.run_in_executor(None, lambda: self.memory.get_smart_context(user_id, message))
+                ctx = await _loop.run_in_executor(None, lambda: self.memory.get_smart_context(user_id, message))
                 return ctx or ""
             except Exception:
                 try:
-                    return await loop.run_in_executor(None, lambda: self.memory.get_context_for_prompt(user_id, message)) or ""
+                    return await _loop.run_in_executor(None, lambda: self.memory.get_context_for_prompt(user_id, message)) or ""
                 except Exception as e:
                     logger.warning(f"Memory recall error: {e}")
                     return ""
 
         async def _fetch_history():
             try:
-                hist = await loop.run_in_executor(None, lambda: self.memory.get_recent_conversation(user_id, limit=6))
+                hist = await _loop.run_in_executor(None, lambda: self.memory.get_recent_conversation(user_id, limit=6))
                 return hist or []
             except Exception as e:
                 logger.warning(f"Conversation history load error: {e}")
@@ -901,12 +913,6 @@ class CompanionBot:
             _dependency_prefix = ""
 
         # Track conversation turns for periodic memory decay
-        if not hasattr(self, '_turn_count'):
-            self._turn_count = 0
-            try:
-                self.memory.decay_old_memories()
-            except Exception:
-                pass
         self._turn_count += 1
         if self._turn_count % 100 == 0:
             try:
@@ -1098,6 +1104,11 @@ class CompanionBot:
                 logger.warning(f"Save response error: {e}")
 
             # Track last response for correction detection (self-improvement loop)
+            # Evict oldest entry if cache is full (bounded memory)
+            _max = getattr(self, "_last_response_max", 500)
+            if len(self._last_response) >= _max:
+                oldest = next(iter(self._last_response))
+                del self._last_response[oldest]
             self._last_response[user_id] = response
 
             # Phase B: Update adapter after each conversation turn (with sanitized response)
@@ -1134,13 +1145,17 @@ class CompanionBot:
             # ── Emotional topic AI disclaimer ────────────────────────────────
             # Append a gentle AI reminder when the user message touches on
             # sensitive emotional topics (self-harm, mental health, crisis)
+            # ONLY if the safety filter hasn't already added a disclaimer
             _EMOTIONAL_KW = [
                 "depress", "suicid", "self-harm", "self harm", "hurt myself",
                 "kill myself", "end it all", "no reason to live", "want to die",
                 "hopeless", "worthless", "can't go on", "can't cope",
                 "anxiety", "panic attack", "mental health", "therapist", "counselor",
             ]
-            if any(kw in message.lower() for kw in _EMOTIONAL_KW):
+            _DISCLAIMER_MARKERS = ["samaritans", "crisis text line", "mental health professional",
+                                    "please talk to a trusted person"]
+            already_disclaimed = any(m in response.lower() for m in _DISCLAIMER_MARKERS)
+            if not already_disclaimed and any(kw in message.lower() for kw in _EMOTIONAL_KW):
                 response = (
                     response + "\n\n"
                     "I want to be helpful, but I'm an AI. "
@@ -2301,7 +2316,7 @@ async def cmd_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except ImportError:
             import asyncio
             import subprocess
-            await asyncio.get_event_loop().run_in_executor(
+            await asyncio.get_running_loop().run_in_executor(
                 None,
                 lambda: subprocess.run(
                     ["pip", "install", "--break-system-packages", "-q", "gTTS"],
