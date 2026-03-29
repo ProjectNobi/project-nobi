@@ -426,21 +426,25 @@ class TestTEEScoringBonus:
         assert with_tee >= base
 
     def test_tee_bonus_in_reward_multi_turn(self):
-        """reward() should apply TEE bonus for multi-turn scoring."""
-        base = reward(
-            "How's my cat?", "Your cat Felix is doing great!",
-            test_type="multi_turn",
-            memory_keywords=["Felix", "cat"],
-            latency=1.0,
-        )
-        with_tee = reward(
-            "How's my cat?", "Your cat Felix is doing great!",
-            test_type="multi_turn",
-            memory_keywords=["Felix", "cat"],
-            latency=1.0,
-            tee_verified=True,
-        )
-        assert with_tee >= base
+        """reward() should apply TEE bonus for multi-turn scoring.
+        
+        Patched _llm_judge for determinism — two live LLM calls are non-deterministic.
+        """
+        with patch("nobi.validator.reward._llm_judge", return_value=0.5):
+            base = reward(
+                "How's my cat?", "Your cat Felix is doing great!",
+                test_type="multi_turn",
+                memory_keywords=["Felix", "cat"],
+                latency=1.0,
+            )
+            with_tee = reward(
+                "How's my cat?", "Your cat Felix is doing great!",
+                test_type="multi_turn",
+                memory_keywords=["Felix", "cat"],
+                latency=1.0,
+                tee_verified=True,
+            )
+            assert with_tee >= base
 
     def test_no_tee_no_reward_change(self):
         """reward() without TEE flags should behave exactly as before.
@@ -545,14 +549,15 @@ class TestProtocolTEEFields:
         # Confirm cache
         assert verifier.is_tee_verified(42) is True
 
-        # Scoring with TEE bonus
-        base_score = reward(req.message, req.response, latency=1.0)
-        tee_score = reward(
-            req.message, req.response,
-            latency=1.0,
-            tee_verified=req.tee_verified,
-            tee_chain_verified=attestation_result.chain_verified,
-        )
+        # Scoring with TEE bonus — patch LLM judge for determinism
+        with patch("nobi.validator.reward._llm_judge", return_value=0.5):
+            base_score = reward(req.message, req.response, latency=1.0)
+            tee_score = reward(
+                req.message, req.response,
+                latency=1.0,
+                tee_verified=req.tee_verified,
+                tee_chain_verified=attestation_result.chain_verified,
+            )
         assert tee_score >= base_score
         assert tee_score <= 1.0
 
