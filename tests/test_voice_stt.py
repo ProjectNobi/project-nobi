@@ -7,7 +7,10 @@ Tests cover:
   - Local Whisper (tertiary fallback)
   - Provider chain priority
   - Audio format handling
-  - Edge cases (empty audio, 503 retry, 429 fallthrough)
+  - Edge cases (empty audio, 503 retry, 429 fallthrough, corrupted data)
+  - Security (format validation, size limits)
+  - Provider failure tracking
+  - Health check
 """
 
 import asyncio
@@ -36,6 +39,15 @@ def make_mock_response(status_code: int, json_data=None, text: str = ""):
     return mock_resp
 
 
+@pytest.fixture(autouse=True)
+def reset_provider_failures():
+    """Reset provider failure tracking between tests."""
+    from nobi.voice import stt
+    stt._provider_failures.clear()
+    yield
+    stt._provider_failures.clear()
+
+
 # ─── HuggingFace Tests ────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
@@ -51,7 +63,8 @@ async def test_hf_transcribe_returns_string():
     mock_client.post = AsyncMock(return_value=mock_resp)
 
     with patch("nobi.voice.stt.httpx.AsyncClient", return_value=mock_client):
-        result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
+        with patch("nobi.voice.stt._convert_to_wav", new=AsyncMock(return_value=(SAMPLE_WAV_BYTES, "wav"))):
+            result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
 
     assert result == SAMPLE_TRANSCRIPT
 
@@ -69,7 +82,8 @@ async def test_hf_transcribe_dict_response():
     mock_client.post = AsyncMock(return_value=mock_resp)
 
     with patch("nobi.voice.stt.httpx.AsyncClient", return_value=mock_client):
-        result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
+        with patch("nobi.voice.stt._convert_to_wav", new=AsyncMock(return_value=(SAMPLE_WAV_BYTES, "wav"))):
+            result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
 
     assert result == SAMPLE_TRANSCRIPT
 
@@ -97,18 +111,18 @@ async def test_hf_transcribe_handles_503_retry():
     mock_client.post = mock_post
 
     with patch("nobi.voice.stt.httpx.AsyncClient", return_value=mock_client):
-        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-            result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
+        with patch("nobi.voice.stt._convert_to_wav", new=AsyncMock(return_value=(SAMPLE_WAV_BYTES, "wav"))):
+            with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
 
     assert result == SAMPLE_TRANSCRIPT
     assert call_count == 2
-    # Verify sleep was called (retry wait)
     mock_sleep.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_hf_transcribe_handles_429_fallthrough():
-    """429 rate limit returns None (falls through to next provider)."""
+    """429 rate limit returns None and marks provider failed."""
     from nobi.voice import stt
 
     mock_resp = make_mock_response(429, text="Too Many Requests")
@@ -119,7 +133,50 @@ async def test_hf_transcribe_handles_429_fallthrough():
     mock_client.post = AsyncMock(return_value=mock_resp)
 
     with patch("nobi.voice.stt.httpx.AsyncClient", return_value=mock_client):
-        result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
+        with patch("nobi.voice.stt._convert_to_wav", new=AsyncMock(return_value=(SAMPLE_WAV_BYTES, "wav"))):
+            result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
+
+    assert result is None
+    assert "huggingface" in stt._provider_failures
+
+
+@pytest.mark.asyncio
+async def test_hf_transcribe_invalid_json():
+    """HF API returning non-JSON 200 is handled gracefully."""
+    from nobi.voice import stt
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.text = "not json at all"
+    mock_resp.json = MagicMock(side_effect=ValueError("bad json"))
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.post = AsyncMock(return_value=mock_resp)
+
+    with patch("nobi.voice.stt.httpx.AsyncClient", return_value=mock_client):
+        with patch("nobi.voice.stt._convert_to_wav", new=AsyncMock(return_value=(SAMPLE_WAV_BYTES, "wav"))):
+            result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_hf_transcribe_malformed_list():
+    """HF returning list with non-dict items is handled."""
+    from nobi.voice import stt
+
+    mock_resp = make_mock_response(200, ["just a string"])
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.post = AsyncMock(return_value=mock_resp)
+
+    with patch("nobi.voice.stt.httpx.AsyncClient", return_value=mock_client):
+        with patch("nobi.voice.stt._convert_to_wav", new=AsyncMock(return_value=(SAMPLE_WAV_BYTES, "wav"))):
+            result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
 
     assert result is None
 
@@ -195,7 +252,6 @@ async def test_audio_format_ogg():
         result = await stt.transcribe_audio(SAMPLE_OGG_BYTES, "ogg", "en")
 
     assert result == SAMPLE_TRANSCRIPT
-    # HF was called with ogg format
     call_args = mock_hf.call_args
     assert call_args[0][1] == "ogg" or call_args.args[1] == "ogg"
 
@@ -253,7 +309,27 @@ async def test_hf_transcribe_empty_text_in_response():
     mock_client.post = AsyncMock(return_value=mock_resp)
 
     with patch("nobi.voice.stt.httpx.AsyncClient", return_value=mock_client):
-        result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
+        with patch("nobi.voice.stt._convert_to_wav", new=AsyncMock(return_value=(SAMPLE_WAV_BYTES, "wav"))):
+            result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_transcribe_whitespace_only_audio():
+    """Whitespace-only transcriptions are treated as empty."""
+    from nobi.voice import stt
+
+    mock_resp = make_mock_response(200, [{"text": "   \n  "}])
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.post = AsyncMock(return_value=mock_resp)
+
+    with patch("nobi.voice.stt.httpx.AsyncClient", return_value=mock_client):
+        with patch("nobi.voice.stt._convert_to_wav", new=AsyncMock(return_value=(SAMPLE_WAV_BYTES, "wav"))):
+            result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
 
     assert result is None
 
@@ -296,3 +372,91 @@ async def test_openrouter_success():
         stt.OPENROUTER_API_KEY = original
 
     assert result == SAMPLE_TRANSCRIPT
+
+
+# ─── Security Tests ───────────────────────────────────────────────────────────
+
+def test_format_validation():
+    """Format validation rejects dangerous strings."""
+    from nobi.voice.stt import _is_safe_format
+
+    assert _is_safe_format("wav") is True
+    assert _is_safe_format("ogg") is True
+    assert _is_safe_format("mp3") is True
+    assert _is_safe_format("") is False
+    assert _is_safe_format("../../../etc/passwd") is False
+    assert _is_safe_format("wav; rm -rf /") is False
+    assert _is_safe_format("a" * 20) is False  # too long
+
+
+# ─── Provider Tracking Tests ─────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_provider_cooldown_skips_recently_failed():
+    """Provider that recently failed is skipped during cooldown."""
+    from nobi.voice import stt
+
+    stt._mark_provider_failed("huggingface")
+
+    # Should be skipped (returns None immediately)
+    result = await stt._transcribe_huggingface(SAMPLE_WAV_BYTES, "wav", "en")
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_provider_cooldown_expires():
+    """Provider cooldown expires and allows retrying."""
+    from nobi.voice import stt
+    import time
+
+    stt._provider_failures["huggingface"] = time.monotonic() - 400  # 400s ago, > 300s cooldown
+
+    assert stt._provider_recently_failed("huggingface") is False
+
+
+# ─── Health Check Tests ──────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_health_check_returns_dict():
+    """check_stt_health returns expected structure."""
+    from nobi.voice import stt
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(return_value=mock_resp)
+
+    with patch("nobi.voice.stt.httpx.AsyncClient", return_value=mock_client):
+        with patch("nobi.voice.stt.asyncio.create_subprocess_exec", new=AsyncMock(side_effect=FileNotFoundError)):
+            result = await stt.check_stt_health()
+
+    assert "huggingface" in result
+    assert "openrouter" in result
+    assert "local_whisper" in result
+    assert "ffmpeg" in result
+    assert isinstance(result["huggingface"]["available"], bool)
+
+
+# ─── Conversion Tests ────────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_convert_wav_passthrough():
+    """WAV format is passed through without conversion."""
+    from nobi.voice.stt import _convert_to_wav
+
+    result_bytes, result_fmt = await _convert_to_wav(SAMPLE_WAV_BYTES, "wav")
+    assert result_bytes == SAMPLE_WAV_BYTES
+    assert result_fmt == "wav"
+
+
+@pytest.mark.asyncio
+async def test_convert_unsafe_format_rejected():
+    """Unsafe format strings are rejected by conversion."""
+    from nobi.voice.stt import _convert_to_wav
+
+    result_bytes, result_fmt = await _convert_to_wav(b"data", "../../../hack")
+    assert result_bytes == b"data"
+    assert result_fmt == "../../../hack"  # Returned unchanged, not executed
