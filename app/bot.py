@@ -973,12 +973,21 @@ class CompanionBot:
         if _MEMORYBEAR_EMOTION:
             async def _detect_and_store_emotion():
                 try:
-                    reading = await detect_emotion(message)
+                    reading = await detect_emotion(message, user_id=user_id)
                     await store_emotion_reading(user_id, message, reading,
                                                 db_path=self._emotion_db_path)
                 except Exception as e:
                     logger.warning(f"[MemoryBear] Emotion detect error: {e}")
-            asyncio.create_task(_detect_and_store_emotion())
+
+            def _task_exception_logger(task):
+                if task.cancelled():
+                    return
+                exc = task.exception()
+                if exc:
+                    logger.error(f"[MemoryBear] Background task failed: {exc}", exc_info=exc)
+
+            _emotion_task = asyncio.create_task(_detect_and_store_emotion())
+            _emotion_task.add_done_callback(_task_exception_logger)
 
             try:
                 current_mood = await get_current_mood(user_id, db_path=self._emotion_db_path)
@@ -1007,7 +1016,8 @@ class CompanionBot:
                         self.feedback_store.save_lesson(user_id, message, lesson)
                     except Exception as e:
                         logger.debug(f"[FeedbackStore] Lesson save error: {e}")
-                asyncio.create_task(_extract_and_save())
+                _lesson_task = asyncio.create_task(_extract_and_save())
+                _lesson_task.add_done_callback(_task_exception_logger)
 
         # Inject active lessons into system prompt
         try:

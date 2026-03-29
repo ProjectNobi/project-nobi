@@ -42,6 +42,10 @@ BM25_WEIGHT = 0.4
 # Minimum semantic score to pass to BM25 stage
 SEMANTIC_THRESHOLD = 0.1
 
+# BM25 index cache: {user_id: (bm25_instance, doc_contents_hash, timestamp)}
+_BM25_CACHE: Dict[str, Any] = {}
+_BM25_CACHE_TTL = 300  # 5 minutes
+
 
 def _tokenize(text: str) -> List[str]:
     """Simple whitespace + punctuation tokenizer for BM25."""
@@ -154,9 +158,41 @@ async def hybrid_search(
             c["hybrid_score"] = c.get("semantic_score", c.get("hybrid_score", 0.0))
         return semantic_candidates[:top_k]
 
-    # Extract content for BM25
+    # Extract content for BM25 (with per-user caching)
     contents = [c.get("content", "") for c in semantic_candidates]
-    bm25_scores = bm25_score(query, contents)
+    import hashlib as _hl
+    import time as _time
+    _content_hash = _hl.md5("||".join(contents).encode()).hexdigest()
+    _cache_key = f"{user_id}:{_content_hash}"
+    _now = _time.time()
+    _cached = _BM25_CACHE.get(_cache_key)
+
+    if _cached and (_now - _cached[1]) < _BM25_CACHE_TTL:
+        # Reuse cached BM25 index
+        _bm25_instance = _cached[0]
+        tokenized_query = _tokenize(query)
+        try:
+            scores = _bm25_instance.get_scores(tokenized_query)
+            max_score = max(scores) if len(scores) > 0 else 1.0
+            if max_score > 0:
+                scores = [s / max_score for s in scores]
+            bm25_scores = list(scores)
+        except Exception:
+            bm25_scores = bm25_score(query, contents)
+    else:
+        bm25_scores = bm25_score(query, contents)
+        # Cache the BM25 index for reuse
+        try:
+            tokenized_docs = [_tokenize(doc) for doc in contents]
+            _bm25_inst = BM25Okapi(tokenized_docs)
+            _BM25_CACHE[_cache_key] = (_bm25_inst, _now)
+            # Evict old cache entries
+            if len(_BM25_CACHE) > 200:
+                oldest_keys = sorted(_BM25_CACHE, key=lambda k: _BM25_CACHE[k][1])[:100]
+                for k in oldest_keys:
+                    del _BM25_CACHE[k]
+        except Exception:
+            pass
 
     # Combine scores
     results = []

@@ -36,6 +36,10 @@ EMOTIONS = ("joy", "sadness", "anger", "fear", "surprise", "neutral")
 # Non-neutral threshold — below this intensity, mood = "neutral"
 NEUTRAL_THRESHOLD = 0.35
 
+# Rate limiting: minimum seconds between emotion detections per user
+EMOTION_RATE_LIMIT_SECONDS = 30
+_emotion_rate_cache: Dict[str, float] = {}  # {user_id: last_detection_timestamp}
+
 _EMOTION_PROMPT = """Analyze the emotional content of this message and output a JSON object.
 
 Message: "{text}"
@@ -203,19 +207,35 @@ def _parse_json_safely(text: str) -> Dict:
     return {}
 
 
-async def detect_emotion(text: str) -> EmotionReading:
+async def detect_emotion(text: str, user_id: str = "") -> EmotionReading:
     """
     Detect emotion in text using LLM.
 
     Args:
         text: Message text to analyse.
+        user_id: Optional user ID for rate limiting.
 
     Returns:
         EmotionReading with scores for all emotions.
-        Falls back to neutral reading if LLM unavailable.
+        Falls back to neutral/keyword reading if LLM unavailable or rate-limited.
     """
     if not text or len(text.strip()) < 3:
         return EmotionReading()
+
+    # Rate limit: max 1 LLM emotion detection per user per EMOTION_RATE_LIMIT_SECONDS
+    now = time.time()
+    if user_id:
+        last_detect = _emotion_rate_cache.get(user_id, 0.0)
+        if now - last_detect < EMOTION_RATE_LIMIT_SECONDS:
+            logger.debug(f"[Emotion] Rate-limited for user={user_id}, using keyword fallback")
+            return _keyword_emotion_detect(text)
+        _emotion_rate_cache[user_id] = now
+        # Periodic cleanup of stale entries (every 100 unique users)
+        if len(_emotion_rate_cache) > 500:
+            cutoff = now - EMOTION_RATE_LIMIT_SECONDS * 10
+            stale = [k for k, v in _emotion_rate_cache.items() if v < cutoff]
+            for k in stale:
+                del _emotion_rate_cache[k]
 
     client = _get_llm_client()
     if not client:

@@ -16,7 +16,6 @@ rank_bm25>=0.2.2
 # sentence-transformers uses ~80MB model (all-MiniLM-L6-v2), no GPU required
 sentence-transformers>=2.2.0
 scikit-learn>=1.3.0
-scikit-learn>=1.3.0
 
 # Optional: High-quality semantic embeddings (recommended for validators)
 # Install with: pip install sentence-transformers
