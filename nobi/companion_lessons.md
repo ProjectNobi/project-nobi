@@ -59,3 +59,10 @@ Bad response: wall of text, ignores what user said, repeats same opening, over-e
 - Ask ONE clarifying question at a time (never batch)
 - If same error 3 times: stop and report, do not keep retrying
 - Specification quality is the bottleneck: clarify before executing
+## Latest Lessons (Mar 29 batch 1)
+- Iron Laws: no fixes without root cause, no claims without evidence
+- Show verification OUTPUT, not just "it works"
+- Subagent tasks must be self-contained — never say "as we discussed"
+## Latest Lessons (Mar 29 batch 2)
+- Delta reporting: always report "what changed" not just current state
+- Cross-domain signals: correlate multiple data sources for early signals
